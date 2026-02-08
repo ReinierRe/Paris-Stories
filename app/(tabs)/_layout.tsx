@@ -1,21 +1,41 @@
-// template
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
-import { SymbolView } from "expo-symbols";
-import { Platform, StyleSheet, useColorScheme } from "react-native";
+import { Platform, StyleSheet, useColorScheme, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-
 import Colors from "@/constants/colors";
 
-//IMPORTANT: iOS 26 Exists, feel free to use NativeTabs for native tabs with liquid glass support.
+let liquidGlassAvailable = false;
+if (Platform.OS !== "web") {
+  try {
+    const { isLiquidGlassAvailable } = require("expo-glass-effect");
+    liquidGlassAvailable = isLiquidGlassAvailable();
+  } catch {}
+}
+
+let NativeTabs: any = null;
+let Icon: any = null;
+let Label: any = null;
+if (liquidGlassAvailable) {
+  try {
+    const nativeTabsModule = require("expo-router/unstable-native-tabs");
+    NativeTabs = nativeTabsModule.NativeTabs;
+    Icon = nativeTabsModule.Icon;
+    Label = nativeTabsModule.Label;
+  } catch {}
+}
+
 function NativeTabLayout() {
+  if (!NativeTabs || !Icon || !Label) return <ClassicTabLayout />;
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
+        <Icon sf={{ default: "books.vertical", selected: "books.vertical.fill" }} />
+        <Label>Library</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="podcasts">
+        <Icon sf={{ default: "headphones", selected: "headphones" }} />
+        <Label>My Podcasts</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -24,28 +44,40 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const isWeb = Platform.OS === "web";
+  const isIOS = Platform.OS === "ios";
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
+        headerShown: false,
+        tabBarActiveTintColor: Colors.light.accent,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
-        headerShown: true,
+        tabBarLabelStyle: {
+          fontFamily: "DMSans_500Medium",
+          fontSize: 11,
+        },
         tabBarStyle: {
-          position: "absolute",
-          backgroundColor: Platform.select({
-            ios: "transparent",
-            android: isDark ? "#000" : "#fff",
-          }),
-          borderTopWidth: 0,
+          position: "absolute" as const,
+          backgroundColor: isIOS ? "transparent" : isDark ? "#1A1F36" : "#FFFFFF",
+          borderTopWidth: isWeb ? 1 : 0,
+          borderTopColor: Colors.light.divider,
           elevation: 0,
+          ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
-          Platform.OS === "ios" ? (
+          isIOS ? (
             <BlurView
               intensity={100}
               tint={isDark ? "dark" : "light"}
               style={StyleSheet.absoluteFill}
+            />
+          ) : isWeb ? (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: isDark ? "#1A1F36" : "#FFFFFF" },
+              ]}
             />
           ) : null,
       }}
@@ -53,9 +85,18 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <SymbolView name="house" tintColor={color} size={24} />
+          title: "Library",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="library-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="podcasts"
+        options={{
+          title: "My Podcasts",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="headset-outline" size={size} color={color} />
           ),
         }}
       />
@@ -64,7 +105,7 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
+  if (liquidGlassAvailable) {
     return <NativeTabLayout />;
   }
   return <ClassicTabLayout />;

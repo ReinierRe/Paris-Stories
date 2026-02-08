@@ -1,11 +1,138 @@
-// template
-import { StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Pressable,
+  Platform,
+  LayoutAnimation,
+  UIManager,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
+import Colors from "@/constants/colors";
+import { themes, type Theme, type Topic } from "@/constants/themes";
 
-export default function TabOneScreen() {
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+function TopicRow({ topic, theme }: { topic: Topic; theme: Theme }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.topicRow, pressed && styles.topicRowPressed]}
+      onPress={() =>
+        router.push({
+          pathname: "/customize",
+          params: {
+            topicId: topic.id,
+            topicName: topic.name,
+            topicNameNl: topic.nameNl,
+            themeId: theme.id,
+            themeName: theme.name,
+            themeNameNl: theme.nameNl,
+          },
+        })
+      }
+    >
+      <View style={styles.topicContent}>
+        <Text style={styles.topicName}>{topic.name}</Text>
+        <Text style={styles.topicDescription} numberOfLines={2}>
+          {topic.description}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={Colors.light.textTertiary} />
+    </Pressable>
+  );
+}
+
+function ThemeCard({ theme }: { theme: Theme }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const toggleExpand = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpanded(!expanded);
+  };
+
+  const renderIcon = () => {
+    const iconProps = { size: 22, color: "#FFFFFF" };
+    if (theme.iconFamily === "MaterialIcons") {
+      return <MaterialIcons name={theme.icon as any} {...iconProps} />;
+    }
+    if (theme.iconFamily === "Feather") {
+      return <Feather name={theme.icon as any} {...iconProps} />;
+    }
+    return <Ionicons name={theme.icon as any} {...iconProps} />;
+  };
+
+  return (
+    <View style={styles.themeCard}>
+      <Pressable
+        style={({ pressed }) => [styles.themeHeader, pressed && styles.themeHeaderPressed]}
+        onPress={toggleExpand}
+      >
+        <View style={[styles.themeIconContainer, { backgroundColor: theme.color }]}>
+          {renderIcon()}
+        </View>
+        <View style={styles.themeTextContainer}>
+          <Text style={styles.themeName}>{theme.name}</Text>
+          <Text style={styles.themeTopicCount}>
+            {theme.topics.length} {theme.topics.length === 1 ? "topic" : "topics"}
+          </Text>
+        </View>
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={Colors.light.textTertiary}
+        />
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.topicList}>
+          {theme.topics.map((topic, index) => (
+            <React.Fragment key={topic.id}>
+              {index > 0 && <View style={styles.topicDivider} />}
+              <TopicRow topic={topic} theme={theme} />
+            </React.Fragment>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+export default function LibraryScreen() {
+  console.log("LibraryScreen render");
+  const insets = useSafeAreaInsets();
+  const webTopInset = Platform.OS === "web" ? 67 : 0;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Replit app will be here</Text>
-      <Text style={styles.text}>Please wait until we finish building it</Text>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + 16 + webTopInset },
+        ]}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerSection}>
+          <Text style={styles.headerTitle}>Paris Stories</Text>
+          <Text style={styles.headerSubtitle}>
+            Discover the stories of Paris through personalized podcasts
+          </Text>
+        </View>
+
+        <View style={styles.themesContainer}>
+          {themes.map((theme) => (
+            <ThemeCard key={theme.id} theme={theme} />
+          ))}
+        </View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
     </View>
   );
 }
@@ -13,17 +140,99 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+  },
+  headerSection: {
+    marginBottom: 28,
+    paddingTop: 8,
+  },
+  headerTitle: {
+    fontSize: 34,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.primary,
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    marginTop: 6,
+    lineHeight: 21,
+  },
+  themesContainer: {
+    gap: 14,
+  },
+  themeCard: {
+    backgroundColor: Colors.light.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.cardBorder,
+    overflow: "hidden",
+  },
+  themeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    gap: 14,
+  },
+  themeHeaderPressed: {
+    opacity: 0.7,
+  },
+  themeIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  themeTextContainer: {
+    flex: 1,
   },
-  text: {
-    fontSize: 16,
-    textAlign: "center",
-    paddingHorizontal: 20,
+  themeName: {
+    fontSize: 17,
+    fontFamily: "DMSans_600SemiBold",
+    color: Colors.light.text,
+  },
+  themeTopicCount: {
+    fontSize: 13,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  topicList: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  topicDivider: {
+    height: 1,
+    backgroundColor: Colors.light.divider,
+    marginLeft: 0,
+  },
+  topicRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 12,
+  },
+  topicRowPressed: {
+    opacity: 0.6,
+  },
+  topicContent: {
+    flex: 1,
+  },
+  topicName: {
+    fontSize: 15,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.text,
+  },
+  topicDescription: {
+    fontSize: 13,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    marginTop: 3,
+    lineHeight: 18,
   },
 });

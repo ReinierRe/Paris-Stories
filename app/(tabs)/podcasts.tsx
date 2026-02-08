@@ -79,58 +79,58 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
   const duration = formatDuration(podcast.durationSeconds);
 
   return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.podcastCard,
-        pressed && podcast.status === "ready" && styles.podcastCardPressed,
-      ]}
-      onPress={handlePress}
-      disabled={podcast.status === "generating"}
-    >
+    <View style={styles.podcastCard}>
       <View style={styles.podcastCardContent}>
-        <View style={styles.podcastInfo}>
-          <Text style={styles.podcastTheme}>{podcast.theme}</Text>
-          <Text style={styles.podcastTitle} numberOfLines={2}>
-            {podcast.title}
-          </Text>
-          <View style={styles.podcastMeta}>
-            <View style={styles.metaBadge}>
-              <Text style={styles.metaBadgeText}>{languageFlag}</Text>
-            </View>
-            <View style={styles.metaBadge}>
-              <Ionicons
-                name={podcast.voice === "male" ? "man" : "woman"}
-                size={11}
-                color={Colors.light.textSecondary}
-              />
-              <Text style={styles.metaBadgeText}>{voiceLabel}</Text>
-            </View>
-            {duration ? (
+        <Pressable
+          style={({ pressed }) => [
+            styles.podcastPressArea,
+            pressed && podcast.status === "ready" && styles.podcastCardPressed,
+          ]}
+          onPress={handlePress}
+          disabled={podcast.status === "generating"}
+        >
+          <View style={styles.podcastInfo}>
+            <Text style={styles.podcastTheme}>{podcast.theme}</Text>
+            <Text style={styles.podcastTitle} numberOfLines={2}>
+              {podcast.title}
+            </Text>
+            <View style={styles.podcastMeta}>
               <View style={styles.metaBadge}>
-                <Ionicons name="time-outline" size={11} color={Colors.light.textSecondary} />
-                <Text style={styles.metaBadgeText}>{duration}</Text>
+                <Text style={styles.metaBadgeText}>{languageFlag}</Text>
               </View>
-            ) : null}
-            <Text style={styles.podcastStatus}>{getStatusText()}</Text>
+              <View style={styles.metaBadge}>
+                <Ionicons
+                  name={podcast.voice === "male" ? "man" : "woman"}
+                  size={11}
+                  color={Colors.light.textSecondary}
+                />
+                <Text style={styles.metaBadgeText}>{voiceLabel}</Text>
+              </View>
+              {duration ? (
+                <View style={styles.metaBadge}>
+                  <Ionicons name="time-outline" size={11} color={Colors.light.textSecondary} />
+                  <Text style={styles.metaBadgeText}>{duration}</Text>
+                </View>
+              ) : null}
+              <Text style={styles.podcastStatus}>{getStatusText()}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.rightActions}>
-          {podcast.status !== "generating" ? (
-            <Pressable
-              onPress={handleDelete}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.deleteButton,
-                pressed && styles.deleteButtonPressed,
-              ]}
-            >
-              <Ionicons name="trash-outline" size={18} color={Colors.light.textTertiary} />
-            </Pressable>
-          ) : null}
           <View style={styles.statusContainer}>{getStatusIcon()}</View>
-        </View>
+        </Pressable>
+        {podcast.status !== "generating" ? (
+          <Pressable
+            onPress={handleDelete}
+            hitSlop={{ top: 10, bottom: 10, left: 6, right: 10 }}
+            style={({ pressed }) => [
+              styles.deleteButton,
+              pressed && styles.deleteButtonPressed,
+            ]}
+          >
+            <Ionicons name="trash-outline" size={20} color={Colors.light.textTertiary} />
+          </Pressable>
+        ) : null}
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -241,6 +241,12 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
+  podcastPressArea: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   podcastInfo: {
     flex: 1,
   },
@@ -283,13 +289,9 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans_400Regular",
     color: Colors.light.textTertiary,
   },
-  rightActions: {
-    alignItems: "center",
-    gap: 8,
-  },
   deleteButton: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,

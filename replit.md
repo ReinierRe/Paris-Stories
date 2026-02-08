@@ -8,14 +8,29 @@ Paris Stories is a mobile-first podcast generator app built with Expo (React Nat
 
 Preferred communication style: Simple, everyday language.
 
+## Authentication
+
+- **Provider**: Replit Auth via OpenID Connect (OIDC)
+- **Flow**: PKCE authorization code flow using `openid-client` v6
+- **Client ID**: Uses `REPL_ID` environment variable as public OIDC client (no client secret needed)
+- **Backend**: `server/auth.ts` handles login, callback, user info, and logout endpoints
+- **Frontend**: `contexts/AuthContext.tsx` manages auth state with token stored in AsyncStorage
+- **Login Screen**: `app/login.tsx` — Parisian-themed dark gradient login screen
+- **Auth Gate**: `app/_layout.tsx` uses `AuthGate` component to show login screen when unauthenticated
+- **Token Management**: Server-side in-memory token store with 7-day expiry, auto-cleanup
+- **Protected Routes**: `requireAuth` middleware protects `/api/podcast/generate`
+- **Web Login**: Opens popup window to `/api/auth/login`, receives token via `postMessage`
+- **Mobile Login**: Opens browser via `expo-web-browser`, receives token via URL params
+- **Session**: `express-session` used for OIDC state (code verifier, nonce) during auth flow
+
 ## System Architecture
 
 ### Frontend (Expo / React Native)
 
 - **Framework**: Expo SDK 54 with expo-router for file-based routing
 - **Navigation**: Tab-based layout with two main tabs (Library and My Podcasts), plus modal screens for customization and audio playback
-- **State Management**: React Context (`PodcastContext`) for podcast data, TanStack React Query for server data fetching
-- **Local Storage**: AsyncStorage for persisting generated podcasts on-device (no server-side podcast storage)
+- **State Management**: React Context (`PodcastContext`) for podcast data, `AuthContext` for authentication, TanStack React Query for server data fetching
+- **Local Storage**: AsyncStorage for persisting generated podcasts and auth tokens on-device
 - **Fonts**: DM Sans via `@expo-google-fonts/dm-sans`
 - **Audio Playback**: `expo-av` for playing generated podcast audio files
 - **Styling**: Plain React Native StyleSheet with a custom color palette (golden accent theme in `constants/colors.ts`)

@@ -16,6 +16,13 @@ import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 
+function formatDuration(seconds?: number): string {
+  if (!seconds || seconds <= 0) return "";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
 function PodcastCard({ podcast }: { podcast: Podcast }) {
   const { removePodcast } = usePodcasts();
 
@@ -69,6 +76,7 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
 
   const languageFlag = podcast.language === "nl" ? "NL" : "EN";
   const voiceLabel = podcast.voice === "male" ? "Male" : "Female";
+  const duration = formatDuration(podcast.durationSeconds);
 
   return (
     <Pressable
@@ -77,7 +85,6 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
         pressed && podcast.status === "ready" && styles.podcastCardPressed,
       ]}
       onPress={handlePress}
-      onLongPress={handleDelete}
       disabled={podcast.status === "generating"}
     >
       <View style={styles.podcastCardContent}>
@@ -98,10 +105,30 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
               />
               <Text style={styles.metaBadgeText}>{voiceLabel}</Text>
             </View>
+            {duration ? (
+              <View style={styles.metaBadge}>
+                <Ionicons name="time-outline" size={11} color={Colors.light.textSecondary} />
+                <Text style={styles.metaBadgeText}>{duration}</Text>
+              </View>
+            ) : null}
             <Text style={styles.podcastStatus}>{getStatusText()}</Text>
           </View>
         </View>
-        <View style={styles.statusContainer}>{getStatusIcon()}</View>
+        <View style={styles.rightActions}>
+          {podcast.status !== "generating" ? (
+            <Pressable
+              onPress={handleDelete}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.deleteButton,
+                pressed && styles.deleteButtonPressed,
+              ]}
+            >
+              <Ionicons name="trash-outline" size={18} color={Colors.light.textTertiary} />
+            </Pressable>
+          ) : null}
+          <View style={styles.statusContainer}>{getStatusIcon()}</View>
+        </View>
       </View>
     </Pressable>
   );
@@ -143,7 +170,6 @@ export default function PodcastsScreen() {
           { paddingTop: insets.top + 16 + webTopInset },
           podcasts.length === 0 && styles.emptyListContent,
         ]}
-        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           podcasts.length > 0 ? (
@@ -213,7 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    gap: 14,
+    gap: 10,
   },
   podcastInfo: {
     flex: 1,
@@ -256,6 +282,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "DMSans_400Regular",
     color: Colors.light.textTertiary,
+  },
+  rightActions: {
+    alignItems: "center",
+    gap: 8,
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+  },
+  deleteButtonPressed: {
+    backgroundColor: Colors.light.overlay,
   },
   statusContainer: {
     width: 44,

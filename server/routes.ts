@@ -223,12 +223,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filepath = path.join(AUDIO_DIR, filename);
       fs.writeFileSync(filepath, combinedAudio);
 
-      console.log(`Podcast "${topicName}" ready (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB)`);
+      let durationSeconds = 0;
+      if (combinedAudio.length >= 44) {
+        const wavChannels = combinedAudio.readUInt16LE(22);
+        const wavSampleRate = combinedAudio.readUInt32LE(24);
+        const wavBitsPerSample = combinedAudio.readUInt16LE(34);
+        const wavByteRate = wavSampleRate * wavChannels * (wavBitsPerSample / 8);
+        const dataInfo = findDataChunk(combinedAudio);
+        const pcmSize = dataInfo ? dataInfo.size : (combinedAudio.length - 44);
+        durationSeconds = Math.round(pcmSize / wavByteRate);
+      }
+
+      console.log(`Podcast "${topicName}" ready (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
 
       res.json({
         id,
         script,
         audioUrl: `/api/podcast/audio/${filename}`,
+        durationSeconds,
       });
     } catch (error) {
       console.error("Error generating podcast:", error);

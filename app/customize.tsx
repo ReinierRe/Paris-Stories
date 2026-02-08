@@ -168,6 +168,7 @@ export default function CustomizeScreen() {
       await updatePodcast(podcastId, {
         script: data.script,
         audioUrl: new URL(data.audioUrl, baseUrl).toString(),
+        durationSeconds: data.durationSeconds || 0,
         status: "ready",
       });
     } catch (error) {

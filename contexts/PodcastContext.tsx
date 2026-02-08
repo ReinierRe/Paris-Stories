@@ -13,6 +13,7 @@ export interface Podcast {
   voice: "male" | "female";
   perspective: string;
   length: string;
+  durationSeconds?: number;
   status: "generating" | "ready" | "error";
   createdAt: string;
   errorMessage?: string;

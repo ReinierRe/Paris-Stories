@@ -25,6 +25,7 @@ interface PodcastContextValue {
   addPodcast: (podcast: Podcast) => Promise<void>;
   updatePodcast: (id: string, updates: Partial<Podcast>) => Promise<void>;
   removePodcast: (id: string) => Promise<void>;
+  clearAllPodcasts: () => Promise<void>;
 }
 
 const STORAGE_KEY = "paris_stories_podcasts";
@@ -41,6 +42,13 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
 
   const loadPodcasts = async () => {
     try {
+      const shouldClear = await AsyncStorage.getItem("paris_stories_clear_once");
+      if (!shouldClear) {
+        await AsyncStorage.setItem("paris_stories_clear_once", "done");
+        await AsyncStorage.removeItem(STORAGE_KEY);
+        setIsLoading(false);
+        return;
+      }
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         setPodcasts(JSON.parse(stored));
@@ -84,9 +92,14 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const clearAllPodcasts = useCallback(async () => {
+    setPodcasts([]);
+    await savePodcasts([]);
+  }, []);
+
   const value = useMemo(
-    () => ({ podcasts, isLoading, addPodcast, updatePodcast, removePodcast }),
-    [podcasts, isLoading, addPodcast, updatePodcast, removePodcast],
+    () => ({ podcasts, isLoading, addPodcast, updatePodcast, removePodcast, clearAllPodcasts }),
+    [podcasts, isLoading, addPodcast, updatePodcast, removePodcast, clearAllPodcasts],
   );
 
   return <PodcastContext.Provider value={value}>{children}</PodcastContext.Provider>;

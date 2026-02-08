@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -24,29 +23,11 @@ function formatDuration(seconds?: number): string {
 }
 
 function PodcastCard({ podcast }: { podcast: Podcast }) {
-  const { removePodcast } = usePodcasts();
-
   const handlePress = () => {
     if (podcast.status === "ready") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       router.push({ pathname: "/player", params: { podcastId: podcast.id } });
     }
-  };
-
-  const handleDelete = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      "Delete Podcast",
-      `Remove "${podcast.title}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => removePodcast(podcast.id),
-        },
-      ],
-    );
   };
 
   const getStatusIcon = () => {
@@ -69,13 +50,13 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
   const duration = formatDuration(podcast.durationSeconds);
 
   return (
-    <View style={styles.podcastCard}>
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={handlePress}
-        disabled={podcast.status === "generating"}
-        style={styles.podcastTouchArea}
-      >
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={handlePress}
+      disabled={podcast.status === "generating"}
+      style={styles.podcastCard}
+    >
+      <View style={styles.podcastCardContent}>
         <View style={styles.podcastInfo}>
           <Text style={styles.podcastTheme}>{podcast.theme}</Text>
           <Text style={styles.podcastTitle} numberOfLines={2}>
@@ -111,19 +92,8 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
           </View>
         </View>
         <View style={styles.statusContainer}>{getStatusIcon()}</View>
-      </TouchableOpacity>
-      {podcast.status !== "generating" ? (
-        <TouchableOpacity
-          onPress={handleDelete}
-          activeOpacity={0.5}
-          style={styles.deleteButtonOuter}
-        >
-          <View style={styles.deleteButtonInner}>
-            <Ionicons name="trash-outline" size={18} color={Colors.light.error} />
-          </View>
-        </TouchableOpacity>
-      ) : null}
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -223,7 +193,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.cardBorder,
     marginBottom: 12,
   },
-  podcastTouchArea: {
+  podcastCardContent: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
@@ -271,21 +241,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "DMSans_400Regular",
     color: Colors.light.textTertiary,
-  },
-  deleteButtonOuter: {
-    position: "absolute" as const,
-    top: 8,
-    right: 8,
-    zIndex: 10,
-    padding: 8,
-  },
-  deleteButtonInner: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(231, 76, 60, 0.1)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   statusContainer: {
     width: 44,

@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
 import { textToSpeech } from "./replit_integrations/audio/client";
+import { requireAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
 import express from "express";
@@ -153,7 +154,7 @@ async function concatenateWavBuffers(buffers: Buffer[]): Promise<Buffer> {
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/podcast/audio", express.static(AUDIO_DIR));
 
-  app.post("/api/podcast/generate", async (req: Request, res: Response) => {
+  app.post("/api/podcast/generate", requireAuth, async (req: Request, res: Response) => {
     try {
       const { topicName, themeName, perspective, voice, language, wordCount } = req.body;
 

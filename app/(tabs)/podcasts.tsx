@@ -4,14 +4,14 @@ import {
   Text,
   View,
   FlatList,
-  Pressable,
+  TouchableOpacity,
   Platform,
   ActivityIndicator,
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Ionicons, Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
@@ -34,6 +34,7 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
   };
 
   const handleDelete = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
       "Delete Podcast",
       `Remove "${podcast.title}"?`,
@@ -63,73 +64,65 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
     }
   };
 
-  const getStatusText = () => {
-    switch (podcast.status) {
-      case "generating":
-        return "Generating...";
-      case "ready":
-        return podcast.language === "nl" ? "Nederlands" : "English";
-      case "error":
-        return "Failed";
-    }
-  };
-
   const languageFlag = podcast.language === "nl" ? "NL" : "EN";
   const voiceLabel = podcast.voice === "male" ? "Male" : "Female";
   const duration = formatDuration(podcast.durationSeconds);
 
   return (
     <View style={styles.podcastCard}>
-      <View style={styles.podcastCardContent}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.podcastPressArea,
-            pressed && podcast.status === "ready" && styles.podcastCardPressed,
-          ]}
-          onPress={handlePress}
-          disabled={podcast.status === "generating"}
-        >
-          <View style={styles.podcastInfo}>
-            <Text style={styles.podcastTheme}>{podcast.theme}</Text>
-            <Text style={styles.podcastTitle} numberOfLines={2}>
-              {podcast.title}
-            </Text>
-            <View style={styles.podcastMeta}>
-              <View style={styles.metaBadge}>
-                <Text style={styles.metaBadgeText}>{languageFlag}</Text>
-              </View>
-              <View style={styles.metaBadge}>
-                <Ionicons
-                  name={podcast.voice === "male" ? "man" : "woman"}
-                  size={11}
-                  color={Colors.light.textSecondary}
-                />
-                <Text style={styles.metaBadgeText}>{voiceLabel}</Text>
-              </View>
-              {duration ? (
-                <View style={styles.metaBadge}>
-                  <Ionicons name="time-outline" size={11} color={Colors.light.textSecondary} />
-                  <Text style={styles.metaBadgeText}>{duration}</Text>
-                </View>
-              ) : null}
-              <Text style={styles.podcastStatus}>{getStatusText()}</Text>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={handlePress}
+        disabled={podcast.status === "generating"}
+        style={styles.podcastTouchArea}
+      >
+        <View style={styles.podcastInfo}>
+          <Text style={styles.podcastTheme}>{podcast.theme}</Text>
+          <Text style={styles.podcastTitle} numberOfLines={2}>
+            {podcast.title}
+          </Text>
+          <View style={styles.podcastMeta}>
+            <View style={styles.metaBadge}>
+              <Text style={styles.metaBadgeText}>{languageFlag}</Text>
             </View>
+            <View style={styles.metaBadge}>
+              <Ionicons
+                name={podcast.voice === "male" ? "man" : "woman"}
+                size={11}
+                color={Colors.light.textSecondary}
+              />
+              <Text style={styles.metaBadgeText}>{voiceLabel}</Text>
+            </View>
+            {duration ? (
+              <View style={styles.metaBadge}>
+                <Ionicons name="time-outline" size={11} color={Colors.light.textSecondary} />
+                <Text style={styles.metaBadgeText}>{duration}</Text>
+              </View>
+            ) : null}
+            <Text style={styles.podcastStatus}>
+              {podcast.status === "generating"
+                ? "Generating..."
+                : podcast.status === "error"
+                  ? "Failed"
+                  : podcast.language === "nl"
+                    ? "Nederlands"
+                    : "English"}
+            </Text>
           </View>
-          <View style={styles.statusContainer}>{getStatusIcon()}</View>
-        </Pressable>
-        {podcast.status !== "generating" ? (
-          <Pressable
-            onPress={handleDelete}
-            hitSlop={{ top: 10, bottom: 10, left: 6, right: 10 }}
-            style={({ pressed }) => [
-              styles.deleteButton,
-              pressed && styles.deleteButtonPressed,
-            ]}
-          >
-            <Ionicons name="trash-outline" size={20} color={Colors.light.textTertiary} />
-          </Pressable>
-        ) : null}
-      </View>
+        </View>
+        <View style={styles.statusContainer}>{getStatusIcon()}</View>
+      </TouchableOpacity>
+      {podcast.status !== "generating" ? (
+        <TouchableOpacity
+          onPress={handleDelete}
+          activeOpacity={0.5}
+          style={styles.deleteButtonOuter}
+        >
+          <View style={styles.deleteButtonInner}>
+            <Ionicons name="trash-outline" size={18} color={Colors.light.error} />
+          </View>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -229,22 +222,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.cardBorder,
     marginBottom: 12,
-    overflow: "hidden",
   },
-  podcastCardPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.98 }],
-  },
-  podcastCardContent: {
+  podcastTouchArea: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    gap: 10,
-  },
-  podcastPressArea: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
     gap: 12,
   },
   podcastInfo: {
@@ -269,6 +251,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     marginTop: 8,
+    flexWrap: "wrap",
   },
   metaBadge: {
     flexDirection: "row",
@@ -289,15 +272,20 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans_400Regular",
     color: Colors.light.textTertiary,
   },
-  deleteButton: {
-    width: 36,
-    height: 36,
+  deleteButtonOuter: {
+    position: "absolute" as const,
+    top: 8,
+    right: 8,
+    zIndex: 10,
+    padding: 8,
+  },
+  deleteButtonInner: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(231, 76, 60, 0.1)",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 8,
-  },
-  deleteButtonPressed: {
-    backgroundColor: Colors.light.overlay,
   },
   statusContainer: {
     width: 44,

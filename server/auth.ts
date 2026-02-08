@@ -46,23 +46,29 @@ function getRedirectUri(): string {
 }
 
 async function initOIDC(): Promise<void> {
-  const clientId = process.env.REPLIT_AUTH_CLIENT_ID;
-  const clientSecret = process.env.REPLIT_AUTH_CLIENT_SECRET;
+  const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
 
-  if (!clientId || !clientSecret) {
-    console.warn(
-      "REPLIT_AUTH_CLIENT_ID or REPLIT_AUTH_CLIENT_SECRET not set. Auth will not work.",
-    );
+  if (!clientId) {
+    console.warn("No OIDC client ID available. Auth will not work.");
     return;
   }
 
+  const clientSecret = process.env.REPLIT_AUTH_CLIENT_SECRET;
+
   try {
-    oidcConfig = await client.discovery(
-      new URL(OIDC_ISSUER),
-      clientId,
-      clientSecret,
-    );
-    console.log("OpenID Connect configured with Replit Auth");
+    if (clientSecret) {
+      oidcConfig = await client.discovery(
+        new URL(OIDC_ISSUER),
+        clientId,
+        clientSecret,
+      );
+    } else {
+      oidcConfig = await client.discovery(
+        new URL(OIDC_ISSUER),
+        clientId,
+      );
+    }
+    console.log("OpenID Connect configured with Replit Auth (client:", clientId.slice(0, 8) + "...)");
   } catch (err) {
     console.error("Failed to initialize OIDC:", err);
   }
@@ -111,7 +117,7 @@ export async function setupAuth(app: Express): Promise<void> {
     if (!oidcConfig) {
       return res
         .status(503)
-        .json({ error: "Auth not configured. Please set REPLIT_AUTH_CLIENT_ID and REPLIT_AUTH_CLIENT_SECRET." });
+        .json({ error: "Auth not configured. Server could not initialize OIDC." });
     }
 
     try {

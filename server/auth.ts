@@ -225,7 +225,9 @@ export async function setupAuth(app: Express): Promise<void> {
         <head><title>Login Successful</title></head>
         <body>
           <script>
-            window.postMessage({ type: 'AUTH_TOKEN', token: '${token}' }, '*');
+            if (window.opener) {
+              window.opener.postMessage({ type: 'AUTH_TOKEN', token: '${token}' }, '*');
+            }
             document.body.innerHTML = '<h2 style="font-family:sans-serif;text-align:center;margin-top:40vh">Login successful! You can close this window.</h2>';
           </script>
         </body>

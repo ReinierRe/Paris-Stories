@@ -281,6 +281,72 @@ export const themes: Theme[] = [
       },
     ],
   },
+  {
+    id: "food-drinks",
+    name: "Food & Drinks",
+    nameNl: "Eten & Drinken",
+    icon: "restaurant",
+    iconFamily: "MaterialIcons",
+    color: "#E67E22",
+    topics: [
+      {
+        id: "parisian-bistro",
+        name: "The Parisian Bistro",
+        nameNl: "Het Parijse Bistro",
+        description: "The history and soul of the classic neighborhood bistro",
+        descriptionNl: "De geschiedenis en ziel van het klassieke buurtbistro",
+      },
+      {
+        id: "rue-montorgueil-walk",
+        name: "Walking Tour: Rue Montorgueil",
+        nameNl: "Wandeltour: Rue Montorgueil",
+        description: "Past the best fromageries, bakeries, and market stalls of this iconic food street",
+        descriptionNl: "Langs de beste kaasboeren, bakkers en marktkraampjes van deze iconische foodstraat",
+      },
+      {
+        id: "patisserie",
+        name: "French Pastry & Pâtisserie",
+        nameNl: "Frans Gebak & Patisserie",
+        description: "From croissants to macarons: the art and craft of French pastry",
+        descriptionNl: "Van croissants tot macarons: de kunst en het vakmanschap van Frans gebak",
+      },
+      {
+        id: "wine-bars",
+        name: "Wine Bars of Paris",
+        nameNl: "Wijnbars van Parijs",
+        description: "The rise of the natural wine bar and Parisian wine culture",
+        descriptionNl: "De opkomst van de natuurlijke wijnbar en de Parijse wijncultuur",
+      },
+      {
+        id: "les-halles",
+        name: "Les Halles: The Belly of Paris",
+        nameNl: "Les Halles: De Buik van Parijs",
+        description: "The legendary market hall that Zola called the belly of Paris",
+        descriptionNl: "De legendarische markthal die Zola de buik van Parijs noemde",
+      },
+      {
+        id: "cafe-culture",
+        name: "Café Culture",
+        nameNl: "Cafécultuur",
+        description: "How the Parisian café shaped French philosophy, art, and revolution",
+        descriptionNl: "Hoe het Parijse café de Franse filosofie, kunst en revolutie vormde",
+      },
+      {
+        id: "julia-child",
+        name: "Julia Child's Paris",
+        nameNl: "Het Parijs van Julia Child",
+        description: "The American chef who brought French cuisine to the world",
+        descriptionNl: "De Amerikaanse kok die de Franse keuken naar de wereld bracht",
+      },
+      {
+        id: "street-food-markets",
+        name: "Street Food & Markets",
+        nameNl: "Straateten & Markten",
+        description: "From crêpes to falafel: the best street markets and their hidden gems",
+        descriptionNl: "Van crêpes tot falafel: de beste straatmarkten en hun verborgen parels",
+      },
+    ],
+  },
 ];
 
 export const perspectives = [

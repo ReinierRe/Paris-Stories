@@ -37,8 +37,11 @@ function generateToken(): string {
 }
 
 function getRedirectUri(): string {
-  const domain =
-    process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS?.split(",")[0];
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}:5000/api/auth/callback`;
+  }
+
+  const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
   if (!domain) {
     throw new Error("No Replit domain configured");
   }

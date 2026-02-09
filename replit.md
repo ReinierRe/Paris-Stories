@@ -10,18 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Authentication
 
-- **Provider**: Replit Auth via OpenID Connect (OIDC)
-- **Flow**: PKCE authorization code flow using `openid-client` v6
-- **Client ID**: Uses `REPL_ID` environment variable as public OIDC client (no client secret needed)
-- **Backend**: `server/auth.ts` handles login, callback, user info, and logout endpoints
+- **Provider**: Google Sign-In via `expo-auth-session` (app store ready)
+- **Flow**: OAuth 2.0 implicit flow using `expo-auth-session/providers/google`
+- **Client ID**: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `GOOGLE_WEB_CLIENT_ID` env vars (from Firebase/Google Cloud Console)
+- **Backend**: `server/auth.ts` — verifies Google access tokens via Google's userinfo API, issues session tokens
 - **Frontend**: `contexts/AuthContext.tsx` manages auth state with token stored in AsyncStorage
-- **Login Screen**: `app/login.tsx` — Parisian-themed dark gradient login screen
+- **Login Screen**: `app/login.tsx` — Parisian-themed dark gradient login screen with Google branding
 - **Auth Gate**: `app/_layout.tsx` uses `AuthGate` component to show login screen when unauthenticated
-- **Token Management**: Server-side in-memory token store with 7-day expiry, auto-cleanup
+- **Token Management**: Server-side in-memory token store with 7-day expiry, auto-cleanup every hour
 - **Protected Routes**: `requireAuth` middleware protects `/api/podcast/generate`
-- **Web Login**: Opens popup window to `/api/auth/login`, receives token via `postMessage`
-- **Mobile Login**: Opens browser via `expo-web-browser`, receives token via URL params
-- **Session**: `express-session` used for OIDC state (code verifier, nonce) during auth flow
+- **Endpoints**: `POST /api/auth/google` (exchange token), `GET /api/auth/me` (verify session), `POST /api/auth/logout`
+- **No Firebase SDK**: Uses expo-auth-session directly to avoid Metro bundler ESM compatibility issues
 
 ## System Architecture
 

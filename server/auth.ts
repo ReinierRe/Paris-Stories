@@ -41,19 +41,65 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   return res.status(401).json({ error: "Authentication required" });
 }
 
+async function exchangeCodeForTokens(
+  code: string,
+  codeVerifier: string,
+  redirectUri: string,
+  clientId: string,
+): Promise<{ access_token: string } | null> {
+  try {
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        code_verifier: codeVerifier,
+        grant_type: "authorization_code",
+        redirect_uri: redirectUri,
+      }).toString(),
+    });
+
+    if (!tokenRes.ok) {
+      const errBody = await tokenRes.text();
+      console.error("Google token exchange failed:", tokenRes.status, errBody);
+      return null;
+    }
+
+    return (await tokenRes.json()) as { access_token: string };
+  } catch (err) {
+    console.error("Token exchange error:", err);
+    return null;
+  }
+}
+
 export async function setupAuth(app: Express): Promise<void> {
   app.post("/api/auth/google", async (req: Request, res: Response) => {
     try {
-      const { accessToken } = req.body;
+      const { code, codeVerifier, redirectUri, accessToken } = req.body;
 
-      if (!accessToken) {
-        return res.status(400).json({ error: "Missing access token" });
+      let googleAccessToken = accessToken;
+
+      if (code && codeVerifier && redirectUri) {
+        const clientId = process.env.GOOGLE_WEB_CLIENT_ID
+          || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+          || "";
+
+        const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri, clientId);
+        if (!tokens) {
+          return res.status(401).json({ error: "Failed to exchange authorization code" });
+        }
+        googleAccessToken = tokens.access_token;
+      }
+
+      if (!googleAccessToken) {
+        return res.status(400).json({ error: "Missing access token or authorization code" });
       }
 
       const googleRes = await fetch(
         `https://www.googleapis.com/oauth2/v3/userinfo`,
         {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${googleAccessToken}` },
         },
       );
 

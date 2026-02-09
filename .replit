@@ -73,3 +73,15 @@ task = "shell.exec"
 args = "npm run expo:dev"
 waitForPort = 8081
 ensurePreviewReachable = "/status"
+
+[userenv]
+
+[userenv.shared]
+FIREBASE_API_KEY = "AIzaSyDjq7lvBKqtIeHBrDCCqiHna-pHPRqUIxw"
+FIREBASE_AUTH_DOMAIN = "city-stories-f966e.firebaseapp.com"
+FIREBASE_PROJECT_ID = "city-stories-f966e"
+FIREBASE_APP_ID = "1:1009953387031:web:6b51f25474f799583a2252"
+EXPO_PUBLIC_FIREBASE_API_KEY = "AIzaSyDjq7lvBKqtIeHBrDCCqiHna-pHPRqUIxw"
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN = "city-stories-f966e.firebaseapp.com"
+EXPO_PUBLIC_FIREBASE_PROJECT_ID = "city-stories-f966e"
+EXPO_PUBLIC_FIREBASE_APP_ID = "1:1009953387031:web:6b51f25474f799583a2252"

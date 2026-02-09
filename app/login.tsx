@@ -91,14 +91,14 @@ export default function LoginScreen() {
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
-              <Ionicons name="log-in-outline" size={22} color="#FFFFFF" />
-              <Text style={styles.loginButtonText}>Sign in to get started</Text>
+              <Ionicons name="logo-google" size={22} color="#FFFFFF" />
+              <Text style={styles.loginButtonText}>Sign in with Google</Text>
             </>
           )}
         </Pressable>
 
         <Text style={styles.disclaimer}>
-          Sign in with your Google account via Replit
+          Sign in with your Google account
         </Text>
       </View>
     </View>

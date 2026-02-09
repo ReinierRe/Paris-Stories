@@ -1,22 +1,32 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth, signInWithCredential, GoogleAuthProvider, onAuthStateChanged, signOut, User } from "firebase/auth";
+import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
-import { getApiUrl } from "@/lib/query-client";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
 
-interface User {
+const firebaseConfig = {
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
+};
+
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const firebaseAuth = getAuth(app);
+
+interface AuthUser {
   id: string;
   email?: string;
   firstName?: string;
-  lastName?: string;
-  profileImageUrl?: string;
-  username?: string;
 }
 
 interface AuthContextValue {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -27,120 +37,66 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUser = useCallback(async (authToken: string) => {
-    try {
-      const baseUrl = getApiUrl();
-      const url = new URL("/api/auth/me", baseUrl);
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-        setToken(authToken);
-        return true;
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
+    responseType: "id_token",
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: User | null) => {
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        await AsyncStorage.setItem(AUTH_TOKEN_KEY, idToken);
+        setToken(idToken);
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email || undefined,
+          firstName: firebaseUser.displayName || undefined,
+        });
+      } else {
+        setUser(null);
+        setToken(null);
       }
-      return false;
-    } catch {
-      return false;
-    }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const stored = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-        if (stored) {
-          const valid = await fetchUser(stored);
-          if (!valid) {
-            await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
-          }
-        }
-      } catch {}
-      setIsLoading(false);
-    })();
-  }, [fetchUser]);
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      if (id_token) {
+        const credential = GoogleAuthProvider.credential(id_token);
+        signInWithCredential(firebaseAuth, credential).catch((err) => {
+          console.error("Firebase sign-in error:", err);
+        });
+      }
+    }
+  }, [response]);
 
   const login = useCallback(async () => {
     try {
-      const baseUrl = getApiUrl();
-      const loginUrl = new URL("/api/auth/login", baseUrl);
-
-      if (Platform.OS === "web") {
-        const width = 500;
-        const height = 700;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-        const popup = window.open(
-          loginUrl.toString(),
-          "replit-auth",
-          `width=${width},height=${height},left=${left},top=${top}`,
-        );
-
-        await new Promise<void>((resolve) => {
-          const handler = async (event: MessageEvent) => {
-            if (event.data?.type === "AUTH_TOKEN" && event.data.token) {
-              window.removeEventListener("message", handler);
-              const authToken = event.data.token;
-              await AsyncStorage.setItem(AUTH_TOKEN_KEY, authToken);
-              await fetchUser(authToken);
-              popup?.close();
-              resolve();
-            }
-          };
-          window.addEventListener("message", handler);
-
-          const pollTimer = setInterval(() => {
-            if (popup?.closed) {
-              clearInterval(pollTimer);
-              window.removeEventListener("message", handler);
-              resolve();
-            }
-          }, 500);
-        });
-      } else {
-        const scheme = "exp";
-        const returnUrl = `${scheme}://`;
-        loginUrl.searchParams.set("returnTo", returnUrl);
-
-        const result = await WebBrowser.openAuthSessionAsync(
-          loginUrl.toString(),
-          returnUrl,
-        );
-
-        if (result.type === "success" && result.url) {
-          const url = new URL(result.url);
-          const authToken = url.searchParams.get("token");
-          if (authToken) {
-            await AsyncStorage.setItem(AUTH_TOKEN_KEY, authToken);
-            await fetchUser(authToken);
-          }
-        }
-      }
+      await promptAsync();
     } catch (err) {
       console.error("Login error:", err);
     }
-  }, [fetchUser]);
+  }, [promptAsync]);
 
   const logout = useCallback(async () => {
     try {
-      if (token) {
-        const baseUrl = getApiUrl();
-        const url = new URL("/api/auth/logout", baseUrl);
-        await fetch(url.toString(), {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
-      }
+      await signOut(firebaseAuth);
       await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
       setUser(null);
       setToken(null);
-    } catch {}
-  }, [token]);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  }, []);
 
   const value = useMemo(
     () => ({

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session/providers/google";
+import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { getApiUrl } from "@/lib/query-client";
 
@@ -31,9 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const redirectUri = AuthSession.makeRedirectUri();
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
+    responseType: "code",
+    usePKCE: true,
+    redirectUri,
     scopes: ["openid", "profile", "email"],
   });
 
@@ -73,8 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (response?.type === "success") {
-      const { access_token } = response.params;
-      if (access_token) {
+      const { code } = response.params;
+      if (code) {
         (async () => {
           try {
             const baseUrl = getApiUrl();
@@ -82,7 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const res = await fetch(url.toString(), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accessToken: access_token }),
+              body: JSON.stringify({
+                code,
+                codeVerifier: request?.codeVerifier,
+                redirectUri,
+              }),
             });
 
             if (res.ok) {

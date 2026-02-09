@@ -1,19 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuthRequest, makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 import { Platform } from "react-native";
 import { getApiUrl } from "@/lib/query-client";
 
-WebBrowser.maybeCompleteAuthSession();
-
 const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
-
-const discovery = {
-  authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-  tokenEndpoint: "https://oauth2.googleapis.com/token",
-  revocationEndpoint: "https://oauth2.googleapis.com/revoke",
-};
 
 interface AuthUser {
   id: string;
@@ -33,29 +25,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const isNative = Platform.OS !== "web";
-
-const redirectUri = isNative
-  ? "https://auth.expo.io/@anonymous/paris-stories"
-  : makeRedirectUri();
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
-
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId,
-      responseType: "code",
-      usePKCE: true,
-      redirectUri,
-      scopes: ["openid", "profile", "email"],
-    },
-    discovery,
-  );
 
   const verifyToken = useCallback(async (authToken: string): Promise<boolean> => {
     try {
@@ -92,47 +65,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [verifyToken]);
 
   useEffect(() => {
-    if (response?.type === "success") {
-      const { code } = response.params;
-      if (code) {
-        (async () => {
-          try {
-            const baseUrl = getApiUrl();
-            const url = new URL("/api/auth/google", baseUrl);
-            const res = await fetch(url.toString(), {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                code,
-                codeVerifier: request?.codeVerifier,
-                redirectUri,
-              }),
-            });
+    const handleDeepLink = async (event: { url: string }) => {
+      const { url } = event;
+      if (!url.includes("auth")) return;
 
-            if (res.ok) {
-              const data = await res.json();
-              await AsyncStorage.setItem(AUTH_TOKEN_KEY, data.token);
-              setToken(data.token);
-              setUser(data.user);
-            } else {
-              const errData = await res.text();
-              console.error("Auth exchange failed:", errData);
-            }
-          } catch (err) {
-            console.error("Auth exchange error:", err);
-          }
-        })();
+      const parsed = Linking.parse(url);
+      const params = parsed.queryParams || {};
+
+      if (params.token && typeof params.token === "string") {
+        let userData: AuthUser | null = null;
+        if (params.user && typeof params.user === "string") {
+          try {
+            userData = JSON.parse(decodeURIComponent(params.user));
+          } catch {}
+        }
+
+        await AsyncStorage.setItem(AUTH_TOKEN_KEY, params.token);
+        setToken(params.token);
+        if (userData) {
+          setUser(userData);
+        } else {
+          await verifyToken(params.token);
+        }
       }
-    }
-  }, [response]);
+    };
+
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+    return () => subscription.remove();
+  }, [verifyToken]);
 
   const login = useCallback(async () => {
     try {
-      await promptAsync(isNative ? { useProxy: true } as any : undefined);
+      const baseUrl = getApiUrl();
+      const startUrl = new URL("/api/auth/google/start", baseUrl);
+      const startRes = await fetch(startUrl.toString());
+      const { authUrl } = await startRes.json();
+
+      if (Platform.OS === "web") {
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, Linking.createURL("auth"));
+        if (result.type === "success" && result.url) {
+          const parsed = Linking.parse(result.url);
+          const params = parsed.queryParams || {};
+          if (params.token && typeof params.token === "string") {
+            let userData: AuthUser | null = null;
+            if (params.user && typeof params.user === "string") {
+              try {
+                userData = JSON.parse(decodeURIComponent(params.user));
+              } catch {}
+            }
+            await AsyncStorage.setItem(AUTH_TOKEN_KEY, params.token);
+            setToken(params.token);
+            if (userData) {
+              setUser(userData);
+            } else {
+              await verifyToken(params.token);
+            }
+          }
+        }
+      } else {
+        await WebBrowser.openAuthSessionAsync(authUrl, "myapp://auth");
+      }
     } catch (err) {
       console.error("Login error:", err);
     }
-  }, [promptAsync]);
+  }, [verifyToken]);
 
   const logout = useCallback(async () => {
     try {

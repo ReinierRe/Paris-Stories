@@ -28,6 +28,12 @@ function generateToken(): string {
   return crypto.randomBytes(48).toString("hex");
 }
 
+function getServerBaseUrl(): string {
+  const domain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS?.split(",")[0] || "";
+  if (domain) return `https://${domain}`;
+  return `http://localhost:5000`;
+}
+
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) {
@@ -41,44 +47,102 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   return res.status(401).json({ error: "Authentication required" });
 }
 
-async function exchangeCodeForTokens(
-  code: string,
-  codeVerifier: string,
-  redirectUri: string,
-  clientId: string,
-  clientSecret: string,
-): Promise<{ access_token: string } | null> {
-  try {
-    const params: Record<string, string> = {
-      code,
+export async function setupAuth(app: Express): Promise<void> {
+  app.get("/api/auth/google/start", (req: Request, res: Response) => {
+    const clientId = process.env.GOOGLE_WEB_CLIENT_ID
+      || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+      || "";
+    const callbackUrl = `${getServerBaseUrl()}/api/auth/callback`;
+    const state = crypto.randomBytes(16).toString("hex");
+
+    const params = new URLSearchParams({
       client_id: clientId,
-      code_verifier: codeVerifier,
-      grant_type: "authorization_code",
-      redirect_uri: redirectUri,
-    };
-    if (clientSecret) {
-      params.client_secret = clientSecret;
-    }
-    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(params).toString(),
+      redirect_uri: callbackUrl,
+      response_type: "code",
+      scope: "openid profile email",
+      state,
+      access_type: "offline",
+      prompt: "consent",
     });
 
-    if (!tokenRes.ok) {
-      const errBody = await tokenRes.text();
-      console.error("Google token exchange failed:", tokenRes.status, errBody);
-      return null;
+    return res.json({
+      authUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
+      callbackUrl,
+    });
+  });
+
+  app.get("/api/auth/callback", async (req: Request, res: Response) => {
+    try {
+      const { code, error } = req.query;
+
+      if (error || !code) {
+        console.error("Google callback error:", error);
+        return res.send(getRedirectHtml("myapp://auth?error=access_denied"));
+      }
+
+      const clientId = process.env.GOOGLE_WEB_CLIENT_ID
+        || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+        || "";
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
+      const callbackUrl = `${getServerBaseUrl()}/api/auth/callback`;
+
+      const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          code: code as string,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: callbackUrl,
+          grant_type: "authorization_code",
+        }).toString(),
+      });
+
+      if (!tokenRes.ok) {
+        const errBody = await tokenRes.text();
+        console.error("Google token exchange failed:", tokenRes.status, errBody);
+        return res.send(getRedirectHtml("myapp://auth?error=token_exchange_failed"));
+      }
+
+      const tokens = (await tokenRes.json()) as { access_token: string };
+
+      const googleRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+
+      if (!googleRes.ok) {
+        console.error("Google userinfo failed:", googleRes.status);
+        return res.send(getRedirectHtml("myapp://auth?error=userinfo_failed"));
+      }
+
+      const googleUser = (await googleRes.json()) as {
+        sub: string;
+        email?: string;
+        name?: string;
+        given_name?: string;
+        picture?: string;
+      };
+
+      const user = {
+        id: googleUser.sub,
+        email: googleUser.email,
+        firstName: googleUser.given_name || googleUser.name,
+        profileImageUrl: googleUser.picture,
+      };
+
+      const token = generateToken();
+      tokenStore.set(token, { user, createdAt: Date.now() });
+
+      console.log(`User logged in: ${user.email}`);
+
+      const userData = encodeURIComponent(JSON.stringify(user));
+      return res.send(getRedirectHtml(`myapp://auth?token=${token}&user=${userData}`));
+    } catch (err) {
+      console.error("Google auth callback error:", err);
+      return res.send(getRedirectHtml("myapp://auth?error=server_error"));
     }
+  });
 
-    return (await tokenRes.json()) as { access_token: string };
-  } catch (err) {
-    console.error("Token exchange error:", err);
-    return null;
-  }
-}
-
-export async function setupAuth(app: Express): Promise<void> {
   app.post("/api/auth/google", async (req: Request, res: Response) => {
     try {
       const { code, codeVerifier, redirectUri, accessToken } = req.body;
@@ -91,10 +155,28 @@ export async function setupAuth(app: Express): Promise<void> {
           || "";
         const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
 
-        const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri, clientId, clientSecret);
-        if (!tokens) {
+        const params: Record<string, string> = {
+          code,
+          client_id: clientId,
+          code_verifier: codeVerifier,
+          grant_type: "authorization_code",
+          redirect_uri: redirectUri,
+        };
+        if (clientSecret) {
+          params.client_secret = clientSecret;
+        }
+        const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(params).toString(),
+        });
+
+        if (!tokenRes.ok) {
+          const errBody = await tokenRes.text();
+          console.error("Google token exchange failed:", tokenRes.status, errBody);
           return res.status(401).json({ error: "Failed to exchange authorization code" });
         }
+        const tokens = (await tokenRes.json()) as { access_token: string };
         googleAccessToken = tokens.access_token;
       }
 
@@ -102,12 +184,9 @@ export async function setupAuth(app: Express): Promise<void> {
         return res.status(400).json({ error: "Missing access token or authorization code" });
       }
 
-      const googleRes = await fetch(
-        `https://www.googleapis.com/oauth2/v3/userinfo`,
-        {
-          headers: { Authorization: `Bearer ${googleAccessToken}` },
-        },
-      );
+      const googleRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${googleAccessToken}` },
+      });
 
       if (!googleRes.ok) {
         console.error("Google userinfo failed:", googleRes.status);
@@ -130,10 +209,7 @@ export async function setupAuth(app: Express): Promise<void> {
       };
 
       const token = generateToken();
-      tokenStore.set(token, {
-        user,
-        createdAt: Date.now(),
-      });
+      tokenStore.set(token, { user, createdAt: Date.now() });
 
       console.log(`User logged in: ${user.email}`);
 
@@ -164,4 +240,29 @@ export async function setupAuth(app: Express): Promise<void> {
     }
     return res.json({ success: true });
   });
+}
+
+function getRedirectHtml(deepLink: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signing in...</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #1a1a2e; color: #fff; }
+    .container { text-align: center; padding: 20px; }
+    a { color: #d4a574; text-decoration: none; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Signing you in...</p>
+    <p><a id="link" href="${deepLink}">Tap here if you're not redirected</a></p>
+  </div>
+  <script>
+    window.location.href = "${deepLink}";
+  </script>
+</body>
+</html>`;
 }

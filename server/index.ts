@@ -6,6 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 const app = express();
+app.set("trust proxy", 1);
 const log = console.log;
 
 declare module "http" {
@@ -41,7 +42,7 @@ function setupCors(app: express.Application) {
         "Access-Control-Allow-Methods",
         "GET, POST, PUT, DELETE, OPTIONS",
       );
-      res.header("Access-Control-Allow-Headers", "Content-Type");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
       res.header("Access-Control-Allow-Credentials", "true");
     }
 

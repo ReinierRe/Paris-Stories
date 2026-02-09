@@ -159,7 +159,8 @@ export async function setupAuth(app: Express): Promise<void> {
       const codeVerifier = req.session.codeVerifier;
 
       if (!codeVerifier) {
-        return res.status(400).json({ error: "Missing code verifier in session" });
+        console.error("Auth callback: Missing code verifier. Session ID:", req.sessionID, "Session data:", JSON.stringify(req.session));
+        return res.status(400).json({ error: "Missing code verifier in session. Please try logging in again." });
       }
 
       const currentUrl = new URL(

@@ -103,9 +103,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 500);
         });
       } else {
+        const scheme = "exp";
+        const returnUrl = `${scheme}://`;
+        loginUrl.searchParams.set("returnTo", returnUrl);
+
         const result = await WebBrowser.openAuthSessionAsync(
           loginUrl.toString(),
-          undefined,
+          returnUrl,
         );
 
         if (result.type === "success" && result.url) {

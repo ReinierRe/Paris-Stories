@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Google from "expo-auth-session/providers/google";
-import * as AuthSession from "expo-auth-session";
+import { useAuthRequest, makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import { getApiUrl } from "@/lib/query-client";
@@ -9,6 +8,12 @@ import { getApiUrl } from "@/lib/query-client";
 WebBrowser.maybeCompleteAuthSession();
 
 const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
+
+const discovery = {
+  authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+  tokenEndpoint: "https://oauth2.googleapis.com/token",
+  revocationEndpoint: "https://oauth2.googleapis.com/revoke",
+};
 
 interface AuthUser {
   id: string;
@@ -28,29 +33,29 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const isNative = Platform.OS !== "web";
+
+const redirectUri = isNative
+  ? "https://auth.expo.io/@anonymous/paris-stories"
+  : makeRedirectUri();
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const redirectUri = Platform.OS === "web"
-    ? AuthSession.makeRedirectUri()
-    : "https://auth.expo.io/@anonymous/paris-stories";
+  const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
 
-  const googleConfig: Record<string, any> = {
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
-    responseType: "code",
-    usePKCE: true,
-    redirectUri,
-    scopes: ["openid", "profile", "email"],
-  };
-
-  const iosId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-  if (iosId) {
-    googleConfig.iosClientId = iosId;
-  }
-
-  const [request, response, promptAsync] = Google.useAuthRequest(googleConfig);
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId,
+      responseType: "code",
+      usePKCE: true,
+      redirectUri,
+      scopes: ["openid", "profile", "email"],
+    },
+    discovery,
+  );
 
   const verifyToken = useCallback(async (authToken: string): Promise<boolean> => {
     try {
@@ -109,6 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await AsyncStorage.setItem(AUTH_TOKEN_KEY, data.token);
               setToken(data.token);
               setUser(data.user);
+            } else {
+              const errData = await res.text();
+              console.error("Auth exchange failed:", errData);
             }
           } catch (err) {
             console.error("Auth exchange error:", err);
@@ -120,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async () => {
     try {
-      await promptAsync();
+      await promptAsync(isNative ? { useProxy: true } as any : undefined);
     } catch (err) {
       console.error("Login error:", err);
     }

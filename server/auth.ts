@@ -46,18 +46,23 @@ async function exchangeCodeForTokens(
   codeVerifier: string,
   redirectUri: string,
   clientId: string,
+  clientSecret: string,
 ): Promise<{ access_token: string } | null> {
   try {
+    const params: Record<string, string> = {
+      code,
+      client_id: clientId,
+      code_verifier: codeVerifier,
+      grant_type: "authorization_code",
+      redirect_uri: redirectUri,
+    };
+    if (clientSecret) {
+      params.client_secret = clientSecret;
+    }
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        code,
-        client_id: clientId,
-        code_verifier: codeVerifier,
-        grant_type: "authorization_code",
-        redirect_uri: redirectUri,
-      }).toString(),
+      body: new URLSearchParams(params).toString(),
     });
 
     if (!tokenRes.ok) {
@@ -84,8 +89,9 @@ export async function setupAuth(app: Express): Promise<void> {
         const clientId = process.env.GOOGLE_WEB_CLIENT_ID
           || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
           || "";
+        const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
 
-        const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri, clientId);
+        const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri, clientId, clientSecret);
         if (!tokens) {
           return res.status(401).json({ error: "Failed to exchange authorization code" });
         }

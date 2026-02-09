@@ -34,14 +34,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const redirectUri = AuthSession.makeRedirectUri();
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
+  const googleConfig: Record<string, any> = {
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
     responseType: "code",
     usePKCE: true,
     redirectUri,
     scopes: ["openid", "profile", "email"],
-  });
+  };
+
+  const iosId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+  if (iosId) {
+    googleConfig.iosClientId = iosId;
+  }
+
+  const [request, response, promptAsync] = Google.useAuthRequest(googleConfig);
 
   const verifyToken = useCallback(async (authToken: string): Promise<boolean> => {
     try {

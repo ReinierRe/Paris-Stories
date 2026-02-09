@@ -1,28 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth, signInWithCredential, GoogleAuthProvider, onAuthStateChanged, signOut, User } from "firebase/auth";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
+import { getApiUrl } from "@/lib/query-client";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
 
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "",
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
-};
-
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const firebaseAuth = getAuth(app);
-
 interface AuthUser {
   id: string;
   email?: string;
   firstName?: string;
+  profileImageUrl?: string;
 }
 
 interface AuthContextValue {
@@ -43,38 +33,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
-    responseType: "id_token",
+    scopes: ["openid", "profile", "email"],
   });
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: User | null) => {
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        await AsyncStorage.setItem(AUTH_TOKEN_KEY, idToken);
-        setToken(idToken);
-        setUser({
-          id: firebaseUser.uid,
-          email: firebaseUser.email || undefined,
-          firstName: firebaseUser.displayName || undefined,
-        });
-      } else {
-        setUser(null);
-        setToken(null);
+  const verifyToken = useCallback(async (authToken: string): Promise<boolean> => {
+    try {
+      const baseUrl = getApiUrl();
+      const url = new URL("/api/auth/me", baseUrl);
+      const res = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        setToken(authToken);
+        return true;
       }
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
+      return false;
+    } catch {
+      return false;
+    }
   }, []);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+        if (stored) {
+          const valid = await verifyToken(stored);
+          if (!valid) {
+            await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+          }
+        }
+      } catch {}
+      setIsLoading(false);
+    })();
+  }, [verifyToken]);
+
+  useEffect(() => {
     if (response?.type === "success") {
-      const { id_token } = response.params;
-      if (id_token) {
-        const credential = GoogleAuthProvider.credential(id_token);
-        signInWithCredential(firebaseAuth, credential).catch((err) => {
-          console.error("Firebase sign-in error:", err);
-        });
+      const { access_token } = response.params;
+      if (access_token) {
+        (async () => {
+          try {
+            const baseUrl = getApiUrl();
+            const url = new URL("/api/auth/google", baseUrl);
+            const res = await fetch(url.toString(), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accessToken: access_token }),
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              await AsyncStorage.setItem(AUTH_TOKEN_KEY, data.token);
+              setToken(data.token);
+              setUser(data.user);
+            }
+          } catch (err) {
+            console.error("Auth exchange error:", err);
+          }
+        })();
       }
     }
   }, [response]);
@@ -89,14 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await signOut(firebaseAuth);
+      if (token) {
+        const baseUrl = getApiUrl();
+        const url = new URL("/api/auth/logout", baseUrl);
+        await fetch(url.toString(), {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
       await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
       setUser(null);
       setToken(null);
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  }, []);
+    } catch {}
+  }, [token]);
 
   const value = useMemo(
     () => ({

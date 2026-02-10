@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,13 +7,29 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
+  Alert,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+  interpolate,
+  Extrapolation,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Colors from "@/constants/colors";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
+
+const DELETE_THRESHOLD = -80;
+const SNAP_OPEN = -88;
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 function formatDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return "";
@@ -22,13 +38,93 @@ function formatDuration(seconds?: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-function PodcastCard({ podcast }: { podcast: Podcast }) {
+function SwipeablePodcastCard({
+  podcast,
+  onDelete,
+}: {
+  podcast: Podcast;
+  onDelete: (id: string) => void;
+}) {
+  const translateX = useSharedValue(0);
+  const isOpen = useSharedValue(false);
+
   const handlePress = () => {
     if (podcast.status === "ready") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       router.push({ pathname: "/player", params: { podcastId: podcast.id } });
     }
   };
+
+  const triggerDelete = useCallback(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert(
+      "Delete Podcast",
+      `Are you sure you want to delete "${podcast.title}"?`,
+      [
+        { text: "Cancel", style: "cancel", onPress: () => { translateX.value = withSpring(0, { damping: 20 }); isOpen.value = false; } },
+        { text: "Delete", style: "destructive", onPress: () => { onDelete(podcast.id); } },
+      ]
+    );
+  }, [podcast.id, podcast.title, onDelete]);
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-5, 5])
+    .onUpdate((e) => {
+      const base = isOpen.value ? SNAP_OPEN : 0;
+      const newX = base + e.translationX;
+      translateX.value = Math.min(0, Math.max(newX, -SCREEN_WIDTH * 0.4));
+    })
+    .onEnd((e) => {
+      if (translateX.value < DELETE_THRESHOLD) {
+        translateX.value = withSpring(SNAP_OPEN, { damping: 20 });
+        isOpen.value = true;
+      } else {
+        translateX.value = withSpring(0, { damping: 20 });
+        isOpen.value = false;
+      }
+    });
+
+  const tapGesture = Gesture.Tap().onEnd(() => {
+    if (isOpen.value) {
+      translateX.value = withSpring(0, { damping: 20 });
+      isOpen.value = false;
+    } else {
+      runOnJS(handlePress)();
+    }
+  });
+
+  const composed = Gesture.Race(panGesture, tapGesture);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const deleteStyle = useAnimatedStyle(() => {
+    const width = interpolate(
+      translateX.value,
+      [0, SNAP_OPEN],
+      [0, Math.abs(SNAP_OPEN)],
+      Extrapolation.CLAMP
+    );
+    const opacity = interpolate(
+      translateX.value,
+      [0, DELETE_THRESHOLD / 2, DELETE_THRESHOLD],
+      [0, 0.5, 1],
+      Extrapolation.CLAMP
+    );
+    return { width, opacity };
+  });
+
+  const iconScale = useAnimatedStyle(() => {
+    const scale = interpolate(
+      translateX.value,
+      [0, DELETE_THRESHOLD],
+      [0.5, 1],
+      Extrapolation.CLAMP
+    );
+    return { transform: [{ scale }] };
+  });
 
   const getStatusIcon = () => {
     switch (podcast.status) {
@@ -50,50 +146,61 @@ function PodcastCard({ podcast }: { podcast: Podcast }) {
   const duration = formatDuration(podcast.durationSeconds);
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={handlePress}
-      disabled={podcast.status === "generating"}
-      style={styles.podcastCard}
-    >
-      <View style={styles.podcastCardContent}>
-        <View style={styles.podcastInfo}>
-          <Text style={styles.podcastTheme}>{podcast.theme}</Text>
-          <Text style={styles.podcastTitle} numberOfLines={2}>
-            {podcast.title}
-          </Text>
-          <View style={styles.podcastMeta}>
-            <View style={styles.metaBadge}>
-              <Text style={styles.metaBadgeText}>{languageFlag}</Text>
-            </View>
-            <View style={styles.metaBadge}>
-              <Ionicons
-                name={podcast.voice === "male" ? "man" : "woman"}
-                size={11}
-                color={Colors.light.textSecondary}
-              />
-              <Text style={styles.metaBadgeText}>{voiceLabel}</Text>
-            </View>
-            {duration ? (
-              <View style={styles.metaBadge}>
-                <Ionicons name="time-outline" size={11} color={Colors.light.textSecondary} />
-                <Text style={styles.metaBadgeText}>{duration}</Text>
+    <View style={styles.swipeContainer}>
+      <Animated.View style={[styles.deleteAction, deleteStyle]}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => triggerDelete()}
+          activeOpacity={0.7}
+        >
+          <Animated.View style={iconScale}>
+            <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
+
+      <GestureDetector gesture={composed}>
+        <Animated.View style={[styles.podcastCard, cardStyle]}>
+          <View style={styles.podcastCardContent}>
+            <View style={styles.podcastInfo}>
+              <Text style={styles.podcastTheme}>{podcast.theme}</Text>
+              <Text style={styles.podcastTitle} numberOfLines={2}>
+                {podcast.title}
+              </Text>
+              <View style={styles.podcastMeta}>
+                <View style={styles.metaBadge}>
+                  <Text style={styles.metaBadgeText}>{languageFlag}</Text>
+                </View>
+                <View style={styles.metaBadge}>
+                  <Ionicons
+                    name={podcast.voice === "male" ? "man" : "woman"}
+                    size={11}
+                    color={Colors.light.textSecondary}
+                  />
+                  <Text style={styles.metaBadgeText}>{voiceLabel}</Text>
+                </View>
+                {duration ? (
+                  <View style={styles.metaBadge}>
+                    <Ionicons name="time-outline" size={11} color={Colors.light.textSecondary} />
+                    <Text style={styles.metaBadgeText}>{duration}</Text>
+                  </View>
+                ) : null}
+                <Text style={styles.podcastStatus}>
+                  {podcast.status === "generating"
+                    ? "Generating..."
+                    : podcast.status === "error"
+                      ? "Failed"
+                      : podcast.language === "nl"
+                        ? "Nederlands"
+                        : "English"}
+                </Text>
               </View>
-            ) : null}
-            <Text style={styles.podcastStatus}>
-              {podcast.status === "generating"
-                ? "Generating..."
-                : podcast.status === "error"
-                  ? "Failed"
-                  : podcast.language === "nl"
-                    ? "Nederlands"
-                    : "English"}
-            </Text>
+            </View>
+            <View style={styles.statusContainer}>{getStatusIcon()}</View>
           </View>
-        </View>
-        <View style={styles.statusContainer}>{getStatusIcon()}</View>
-      </View>
-    </TouchableOpacity>
+        </Animated.View>
+      </GestureDetector>
+    </View>
   );
 }
 
@@ -110,9 +217,14 @@ function EmptyState() {
 }
 
 export default function PodcastsScreen() {
-  const { podcasts, isLoading } = usePodcasts();
+  const { podcasts, isLoading, removePodcast } = usePodcasts();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+
+  const handleDelete = useCallback(async (id: string) => {
+    await removePodcast(id);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [removePodcast]);
 
   if (isLoading) {
     return (
@@ -123,11 +235,13 @@ export default function PodcastsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <FlatList
         data={podcasts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PodcastCard podcast={item} />}
+        renderItem={({ item }) => (
+          <SwipeablePodcastCard podcast={item} onDelete={handleDelete} />
+        )}
         contentContainerStyle={[
           styles.listContent,
           { paddingTop: insets.top + 16 + webTopInset },
@@ -149,7 +263,7 @@ export default function PodcastsScreen() {
         ListEmptyComponent={<EmptyState />}
         scrollEnabled={podcasts.length > 0}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -186,12 +300,35 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
     marginTop: 4,
   },
+  swipeContainer: {
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  deleteAction: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: "#E74C3C",
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  deleteButton: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
   podcastCard: {
     backgroundColor: Colors.light.card,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.light.cardBorder,
-    marginBottom: 12,
   },
   podcastCardContent: {
     flexDirection: "row",

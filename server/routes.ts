@@ -8,7 +8,8 @@ import * as path from "path";
 import express from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "./storage";
-import { cachedPodcasts } from "@shared/schema";
+import { cachedPodcasts, customPodcasts } from "@shared/schema";
+import { desc } from "drizzle-orm";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
@@ -322,6 +323,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating podcast:", error);
       res.status(500).json({ error: "Failed to generate podcast" });
+    }
+  });
+
+  app.post("/api/podcast/generate-custom", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { subject, angle, voice, language, wordCount, lengthId } = req.body;
+      const userId = (req as any).user?.id;
+
+      if (!subject || !angle || !voice || !language || !userId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const customAngleMap: Record<string, { en: string; nl: string }> = {
+        historical: {
+          en: "Use a factual, chronological storytelling approach. Include specific dates, names, and historical context.",
+          nl: "Gebruik een feitelijke, chronologische vertelbenadering. Neem specifieke data, namen en historische context op.",
+        },
+        "modern-culture": {
+          en: "Focus on contemporary culture, modern-day significance, current trends, and how this topic connects to life in Paris today.",
+          nl: "Focus op hedendaagse cultuur, de moderne betekenis, huidige trends en hoe dit onderwerp aansluit bij het leven in Parijs vandaag.",
+        },
+        "personal-stories": {
+          en: "Tell personal, intimate stories. Use anecdotes, first-person perspectives, and emotional storytelling to bring this topic to life through the eyes of real people.",
+          nl: "Vertel persoonlijke, intieme verhalen. Gebruik anekdotes, eerstepersoonperspectieven en emotioneel vertellen om dit onderwerp tot leven te brengen door de ogen van echte mensen.",
+        },
+      };
+
+      const angleText = customAngleMap[angle]?.[language === "nl" ? "nl" : "en"] || customAngleMap["historical"][language === "nl" ? "nl" : "en"];
+
+      const systemPrompt = language === "nl"
+        ? `Je bent een getalenteerde podcastverteller die boeiende, informatieve en meeslepende verhalen vertelt over Parijs. Je schrijft een podcast manuscript in vloeiend, natuurlijk Nederlands.
+
+Stijl: ${angleText}
+
+Lengte: schrijf ongeveer ${wordCount || 400} woorden.
+
+Regels:
+- Schrijf alsof je direct tegen de luisteraar praat in een warme, persoonlijke toon
+- Begin meteen met het verhaal, geen titel of intro zoals "Welkom bij..."
+- Maak het levendig en beeldend
+- Gebruik geen opsommingstekens of koppen
+- Schrijf in vloeiende alinea's
+- Sluit af met een mooie, gedenkwaardige afsluitende gedachte`
+        : `You are a talented podcast storyteller who tells engaging, informative, and immersive stories about Paris. You write a podcast script in fluent, natural English.
+
+Style: ${angleText}
+
+Length: write approximately ${wordCount || 400} words.
+
+Rules:
+- Write as if speaking directly to the listener in a warm, personal tone
+- Start immediately with the story, no title or intro like "Welcome to..."
+- Make it vivid and descriptive
+- Do not use bullet points or headings
+- Write in flowing paragraphs
+- Close with a beautiful, memorable closing thought`;
+
+      const userPrompt = language === "nl"
+        ? `Schrijf een podcast over: ${subject} (in de context van Parijs)`
+        : `Write a podcast about: ${subject} (in the context of Paris)`;
+
+      const id = generateId();
+
+      console.log(`Generating custom podcast for user ${userId}: "${subject}" [${angle}/${voice}/${language}]...`);
+      const scriptResponse = await anthropic.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 8192,
+        messages: [{ role: "user", content: userPrompt }],
+        system: systemPrompt,
+      });
+
+      const script = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
+      console.log(`Custom script generated (${script.length} chars). Generating audio...`);
+
+      const openaiVoice = getVoice(voice);
+      const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
+      const chunks: string[] = [];
+      let currentChunk = "";
+
+      for (const paragraph of paragraphs) {
+        if (currentChunk.length + paragraph.length > 800 && currentChunk.length > 0) {
+          chunks.push(currentChunk.trim());
+          currentChunk = paragraph;
+        } else {
+          currentChunk += (currentChunk ? "\n\n" : "") + paragraph;
+        }
+      }
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+      }
+
+      const audioBuffers: Buffer[] = [];
+      for (let i = 0; i < chunks.length; i++) {
+        console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
+        try {
+          const audio = await textToSpeech(chunks[i], openaiVoice, "wav");
+          if (audio.length > 44) {
+            audioBuffers.push(audio);
+          }
+        } catch (err) {
+          console.error(`  TTS chunk ${i + 1} failed:`, err);
+        }
+      }
+
+      if (audioBuffers.length === 0) {
+        return res.status(500).json({ error: "Audio generation failed" });
+      }
+
+      const combinedAudio = await concatenateWavBuffers(audioBuffers);
+      const filename = `custom_${id}.wav`;
+      const filepath = path.join(AUDIO_DIR, filename);
+      fs.writeFileSync(filepath, combinedAudio);
+
+      let durationSeconds = 0;
+      if (combinedAudio.length >= 44) {
+        const wavChannels = combinedAudio.readUInt16LE(22);
+        const wavSampleRate = combinedAudio.readUInt32LE(24);
+        const wavBitsPerSample = combinedAudio.readUInt16LE(34);
+        const wavByteRate = wavSampleRate * wavChannels * (wavBitsPerSample / 8);
+        const dataInfo = findDataChunk(combinedAudio);
+        const pcmSize = dataInfo ? dataInfo.size : (combinedAudio.length - 44);
+        durationSeconds = Math.round(pcmSize / wavByteRate);
+      }
+
+      const [saved] = await db.insert(customPodcasts).values({
+        id,
+        userId,
+        subject,
+        angle,
+        voice,
+        language,
+        length: lengthId || "short",
+        script,
+        audioFilename: filename,
+        durationSeconds,
+      }).returning();
+
+      console.log(`Custom podcast "${subject}" ready for user ${userId} (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
+
+      res.json({
+        id: saved.id,
+        subject: saved.subject,
+        script: saved.script,
+        audioUrl: `/api/podcast/audio/${saved.audioFilename}`,
+        durationSeconds: saved.durationSeconds,
+        angle: saved.angle,
+        voice: saved.voice,
+        language: saved.language,
+        length: saved.length,
+        createdAt: saved.createdAt,
+      });
+    } catch (error) {
+      console.error("Error generating custom podcast:", error);
+      res.status(500).json({ error: "Failed to generate custom podcast" });
+    }
+  });
+
+  app.get("/api/podcast/custom", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const results = await db
+        .select()
+        .from(customPodcasts)
+        .where(eq(customPodcasts.userId, userId))
+        .orderBy(desc(customPodcasts.createdAt));
+
+      const podcasts = results.map((p) => ({
+        id: p.id,
+        subject: p.subject,
+        script: p.script,
+        audioUrl: `/api/podcast/audio/${p.audioFilename}`,
+        durationSeconds: p.durationSeconds,
+        angle: p.angle,
+        voice: p.voice,
+        language: p.language,
+        length: p.length,
+        createdAt: p.createdAt,
+      }));
+
+      res.json({ podcasts });
+    } catch (error) {
+      console.error("Error fetching custom podcasts:", error);
+      res.status(500).json({ error: "Failed to fetch custom podcasts" });
+    }
+  });
+
+  app.delete("/api/podcast/custom/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const podcastId = req.params.id;
+
+      const [podcast] = await db
+        .select()
+        .from(customPodcasts)
+        .where(and(eq(customPodcasts.id, podcastId), eq(customPodcasts.userId, userId)));
+
+      if (!podcast) {
+        return res.status(404).json({ error: "Podcast not found" });
+      }
+
+      const audioPath = path.join(AUDIO_DIR, podcast.audioFilename);
+      if (fs.existsSync(audioPath)) {
+        fs.unlinkSync(audioPath);
+      }
+
+      await db.delete(customPodcasts).where(eq(customPodcasts.id, podcastId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting custom podcast:", error);
+      res.status(500).json({ error: "Failed to delete custom podcast" });
     }
   });
 

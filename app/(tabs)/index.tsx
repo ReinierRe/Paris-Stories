@@ -8,12 +8,14 @@ import {
   Platform,
   LayoutAnimation,
   UIManager,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { themes, type Theme, type Topic } from "@/constants/themes";
+import { useAuth } from "@/contexts/AuthContext";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -104,9 +106,20 @@ function ThemeCard({ theme }: { theme: Theme }) {
 }
 
 export default function LibraryScreen() {
-  console.log("LibraryScreen render");
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    if (Platform.OS === "web") {
+      logout();
+      return;
+    }
+    Alert.alert("Sign out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Sign out", style: "destructive", onPress: logout },
+    ]);
+  };
 
   return (
     <View style={styles.container}>
@@ -119,10 +132,17 @@ export default function LibraryScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerSection}>
-          <Text style={styles.headerTitle}>Paris Stories</Text>
-          <Text style={styles.headerSubtitle}>
-            Discover the stories of Paris through personalized podcasts
-          </Text>
+          <View style={styles.headerRow}>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Paris Stories</Text>
+              <Text style={styles.headerSubtitle}>
+                {user?.firstName ? `Welcome, ${user.firstName}` : "Discover the stories of Paris"}
+              </Text>
+            </View>
+            <Pressable onPress={handleLogout} hitSlop={12} testID="logout-button">
+              <Ionicons name="log-out-outline" size={24} color={Colors.light.textSecondary} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.themesContainer}>
@@ -148,6 +168,15 @@ const styles = StyleSheet.create({
   headerSection: {
     marginBottom: 28,
     paddingTop: 8,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  headerTextContainer: {
+    flex: 1,
+    marginRight: 16,
   },
   headerTitle: {
     fontSize: 34,

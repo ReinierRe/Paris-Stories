@@ -1,10 +1,8 @@
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { users, type User } from "@shared/schema";
 
-const sql = neon(process.env.DATABASE_URL!);
-export const db = drizzle(sql);
+export const db = drizzle(process.env.DATABASE_URL!);
 
 export async function getUser(id: string): Promise<User | undefined> {
   const [user] = await db.select().from(users).where(eq(users.id, id));

@@ -34,21 +34,43 @@ function getSystemPrompt(language: string, perspective: string, wordCount: numbe
       en: "Use a factual, chronological storytelling approach. Include specific dates, names, and historical context.",
       nl: "Gebruik een feitelijke, chronologische vertelbenadering. Neem specifieke data, namen en historische context op.",
     },
-    personal: {
-      en: "Tell the story through personal anecdotes, human experiences, and emotional connections. Make listeners feel like they are hearing from a friend.",
-      nl: "Vertel het verhaal door persoonlijke anekdotes, menselijke ervaringen en emotionele verbindingen. Laat luisteraars het gevoel hebben dat ze van een vriend horen.",
+    "iconic-figures": {
+      en: "Focus on the key personalities and iconic figures central to this story. Bring them to life with vivid character details, their motivations, rivalries, and the human drama behind the events.",
+      nl: "Focus op de belangrijkste persoonlijkheden en iconische figuren in dit verhaal. Breng ze tot leven met levendige karakterdetails, hun motivaties, rivaliteiten en het menselijke drama achter de gebeurtenissen.",
+    },
+    origin: {
+      en: "Tell the founding story of this museum. How did it come to be? What vision drove its creation? Cover the key moments from its origins to what it is today.",
+      nl: "Vertel het ontstaansverhaal van dit museum. Hoe is het tot stand gekomen? Welke visie dreef de oprichting? Behandel de belangrijkste momenten van het ontstaan tot wat het nu is.",
+    },
+    "prominent-art": {
+      en: "Focus on the most famous and significant artworks in the collection. Tell the stories behind the masterpieces — who created them, why, and what makes them extraordinary.",
+      nl: "Focus op de beroemdste en belangrijkste kunstwerken in de collectie. Vertel de verhalen achter de meesterwerken — wie ze maakte, waarom, en wat ze buitengewoon maakt.",
+    },
+    architecture: {
+      en: "Focus on the architecture and the building itself. Describe its design, the architect's vision, the construction story, and the architectural details that make it remarkable.",
+      nl: "Focus op de architectuur en het gebouw zelf. Beschrijf het ontwerp, de visie van de architect, het bouwverhaal en de architectonische details die het bijzonder maken.",
     },
     cultural: {
       en: "Focus on art, food, lifestyle, and cultural significance. Explore how culture shaped and was shaped by this topic.",
       nl: "Focus op kunst, eten, levensstijl en culturele betekenis. Verken hoe cultuur dit onderwerp vormde en erdoor werd gevormd.",
     },
+    "modern-times": {
+      en: "Tell the story of how this place looks and feels today. What has changed in recent decades? How does modern life play out here? Capture the contemporary atmosphere.",
+      nl: "Vertel het verhaal van hoe deze plek er vandaag uitziet en aanvoelt. Wat is er de afgelopen decennia veranderd? Hoe speelt het moderne leven zich hier af? Vang de hedendaagse sfeer.",
+    },
     "walking-tour": {
-      en: "Guide the listener as if walking through Paris together. Describe what they would see, hear, and smell. Use directional language and vivid sensory details.",
-      nl: "Begeleid de luisteraar alsof je samen door Parijs wandelt. Beschrijf wat ze zouden zien, horen en ruiken. Gebruik richtinggevende taal en levendige zintuiglijke details.",
+      en: "Guide the listener as if walking through Paris together. Describe what they would see, hear, and smell. Take them to the best and most famous places in the area. Use directional language and vivid sensory details.",
+      nl: "Begeleid de luisteraar alsof je samen door Parijs wandelt. Beschrijf wat ze zouden zien, horen en ruiken. Neem ze mee naar de beste en beroemdste plekken in het gebied. Gebruik richtinggevende taal en levendige zintuiglijke details.",
     },
   };
 
-  const perspectiveText = perspectiveMap[perspective]?.[language === "nl" ? "nl" : "en"] || perspectiveMap.historical.en;
+  const defaultStyle = {
+    en: "Tell an engaging, well-rounded story covering the most interesting aspects of this topic.",
+    nl: "Vertel een boeiend, veelzijdig verhaal dat de meest interessante aspecten van dit onderwerp behandelt.",
+  };
+  const perspectiveText = perspective
+    ? (perspectiveMap[perspective]?.[language === "nl" ? "nl" : "en"] || defaultStyle[language === "nl" ? "nl" : "en"])
+    : defaultStyle[language === "nl" ? "nl" : "en"];
 
   if (language === "nl") {
     return `Je bent een getalenteerde podcastverteller die boeiende, informatieve en meeslepende verhalen vertelt over Parijs. Je schrijft een podcast manuscript in vloeiend, natuurlijk Nederlands.
@@ -158,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { topicName, themeName, perspective, voice, language, wordCount } = req.body;
 
-      if (!topicName || !perspective || !voice || !language) {
+      if (!topicName || !voice || !language) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 

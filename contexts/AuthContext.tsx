@@ -1,19 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuthRequest, makeRedirectUri, ResponseType } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
+import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
 import { getApiUrl } from "@/lib/query-client";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
-
-const discovery = {
-  authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-  tokenEndpoint: "https://oauth2.googleapis.com/token",
-  revocationEndpoint: "https://oauth2.googleapis.com/revoke",
-};
 
 interface AuthUser {
   id: string;
@@ -33,11 +27,39 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const isNative = Platform.OS !== "web";
+const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
+const REDIRECT_URI = "https://auth.expo.io/@anonymous/paris-stories";
 
-const redirectUri = isNative
-  ? "https://auth.expo.io/@anonymous/paris-stories"
-  : makeRedirectUri();
+function parseHashParams(url: string): Record<string, string> {
+  const params: Record<string, string> = {};
+  const hashIndex = url.indexOf("#");
+  if (hashIndex === -1) return params;
+  const hash = url.substring(hashIndex + 1);
+  const pairs = hash.split("&");
+  for (const pair of pairs) {
+    const [key, value] = pair.split("=");
+    if (key && value) {
+      params[decodeURIComponent(key)] = decodeURIComponent(value);
+    }
+  }
+  return params;
+}
+
+function parseQueryParams(url: string): Record<string, string> {
+  const params: Record<string, string> = {};
+  const qIndex = url.indexOf("?");
+  if (qIndex === -1) return params;
+  const hashIndex = url.indexOf("#");
+  const query = hashIndex === -1 ? url.substring(qIndex + 1) : url.substring(qIndex + 1, hashIndex);
+  const pairs = query.split("&");
+  for (const pair of pairs) {
+    const [key, value] = pair.split("=");
+    if (key && value) {
+      params[decodeURIComponent(key)] = decodeURIComponent(value);
+    }
+  }
+  return params;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -46,16 +68,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
 
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId,
-      responseType: ResponseType.Token,
-      redirectUri,
-      scopes: ["openid", "profile", "email"],
-      usePKCE: false,
-    },
-    discovery,
-  );
+  const exchangeAccessToken = useCallback(async (googleAccessToken: string) => {
+    try {
+      const baseUrl = getApiUrl();
+      const url = new URL("/api/auth/google", baseUrl);
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken: googleAccessToken }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        await AsyncStorage.setItem(AUTH_TOKEN_KEY, data.token);
+        setToken(data.token);
+        setUser(data.user);
+      } else {
+        console.error("Auth exchange failed:", await res.text());
+      }
+    } catch (err) {
+      console.error("Auth exchange error:", err);
+    }
+  }, []);
 
   const verifyToken = useCallback(async (authToken: string): Promise<boolean> => {
     try {
@@ -91,44 +125,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, [verifyToken]);
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const googleAccessToken = response.params?.access_token;
-      if (googleAccessToken) {
-        (async () => {
-          try {
-            const baseUrl = getApiUrl();
-            const url = new URL("/api/auth/google", baseUrl);
-            const res = await fetch(url.toString(), {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accessToken: googleAccessToken }),
-            });
-
-            if (res.ok) {
-              const data = await res.json();
-              await AsyncStorage.setItem(AUTH_TOKEN_KEY, data.token);
-              setToken(data.token);
-              setUser(data.user);
-            } else {
-              const errData = await res.text();
-              console.error("Auth exchange failed:", errData);
-            }
-          } catch (err) {
-            console.error("Auth exchange error:", err);
-          }
-        })();
-      }
-    }
-  }, [response]);
-
   const login = useCallback(async () => {
     try {
-      await promptAsync(isNative ? { useProxy: true } as any : undefined);
+      const state = Crypto.randomUUID();
+      const nonce = Crypto.randomUUID();
+
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: REDIRECT_URI,
+        response_type: "token",
+        scope: "openid profile email",
+        state,
+        nonce,
+        prompt: "select_account",
+      });
+
+      const authUrl = `${GOOGLE_AUTH_ENDPOINT}?${params.toString()}`;
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        REDIRECT_URI,
+      );
+
+      if (result.type === "success" && result.url) {
+        const hashParams = parseHashParams(result.url);
+        const queryParams = parseQueryParams(result.url);
+
+        const accessToken = hashParams.access_token || queryParams.access_token;
+
+        if (accessToken) {
+          await exchangeAccessToken(accessToken);
+        } else {
+          console.error("No access token in response:", result.url);
+        }
+      } else if (result.type === "cancel") {
+        console.log("Auth cancelled by user");
+      }
     } catch (err) {
       console.error("Login error:", err);
     }
-  }, [promptAsync]);
+  }, [clientId, exchangeAccessToken]);
 
   const logout = useCallback(async () => {
     try {

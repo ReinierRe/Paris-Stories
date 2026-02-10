@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getApiUrl } from "@/lib/query-client";
+import { getApiUrl, setOnUnauthorized } from "@/lib/query-client";
 
 const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
 
@@ -126,6 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(null);
     } catch {}
   }, [token]);
+
+  const logoutRef = useRef(logout);
+  logoutRef.current = logout;
+
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      logoutRef.current();
+    });
+  }, []);
 
   const value = useMemo(
     () => ({

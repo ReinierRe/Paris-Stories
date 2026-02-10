@@ -4,6 +4,12 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
 
+let onUnauthorizedCallback: (() => void) | null = null;
+
+export function setOnUnauthorized(callback: () => void) {
+  onUnauthorizedCallback = callback;
+}
+
 export function getApiUrl(): string {
   let host = process.env.EXPO_PUBLIC_DOMAIN;
 
@@ -28,6 +34,9 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    if (res.status === 401 && onUnauthorizedCallback) {
+      onUnauthorizedCallback();
+    }
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }

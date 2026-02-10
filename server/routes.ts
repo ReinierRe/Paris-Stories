@@ -6,6 +6,9 @@ import { requireAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
 import express from "express";
+import { eq, and } from "drizzle-orm";
+import { db } from "./storage";
+import { cachedPodcasts } from "@shared/schema";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
@@ -178,10 +181,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast/generate", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { topicName, themeName, perspective, voice, language, wordCount } = req.body;
+      const { topicId, topicName, themeName, perspective, voice, language, wordCount, lengthId } = req.body;
 
       if (!topicName || !voice || !language) {
         return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const cacheAngle = perspective || "";
+      const cacheLength = lengthId || "medium";
+
+      if (topicId) {
+        const [cached] = await db
+          .select()
+          .from(cachedPodcasts)
+          .where(
+            and(
+              eq(cachedPodcasts.topicId, topicId),
+              eq(cachedPodcasts.angle, cacheAngle),
+              eq(cachedPodcasts.voice, voice),
+              eq(cachedPodcasts.language, language),
+              eq(cachedPodcasts.length, cacheLength)
+            )
+          );
+
+        if (cached) {
+          const audioPath = path.join(AUDIO_DIR, cached.audioFilename);
+          if (fs.existsSync(audioPath)) {
+            console.log(`Cache hit for "${topicName}" [${cacheAngle || "no angle"}/${voice}/${language}/${cacheLength}]`);
+            return res.json({
+              id: cached.id,
+              script: cached.script,
+              audioUrl: `/api/podcast/audio/${cached.audioFilename}`,
+              durationSeconds: cached.durationSeconds,
+              cached: true,
+            });
+          }
+        }
       }
 
       const id = generateId();
@@ -192,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)`
           : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
 
-      console.log(`Generating script for "${topicName}"...`);
+      console.log(`Generating script for "${topicName}" [${cacheAngle || "no angle"}/${voice}/${language}/${cacheLength}]...`);
       const scriptResponse = await anthropic.messages.create({
         model: "claude-sonnet-4-5",
         max_tokens: 8192,
@@ -259,11 +294,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Podcast "${topicName}" ready (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
 
+      if (topicId) {
+        try {
+          await db.insert(cachedPodcasts).values({
+            topicId,
+            angle: cacheAngle,
+            voice,
+            language,
+            length: cacheLength,
+            script,
+            audioFilename: filename,
+            durationSeconds,
+          });
+          console.log(`Cached podcast for "${topicName}"`);
+        } catch (cacheErr) {
+          console.error("Failed to cache podcast:", cacheErr);
+        }
+      }
+
       res.json({
         id,
         script,
         audioUrl: `/api/podcast/audio/${filename}`,
         durationSeconds,
+        cached: false,
       });
     } catch (error) {
       console.error("Error generating podcast:", error);

@@ -9,10 +9,11 @@ import {
   TextInput,
   KeyboardAvoidingView,
   ScrollView,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -87,13 +88,11 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <MaterialCommunityIcons
-                name="microphone-variant"
-                size={44}
-                color={Colors.light.accent}
-              />
-            </View>
+            <Image
+              source={require("@/assets/images/logo-waveform.png")}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.title}>Paris Stories</Text>
             <Text style={styles.subtitle}>
               Discover the hidden stories of Paris through personalized podcasts
@@ -234,16 +233,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 40,
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 22,
-    backgroundColor: "rgba(196, 162, 101, 0.12)",
-    alignItems: "center",
-    justifyContent: "center",
+  logoImage: {
+    width: 120,
+    height: 120,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "rgba(196, 162, 101, 0.2)",
+    borderRadius: 24,
   },
   title: {
     fontFamily: "DMSans_700Bold",

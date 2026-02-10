@@ -543,6 +543,5 @@ export const themes: Theme[] = [
 
 export const podcastLengths = [
   { id: "short", name: "Short", nameNl: "Kort", duration: "~3 min", words: 400 },
-  { id: "medium", name: "Medium", nameNl: "Gemiddeld", duration: "~7 min", words: 900 },
-  { id: "long", name: "Long", nameNl: "Lang", duration: "~12 min", words: 1500 },
+  { id: "long", name: "Long", nameNl: "Lang", duration: "~8 min", words: 1100 },
 ];

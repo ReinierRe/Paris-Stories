@@ -80,7 +80,7 @@ export default function CustomizeScreen() {
   const [angle, setAngle] = useState("");
   const [voice, setVoice] = useState<"male" | "female">("female");
   const [language, setLanguage] = useState<"nl" | "en">("nl");
-  const [length, setLength] = useState("medium");
+  const [length, setLength] = useState("short");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const step = steps[currentStep];

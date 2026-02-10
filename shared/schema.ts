@@ -46,3 +46,21 @@ export const cachedPodcasts = pgTable("cached_podcasts", {
 ]);
 
 export type CachedPodcast = typeof cachedPodcasts.$inferSelect;
+
+export const customPodcasts = pgTable("custom_podcasts", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  subject: text("subject").notNull(),
+  angle: text("angle").notNull(),
+  voice: text("voice").notNull(),
+  language: text("language").notNull(),
+  length: text("length").notNull(),
+  script: text("script").notNull(),
+  audioFilename: text("audio_filename").notNull(),
+  durationSeconds: integer("duration_seconds").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type CustomPodcast = typeof customPodcasts.$inferSelect;

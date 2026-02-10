@@ -145,12 +145,13 @@ export async function setupAuth(app: Express): Promise<void> {
 
   app.post("/api/auth/google", async (req: Request, res: Response) => {
     try {
-      const { code, codeVerifier, redirectUri, accessToken } = req.body;
+      const { code, codeVerifier, redirectUri, accessToken, clientId: reqClientId } = req.body;
 
       let googleAccessToken = accessToken;
 
       if (code && codeVerifier && redirectUri) {
-        const clientId = process.env.GOOGLE_WEB_CLIENT_ID
+        const clientId = reqClientId
+          || process.env.GOOGLE_WEB_CLIENT_ID
           || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
           || "";
         const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";

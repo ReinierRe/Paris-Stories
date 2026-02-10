@@ -30,32 +30,47 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const REDIRECT_URI = "https://auth.expo.io/@anonymous/paris-stories";
 
-function parseHashParams(url: string): Record<string, string> {
-  const params: Record<string, string> = {};
-  const hashIndex = url.indexOf("#");
-  if (hashIndex === -1) return params;
-  const hash = url.substring(hashIndex + 1);
-  const pairs = hash.split("&");
-  for (const pair of pairs) {
-    const [key, value] = pair.split("=");
-    if (key && value) {
-      params[decodeURIComponent(key)] = decodeURIComponent(value);
-    }
+function base64URLEncode(buffer: Uint8Array): string {
+  let str = "";
+  for (let i = 0; i < buffer.length; i++) {
+    str += String.fromCharCode(buffer[i]);
   }
-  return params;
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function parseQueryParams(url: string): Record<string, string> {
+async function generateCodeVerifier(): Promise<string> {
+  const bytes = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return base64URLEncode(bytes);
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const digest = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    verifier,
+    { encoding: Crypto.CryptoEncoding.BASE64 }
+  );
+  return digest.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function parseUrlParams(url: string): Record<string, string> {
   const params: Record<string, string> = {};
+
   const qIndex = url.indexOf("?");
   if (qIndex === -1) return params;
+
   const hashIndex = url.indexOf("#");
-  const query = hashIndex === -1 ? url.substring(qIndex + 1) : url.substring(qIndex + 1, hashIndex);
-  const pairs = query.split("&");
+  const queryString = hashIndex === -1 ? url.substring(qIndex + 1) : url.substring(qIndex + 1, hashIndex);
+
+  const pairs = queryString.split("&");
   for (const pair of pairs) {
-    const [key, value] = pair.split("=");
-    if (key && value) {
-      params[decodeURIComponent(key)] = decodeURIComponent(value);
+    const eqIndex = pair.indexOf("=");
+    if (eqIndex !== -1) {
+      const key = decodeURIComponent(pair.substring(0, eqIndex));
+      const value = decodeURIComponent(pair.substring(eqIndex + 1));
+      params[key] = value;
     }
   }
   return params;
@@ -68,14 +83,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
 
-  const exchangeAccessToken = useCallback(async (googleAccessToken: string) => {
+  const exchangeCodeForToken = useCallback(async (code: string, codeVerifier: string) => {
     try {
       const baseUrl = getApiUrl();
       const url = new URL("/api/auth/google", baseUrl);
       const res = await fetch(url.toString(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken: googleAccessToken }),
+        body: JSON.stringify({
+          code,
+          codeVerifier,
+          redirectUri: REDIRECT_URI,
+        }),
       });
 
       if (res.ok) {
@@ -84,7 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(data.token);
         setUser(data.user);
       } else {
-        console.error("Auth exchange failed:", await res.text());
+        const errText = await res.text();
+        console.error("Auth exchange failed:", errText);
       }
     } catch (err) {
       console.error("Auth exchange error:", err);
@@ -127,16 +147,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async () => {
     try {
-      const state = Crypto.randomUUID();
-      const nonce = Crypto.randomUUID();
+      const codeVerifier = await generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
 
       const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: REDIRECT_URI,
-        response_type: "token",
+        response_type: "code",
         scope: "openid profile email",
-        state,
-        nonce,
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+        access_type: "offline",
         prompt: "select_account",
       });
 
@@ -148,15 +169,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       if (result.type === "success" && result.url) {
-        const hashParams = parseHashParams(result.url);
-        const queryParams = parseQueryParams(result.url);
+        const urlParams = parseUrlParams(result.url);
+        const code = urlParams.code;
 
-        const accessToken = hashParams.access_token || queryParams.access_token;
-
-        if (accessToken) {
-          await exchangeAccessToken(accessToken);
+        if (code) {
+          await exchangeCodeForToken(code, codeVerifier);
         } else {
-          console.error("No access token in response:", result.url);
+          console.error("No authorization code in response:", result.url);
         }
       } else if (result.type === "cancel") {
         console.log("Auth cancelled by user");
@@ -164,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Login error:", err);
     }
-  }, [clientId, exchangeAccessToken]);
+  }, [clientId, exchangeCodeForToken]);
 
   const logout = useCallback(async () => {
     try {

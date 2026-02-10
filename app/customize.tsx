@@ -13,12 +13,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { perspectives, podcastLengths } from "@/constants/themes";
+import { themes, podcastLengths } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 
-type Step = "perspective" | "voice" | "language" | "length" | "confirm";
-const steps: Step[] = ["perspective", "voice", "language", "length", "confirm"];
+type Step = "angle" | "voice" | "language" | "length" | "confirm";
 
 function ChoiceCard({
   selected,
@@ -71,8 +70,14 @@ export default function CustomizeScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
+  const currentTheme = themes.find((t) => t.id === params.themeId);
+  const hasAngles = !!(currentTheme?.angles && currentTheme.angles.length > 0);
+  const steps: Step[] = hasAngles
+    ? ["angle", "voice", "language", "length", "confirm"]
+    : ["voice", "language", "length", "confirm"];
+
   const [currentStep, setCurrentStep] = useState(0);
-  const [perspective, setPerspective] = useState("");
+  const [angle, setAngle] = useState("");
   const [voice, setVoice] = useState<"male" | "female">("female");
   const [language, setLanguage] = useState<"nl" | "en">("nl");
   const [length, setLength] = useState("medium");
@@ -80,7 +85,7 @@ export default function CustomizeScreen() {
 
   const step = steps[currentStep];
   const canProceed =
-    step === "perspective" ? !!perspective :
+    step === "angle" ? !!angle :
     step === "voice" ? true :
     step === "language" ? true :
     step === "length" ? true :
@@ -88,7 +93,7 @@ export default function CustomizeScreen() {
 
   const stepTitle = () => {
     switch (step) {
-      case "perspective": return "Choose your angle";
+      case "angle": return "Choose your angle";
       case "voice": return "Select a voice";
       case "language": return "Pick a language";
       case "length": return "Podcast length";
@@ -98,7 +103,7 @@ export default function CustomizeScreen() {
 
   const stepSubtitle = () => {
     switch (step) {
-      case "perspective": return "How should we tell this story?";
+      case "angle": return "How should we tell this story?";
       case "voice": return "Who narrates your podcast?";
       case "language": return "Which language do you prefer?";
       case "length": return "How long should the podcast be?";
@@ -138,7 +143,7 @@ export default function CustomizeScreen() {
       audioUrl: "",
       language,
       voice,
-      perspective,
+      perspective: angle,
       length,
       status: "generating",
       createdAt: new Date().toISOString(),
@@ -155,7 +160,7 @@ export default function CustomizeScreen() {
       const res = await apiRequest("POST", "/api/podcast/generate", {
         topicName: language === "nl" ? params.topicNameNl : params.topicName,
         themeName: language === "nl" ? params.themeNameNl : params.themeName,
-        perspective,
+        perspective: angle,
         voice,
         language,
         wordCount: selectedLength?.words || 750,
@@ -181,21 +186,21 @@ export default function CustomizeScreen() {
   };
 
   const selectedLength = podcastLengths.find((l) => l.id === length);
-  const selectedPerspective = perspectives.find((p) => p.id === perspective);
+  const selectedAngle = currentTheme?.angles?.find((a) => a.id === angle);
 
   const renderStepContent = () => {
     switch (step) {
-      case "perspective":
+      case "angle":
         return (
           <View style={styles.choicesContainer}>
-            {perspectives.map((p) => (
+            {(currentTheme?.angles || []).map((a) => (
               <ChoiceCard
-                key={p.id}
-                selected={perspective === p.id}
-                onPress={() => setPerspective(p.id)}
-                icon={<Feather name={p.icon as any} size={20} color={perspective === p.id ? Colors.light.accent : Colors.light.textSecondary} />}
-                title={p.name}
-                subtitle={p.description}
+                key={a.id}
+                selected={angle === a.id}
+                onPress={() => setAngle(a.id)}
+                icon={<Feather name={a.icon as any} size={20} color={angle === a.id ? Colors.light.accent : Colors.light.textSecondary} />}
+                title={a.name}
+                subtitle={a.description}
               />
             ))}
           </View>
@@ -265,11 +270,15 @@ export default function CustomizeScreen() {
                 <Text style={styles.summaryLabel}>Topic</Text>
                 <Text style={styles.summaryValue} numberOfLines={1}>{params.topicName}</Text>
               </View>
-              <View style={styles.summaryDivider} />
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Angle</Text>
-                <Text style={styles.summaryValue}>{selectedPerspective?.name || perspective}</Text>
-              </View>
+              {hasAngles && selectedAngle ? (
+                <>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Angle</Text>
+                    <Text style={styles.summaryValue}>{selectedAngle.name}</Text>
+                  </View>
+                </>
+              ) : null}
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Voice</Text>

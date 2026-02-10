@@ -158,12 +158,14 @@ export default function CustomizeScreen() {
 
     try {
       const res = await apiRequest("POST", "/api/podcast/generate", {
+        topicId: params.topicId,
         topicName: language === "nl" ? params.topicNameNl : params.topicName,
         themeName: language === "nl" ? params.themeNameNl : params.themeName,
         perspective: angle,
         voice,
         language,
         wordCount: selectedLength?.words || 750,
+        lengthId: length,
       });
 
       const data = await res.json();

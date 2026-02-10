@@ -2,7 +2,7 @@
 
 ## Overview
 
-Paris Stories is a mobile-first podcast generator app built with Expo (React Native) and an Express backend. Users browse historical and cultural themes about Paris, customize podcast parameters (perspective, voice, language, length), and the app generates AI-narrated audio podcasts using Anthropic (Claude) for script generation and OpenAI for text-to-speech. Generated podcasts are stored locally on the device and can be played back in an audio player.
+Paris Stories is a mobile-first podcast generator app built with Expo (React Native) and an Express backend. Users browse historical and cultural themes about Paris, customize podcast parameters (perspective, voice, language, length), and the app generates AI-narrated audio podcasts using Anthropic (Claude) for script generation and OpenAI for text-to-speech. Generated podcasts are stored locally on the device and can be played back in an audio player. Users can also create custom podcasts by entering their own Paris-related subjects with fixed angle categories (Historical, Modern Culture, Personal Stories).
 
 ## User Preferences
 
@@ -40,6 +40,7 @@ Preferred communication style: Simple, everyday language.
 - `app/(tabs)/index.tsx` — Library: browse themes and topics about Paris
 - `app/(tabs)/podcasts.tsx` — My Podcasts: list of generated podcasts with playback/delete
 - `app/customize.tsx` — Multi-step modal: choose perspective, voice, language, length before generating
+- `app/custom-create.tsx` — Multi-step modal for custom podcasts: enter subject, choose angle (Historical/Modern Culture/Personal Stories), voice, language, length
 - `app/player.tsx` — Audio player screen with play/pause, progress, and script view
 
 ### Backend (Express)
@@ -66,6 +67,7 @@ Preferred communication style: Simple, everyday language.
 - **Config**: `drizzle.config.ts` points to `DATABASE_URL` env var
 - **Schema**: `shared/schema.ts` defines `users` and `cached_podcasts` tables
 - **Podcast Caching**: `cached_podcasts` table stores generated scripts and audio filenames with a unique index on `(topicId, angle, voice, language, length)`. The generate endpoint checks this cache first — if a matching podcast exists and the audio file is present, it returns the cached result without regenerating. New podcasts are inserted into the cache after generation.
+- **Custom Podcasts**: `custom_podcasts` table stores user-created podcasts with userId, subject, angle, voice, language, length, script, audioFilename, durationSeconds. Each custom podcast is private to its creator. Angles are fixed: Historical, Modern Culture, Personal Stories. Endpoints: `POST /api/podcast/generate-custom`, `GET /api/podcast/custom`, `DELETE /api/podcast/custom/:id`.
 - **Chat Models**: `shared/models/chat.ts` defines `conversations` and `messages` tables (used by replit integration chat/audio features)
 - **Current Storage**: `server/storage.ts` uses in-memory storage (`MemStorage`) for user data — the Drizzle/Postgres setup is available but the main podcast feature uses the database for caching
 - **Push Schema**: Use `npm run db:push` to sync schema to database

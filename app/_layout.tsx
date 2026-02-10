@@ -32,6 +32,13 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="custom-create"
+        options={{
+          presentation: Platform.OS === "web" ? "card" : "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="player"
         options={{
           headerShown: false,

@@ -99,6 +99,17 @@ function ThemeCard({ theme }: { theme: Theme }) {
               <TopicRow topic={topic} theme={theme} />
             </React.Fragment>
           ))}
+          <View style={styles.topicDivider} />
+          <Pressable
+            style={({ pressed }) => [styles.addOwnRow, pressed && styles.topicRowPressed]}
+            onPress={() => router.push("/custom-create")}
+          >
+            <View style={styles.addOwnIcon}>
+              <Ionicons name="add" size={18} color={Colors.light.accent} />
+            </View>
+            <Text style={styles.addOwnText}>Add your own subject</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.light.textTertiary} />
+          </Pressable>
         </View>
       )}
     </View>
@@ -263,5 +274,25 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
     marginTop: 3,
     lineHeight: 18,
+  },
+  addOwnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 12,
+  },
+  addOwnIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "rgba(196, 162, 101, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addOwnText: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.accent,
   },
 });

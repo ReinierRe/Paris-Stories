@@ -17,6 +17,8 @@ export interface Podcast {
   status: "generating" | "ready" | "error";
   createdAt: string;
   errorMessage?: string;
+  isCustom?: boolean;
+  customDbId?: string;
 }
 
 interface PodcastContextValue {

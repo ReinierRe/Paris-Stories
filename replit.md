@@ -71,9 +71,13 @@ Preferred communication style: Simple, everyday language.
 
 ### Content Structure
 
-- **Themes**: Defined in `constants/themes.ts` — categories like French Revolution, Art & Museums, Literary Paris, etc.
-- **Topics**: Nested under themes — specific subjects like "Storming of the Bastille", "Marie Antoinette"
-- **Perspectives**: Historical, Personal, Cultural, Walking Tour — each changes the AI prompt style
+- **Themes**: Defined in `constants/themes.ts` — 7 categories in order: History, French Revolution, Museums, Epic Buildings, Modern History, Neighborhoods, Food & Drinks
+- **Topics**: Nested under themes — specific subjects like "Storming of the Bastille", "The Louvre"
+- **Angles**: Per-theme angles (perspectives) that change the AI prompt style. Some themes have angles, others don't:
+  - French Revolution: Historical, Iconic Figures
+  - Museums: Origin of the Museum, Prominent Art Pieces, Architecture & Building
+  - Neighborhoods: Historical, Cultural, Modern Times, Walking Tour
+  - History, Epic Buildings, Modern History, Food & Drinks: no angles (step skipped in customize flow)
 - **Languages**: English and Dutch (nl)
 - **Podcast Lengths**: Configurable via `podcastLengths` constant
 

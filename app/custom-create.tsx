@@ -186,11 +186,11 @@ export default function CustomCreateScreen() {
       const baseUrl = getApiUrl();
 
       await updatePodcast(podcastId, {
-        id: data.id,
         script: data.script,
         audioUrl: new URL(data.audioUrl, baseUrl).toString(),
         durationSeconds: data.durationSeconds || 0,
         status: "ready",
+        customDbId: data.id,
       });
     } catch (error) {
       console.error("Custom generation failed:", error);

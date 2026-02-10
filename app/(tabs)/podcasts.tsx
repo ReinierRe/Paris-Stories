@@ -26,6 +26,7 @@ import Animated, {
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Colors from "@/constants/colors";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
+import { apiRequest } from "@/lib/query-client";
 
 const DELETE_THRESHOLD = -80;
 const SNAP_OPEN = -88;
@@ -163,7 +164,7 @@ function SwipeablePodcastCard({
         <Animated.View style={[styles.podcastCard, cardStyle]}>
           <View style={styles.podcastCardContent}>
             <View style={styles.podcastInfo}>
-              <Text style={styles.podcastTheme}>{podcast.theme}</Text>
+              <Text style={[styles.podcastTheme, podcast.isCustom && styles.podcastThemeCustom]}>{podcast.isCustom ? "Custom" : podcast.theme}</Text>
               <Text style={styles.podcastTitle} numberOfLines={2}>
                 {podcast.title}
               </Text>
@@ -222,9 +223,17 @@ export default function PodcastsScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
   const handleDelete = useCallback(async (id: string) => {
+    const podcast = podcasts.find((p) => p.id === id);
+    if (podcast?.isCustom && podcast?.customDbId) {
+      try {
+        await apiRequest("DELETE", `/api/podcast/custom/${podcast.customDbId}`);
+      } catch (e) {
+        console.error("Failed to delete custom podcast from server:", e);
+      }
+    }
     await removePodcast(id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [removePodcast]);
+  }, [removePodcast, podcasts]);
 
   if (isLoading) {
     return (
@@ -346,6 +355,9 @@ const styles = StyleSheet.create({
     textTransform: "uppercase" as const,
     letterSpacing: 0.8,
     marginBottom: 4,
+  },
+  podcastThemeCustom: {
+    color: "#8E44AD",
   },
   podcastTitle: {
     fontSize: 16,

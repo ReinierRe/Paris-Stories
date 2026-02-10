@@ -6,6 +6,15 @@ export interface Topic {
   descriptionNl: string;
 }
 
+export interface Angle {
+  id: string;
+  name: string;
+  nameNl: string;
+  description: string;
+  descriptionNl: string;
+  icon: string;
+}
+
 export interface Theme {
   id: string;
   name: string;
@@ -14,9 +23,48 @@ export interface Theme {
   iconFamily: "Ionicons" | "MaterialIcons" | "MaterialCommunityIcons" | "Feather";
   color: string;
   topics: Topic[];
+  angles?: Angle[];
 }
 
 export const themes: Theme[] = [
+  {
+    id: "history",
+    name: "History",
+    nameNl: "Geschiedenis",
+    icon: "book",
+    iconFamily: "Ionicons",
+    color: "#6B4226",
+    topics: [
+      {
+        id: "founding-lutetia",
+        name: "Lutetia: The Birth of Paris",
+        nameNl: "Lutetia: De Geboorte van Parijs",
+        description: "How a small Roman settlement on the Seine became one of the world's greatest cities",
+        descriptionNl: "Hoe een kleine Romeinse nederzetting aan de Seine uitgroeide tot een van de grootste steden ter wereld",
+      },
+      {
+        id: "medieval-paris",
+        name: "Medieval Paris: Rise of a Capital",
+        nameNl: "Middeleeuws Parijs: Opkomst van een Hoofdstad",
+        description: "From Viking sieges to the building of Notre-Dame, how Paris became the heart of France",
+        descriptionNl: "Van Vikingbelegeringen tot de bouw van Notre-Dame, hoe Parijs het hart van Frankrijk werd",
+      },
+      {
+        id: "paris-kings",
+        name: "City of Kings",
+        nameNl: "Stad der Koningen",
+        description: "The monarchs who shaped Paris from the Capetians to the Sun King's Versailles",
+        descriptionNl: "De vorsten die Parijs vormden, van de Capetingen tot de Zonnekoning in Versailles",
+      },
+      {
+        id: "haussmann-transformation",
+        name: "The Great Transformation",
+        nameNl: "De Grote Transformatie",
+        description: "How Baron Haussmann demolished medieval Paris and created the city of grand boulevards",
+        descriptionNl: "Hoe Baron Haussmann het middeleeuwse Parijs sloopte en de stad van grote boulevards creëerde",
+      },
+    ],
+  },
   {
     id: "revolution",
     name: "French Revolution",
@@ -24,6 +72,24 @@ export const themes: Theme[] = [
     icon: "flag",
     iconFamily: "Ionicons",
     color: "#C0392B",
+    angles: [
+      {
+        id: "historical",
+        name: "Historical",
+        nameNl: "Historisch",
+        description: "Facts, dates, and chronological storytelling",
+        descriptionNl: "Feiten, data en chronologisch vertellen",
+        icon: "book-open",
+      },
+      {
+        id: "iconic-figures",
+        name: "Iconic Figures",
+        nameNl: "Iconische Figuren",
+        description: "The key personalities who shaped the revolution",
+        descriptionNl: "De belangrijkste persoonlijkheden die de revolutie vormden",
+        icon: "users",
+      },
+    ],
     topics: [
       {
         id: "bastille",
@@ -90,6 +156,32 @@ export const themes: Theme[] = [
     icon: "museum",
     iconFamily: "MaterialIcons",
     color: "#2980B9",
+    angles: [
+      {
+        id: "origin",
+        name: "Origin of the Museum",
+        nameNl: "Ontstaan van het Museum",
+        description: "The founding story and how the museum came to be",
+        descriptionNl: "Het ontstaansverhaal en hoe het museum tot stand kwam",
+        icon: "clock",
+      },
+      {
+        id: "prominent-art",
+        name: "Prominent Art Pieces",
+        nameNl: "Prominente Kunstwerken",
+        description: "The most famous and significant works in the collection",
+        descriptionNl: "De beroemdste en belangrijkste werken in de collectie",
+        icon: "image",
+      },
+      {
+        id: "architecture",
+        name: "Architecture & Building",
+        nameNl: "Architectuur & Gebouw",
+        description: "The architectural story and design of the building itself",
+        descriptionNl: "Het architectuurverhaal en het ontwerp van het gebouw zelf",
+        icon: "home",
+      },
+    ],
     topics: [
       {
         id: "louvre",
@@ -150,6 +242,72 @@ export const themes: Theme[] = [
     ],
   },
   {
+    id: "epic-buildings",
+    name: "Epic Buildings",
+    nameNl: "Iconische Gebouwen",
+    icon: "business",
+    iconFamily: "MaterialIcons",
+    color: "#34495E",
+    topics: [
+      {
+        id: "eiffel-tower",
+        name: "The Eiffel Tower",
+        nameNl: "De Eiffeltoren",
+        description: "From controversial iron eyesore to the world's most beloved landmark",
+        descriptionNl: "Van controversieel ijzeren gedrocht tot het meest geliefde monument ter wereld",
+      },
+      {
+        id: "notre-dame",
+        name: "Notre-Dame Cathedral",
+        nameNl: "Kathedraal Notre-Dame",
+        description: "Eight centuries of faith, fire, and resurrection on the Île de la Cité",
+        descriptionNl: "Acht eeuwen geloof, vuur en wederopstanding op het Île de la Cité",
+      },
+      {
+        id: "louvre-palace",
+        name: "The Louvre Palace",
+        nameNl: "Het Paleis van het Louvre",
+        description: "From medieval fortress to royal palace to the world's greatest museum",
+        descriptionNl: "Van middeleeuws fort tot koninklijk paleis tot het grootste museum ter wereld",
+      },
+      {
+        id: "sacre-coeur",
+        name: "Sacré-Cœur Basilica",
+        nameNl: "Basiliek Sacré-Cœur",
+        description: "The white dome on the hilltop and the turbulent history behind it",
+        descriptionNl: "De witte koepel op de heuvel en de turbulente geschiedenis erachter",
+      },
+      {
+        id: "arc-de-triomphe",
+        name: "Arc de Triomphe",
+        nameNl: "Arc de Triomphe",
+        description: "Napoleon's monument to military glory at the heart of the Champs-Élysées",
+        descriptionNl: "Napoleons monument voor militaire glorie in het hart van de Champs-Élysées",
+      },
+      {
+        id: "pantheon",
+        name: "The Panthéon",
+        nameNl: "Het Panthéon",
+        description: "Where France honors its greatest citizens, from Voltaire to Marie Curie",
+        descriptionNl: "Waar Frankrijk zijn grootste burgers eert, van Voltaire tot Marie Curie",
+      },
+      {
+        id: "opera-garnier",
+        name: "Opéra Garnier",
+        nameNl: "Opéra Garnier",
+        description: "The lavish palace of opera and the legend of the Phantom",
+        descriptionNl: "Het weelderige operapaleis en de legende van het Spook",
+      },
+      {
+        id: "palace-versailles",
+        name: "Palace of Versailles",
+        nameNl: "Paleis van Versailles",
+        description: "The Sun King's masterpiece of power, excess, and absolute beauty",
+        descriptionNl: "Het meesterwerk van de Zonnekoning vol macht, overdaad en absolute schoonheid",
+      },
+    ],
+  },
+  {
     id: "modern-history",
     name: "Modern History",
     nameNl: "Moderne Geschiedenis",
@@ -200,18 +358,18 @@ export const themes: Theme[] = [
         descriptionNl: "De gouden eeuw van kunst, cultuur en het Parijse leven",
       },
       {
-        id: "eiffel-tower",
-        name: "The Eiffel Tower Story",
-        nameNl: "Het Verhaal van de Eiffeltoren",
-        description: "From controversial construction to the world's most beloved landmark",
-        descriptionNl: "Van controversieel bouwwerk tot het meest geliefde monument ter wereld",
-      },
-      {
         id: "haussmann",
         name: "Haussmann: The Man Who Rebuilt Paris",
         nameNl: "Haussmann: De Man Die Parijs Herbouwde",
         description: "How one prefect demolished medieval Paris and created the city of boulevards",
         descriptionNl: "Hoe één prefect middeleeuws Parijs sloopte en de stad van boulevards creëerde",
+      },
+      {
+        id: "paris-expo-1900",
+        name: "The 1900 World's Fair",
+        nameNl: "De Wereldtentoonstelling van 1900",
+        description: "The grand exposition that showcased Paris as the capital of the modern world",
+        descriptionNl: "De grote tentoonstelling die Parijs presenteerde als hoofdstad van de moderne wereld",
       },
     ],
   },
@@ -222,6 +380,40 @@ export const themes: Theme[] = [
     icon: "map",
     iconFamily: "Feather",
     color: "#27AE60",
+    angles: [
+      {
+        id: "historical",
+        name: "Historical",
+        nameNl: "Historisch",
+        description: "The origins and historical evolution of this neighborhood",
+        descriptionNl: "De oorsprong en historische ontwikkeling van deze buurt",
+        icon: "book-open",
+      },
+      {
+        id: "cultural",
+        name: "Cultural",
+        nameNl: "Cultureel",
+        description: "Art, food, lifestyle, and cultural significance",
+        descriptionNl: "Kunst, eten, levensstijl en culturele betekenis",
+        icon: "coffee",
+      },
+      {
+        id: "modern-times",
+        name: "Modern Times",
+        nameNl: "Moderne Tijd",
+        description: "What the neighborhood looks like today and how it has evolved",
+        descriptionNl: "Hoe de buurt er vandaag uitziet en hoe deze is geëvolueerd",
+        icon: "trending-up",
+      },
+      {
+        id: "walking-tour",
+        name: "Walking Tour",
+        nameNl: "Wandeltour",
+        description: "A guided walk past the best and most famous places in the area",
+        descriptionNl: "Een begeleide wandeling langs de beste en beroemdste plekken in het gebied",
+        icon: "navigation",
+      },
+    ],
     topics: [
       {
         id: "montmartre",
@@ -346,41 +538,6 @@ export const themes: Theme[] = [
         descriptionNl: "Van crêpes tot falafel: de beste straatmarkten en hun verborgen parels",
       },
     ],
-  },
-];
-
-export const perspectives = [
-  {
-    id: "historical",
-    name: "Historical",
-    nameNl: "Historisch",
-    description: "Facts, dates, and chronological storytelling",
-    descriptionNl: "Feiten, data en chronologisch vertellen",
-    icon: "book-open",
-  },
-  {
-    id: "personal",
-    name: "Personal Stories",
-    nameNl: "Persoonlijke Verhalen",
-    description: "Human stories, anecdotes, and personal experiences",
-    descriptionNl: "Menselijke verhalen, anekdotes en persoonlijke ervaringen",
-    icon: "heart",
-  },
-  {
-    id: "cultural",
-    name: "Cultural",
-    nameNl: "Cultureel",
-    description: "Art, food, lifestyle, and cultural impact",
-    descriptionNl: "Kunst, eten, levensstijl en culturele impact",
-    icon: "coffee",
-  },
-  {
-    id: "walking-tour",
-    name: "Walking Tour",
-    nameNl: "Wandeltour",
-    description: "As if guiding you through the streets of Paris",
-    descriptionNl: "Alsof je door de straten van Parijs wordt geleid",
-    icon: "navigation",
   },
 ];
 

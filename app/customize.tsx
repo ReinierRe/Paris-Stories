@@ -160,7 +160,9 @@ export default function CustomizeScreen() {
       const res = await apiRequest("POST", "/api/podcast/generate", {
         topicId: params.topicId,
         topicName: language === "nl" ? params.topicNameNl : params.topicName,
+        topicNameNl: params.topicNameNl || params.topicName,
         themeName: language === "nl" ? params.themeNameNl : params.themeName,
+        themeNameNl: params.themeNameNl || params.themeName,
         perspective: angle,
         voice,
         language,

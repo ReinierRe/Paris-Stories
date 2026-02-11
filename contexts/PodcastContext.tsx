@@ -3,6 +3,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 
+export function resolveAudioUrl(audioUrl: string): string {
+  if (!audioUrl) return "";
+  if (audioUrl.startsWith("http://") || audioUrl.startsWith("https://")) {
+    try {
+      const url = new URL(audioUrl);
+      return new URL(url.pathname, getApiUrl()).toString();
+    } catch {
+      return audioUrl;
+    }
+  }
+  return new URL(audioUrl, getApiUrl()).toString();
+}
+
 export interface Podcast {
   id: string;
   title: string;
@@ -57,7 +70,6 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("GET", "/api/podcast/history");
       const data = await res.json();
       if (data.podcasts && Array.isArray(data.podcasts)) {
-        const baseUrl = getApiUrl();
         const serverPodcasts: Podcast[] = data.podcasts.map((p: any) => ({
           id: p.id,
           title: p.title || "",
@@ -65,7 +77,7 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
           theme: p.theme || "",
           themeNl: p.themeNl || p.theme || "",
           script: p.script || "",
-          audioUrl: p.audioUrl ? new URL(p.audioUrl, baseUrl).toString() : "",
+          audioUrl: p.audioUrl || "",
           language: p.language || "en",
           voice: p.voice || "female",
           perspective: p.perspective || "",
@@ -96,7 +108,22 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
-          setPodcasts(JSON.parse(stored));
+          const parsed: Podcast[] = JSON.parse(stored);
+          const migrated = parsed.map((p) => {
+            if (p.audioUrl && (p.audioUrl.startsWith("http://") || p.audioUrl.startsWith("https://"))) {
+              try {
+                const url = new URL(p.audioUrl);
+                return { ...p, audioUrl: url.pathname };
+              } catch {
+                return p;
+              }
+            }
+            return p;
+          });
+          setPodcasts(migrated);
+          if (JSON.stringify(parsed) !== JSON.stringify(migrated)) {
+            savePodcasts(migrated);
+          }
         }
       } catch (e) {
         console.error("Failed to load podcasts:", e);

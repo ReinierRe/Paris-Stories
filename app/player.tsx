@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { usePodcasts } from "@/contexts/PodcastContext";
+import { usePodcasts, resolveAudioUrl } from "@/contexts/PodcastContext";
 
 function formatTime(millis: number): string {
   const totalSeconds = Math.floor(millis / 1000);
@@ -56,8 +56,9 @@ export default function PlayerScreen() {
         staysActiveInBackground: true,
       });
 
+      const fullAudioUrl = resolveAudioUrl(podcast!.audioUrl);
       const { sound } = await Audio.Sound.createAsync(
-        { uri: podcast!.audioUrl },
+        { uri: fullAudioUrl },
         { shouldPlay: false },
         onPlaybackStatusUpdate,
       );

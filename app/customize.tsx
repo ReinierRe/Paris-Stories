@@ -15,7 +15,7 @@ import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { themes, podcastLengths } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
-import { apiRequest, getApiUrl } from "@/lib/query-client";
+import { apiRequest } from "@/lib/query-client";
 
 type Step = "angle" | "voice" | "language" | "length" | "confirm";
 
@@ -172,11 +172,9 @@ export default function CustomizeScreen() {
 
       const data = await res.json();
 
-      const baseUrl = getApiUrl();
-
       await updatePodcast(podcastId, {
         script: data.script,
-        audioUrl: new URL(data.audioUrl, baseUrl).toString(),
+        audioUrl: data.audioUrl,
         durationSeconds: data.durationSeconds || 0,
         status: "ready",
       });

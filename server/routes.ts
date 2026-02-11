@@ -8,7 +8,7 @@ import * as path from "path";
 import express from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "./storage";
-import { cachedPodcasts, customPodcasts } from "@shared/schema";
+import { cachedPodcasts, customPodcasts, userPodcasts } from "@shared/schema";
 import { desc } from "drizzle-orm";
 
 const anthropic = new Anthropic({
@@ -182,7 +182,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast/generate", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { topicId, topicName, themeName, perspective, voice, language, wordCount, lengthId } = req.body;
+      const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId } = req.body;
+      const userId = (req as any).user?.id;
 
       if (!topicName || !voice || !language) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -209,6 +210,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const audioPath = path.join(AUDIO_DIR, cached.audioFilename);
           if (fs.existsSync(audioPath)) {
             console.log(`Cache hit for "${topicName}" [${cacheAngle || "no angle"}/${voice}/${language}/${cacheLength}]`);
+
+            if (userId) {
+              try {
+                await db.insert(userPodcasts).values({
+                  userId,
+                  cachedPodcastId: cached.id,
+                  topicName: topicName || "",
+                  topicNameNl: topicNameNl || topicName || "",
+                  themeName: themeName || "",
+                  themeNameNl: themeNameNl || themeName || "",
+                }).onConflictDoNothing();
+              } catch (e) {
+                console.error("Failed to save user-podcast link:", e);
+              }
+            }
+
             return res.json({
               id: cached.id,
               script: cached.script,
@@ -295,9 +312,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Podcast "${topicName}" ready (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
 
+      let cachedId = id;
       if (topicId) {
         try {
-          await db.insert(cachedPodcasts).values({
+          const [inserted] = await db.insert(cachedPodcasts).values({
             topicId,
             angle: cacheAngle,
             voice,
@@ -306,15 +324,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
             script,
             audioFilename: filename,
             durationSeconds,
-          });
+          }).returning();
+          cachedId = inserted.id;
           console.log(`Cached podcast for "${topicName}"`);
         } catch (cacheErr) {
           console.error("Failed to cache podcast:", cacheErr);
         }
       }
 
+      if (userId && topicId) {
+        try {
+          await db.insert(userPodcasts).values({
+            userId,
+            cachedPodcastId: cachedId,
+            topicName: topicName || "",
+            topicNameNl: topicNameNl || topicName || "",
+            themeName: themeName || "",
+            themeNameNl: themeNameNl || themeName || "",
+          }).onConflictDoNothing();
+        } catch (e) {
+          console.error("Failed to save user-podcast link:", e);
+        }
+      }
+
       res.json({
-        id,
+        id: cachedId,
         script,
         audioUrl: `/api/podcast/audio/${filename}`,
         durationSeconds,
@@ -506,6 +540,82 @@ Rules:
     } catch (error) {
       console.error("Error fetching custom podcasts:", error);
       res.status(500).json({ error: "Failed to fetch custom podcasts" });
+    }
+  });
+
+  app.get("/api/podcast/history", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+
+      const genericResults = await db
+        .select({
+          userPodcast: userPodcasts,
+          cached: cachedPodcasts,
+        })
+        .from(userPodcasts)
+        .innerJoin(cachedPodcasts, eq(userPodcasts.cachedPodcastId, cachedPodcasts.id))
+        .where(eq(userPodcasts.userId, userId))
+        .orderBy(desc(userPodcasts.createdAt));
+
+      const genericPodcasts = genericResults
+        .filter((r) => {
+          const audioPath = path.join(AUDIO_DIR, r.cached.audioFilename);
+          return fs.existsSync(audioPath);
+        })
+        .map((r) => ({
+          id: r.cached.id,
+          title: r.userPodcast.topicName,
+          titleNl: r.userPodcast.topicNameNl,
+          theme: r.userPodcast.themeName,
+          themeNl: r.userPodcast.themeNameNl,
+          script: r.cached.script,
+          audioUrl: `/api/podcast/audio/${r.cached.audioFilename}`,
+          durationSeconds: r.cached.durationSeconds,
+          voice: r.cached.voice,
+          language: r.cached.language,
+          perspective: r.cached.angle,
+          length: r.cached.length,
+          createdAt: r.userPodcast.createdAt?.toISOString() || new Date().toISOString(),
+          isCustom: false,
+        }));
+
+      const customResults = await db
+        .select()
+        .from(customPodcasts)
+        .where(eq(customPodcasts.userId, userId))
+        .orderBy(desc(customPodcasts.createdAt));
+
+      const customPodcastsList = customResults
+        .filter((p) => {
+          const audioPath = path.join(AUDIO_DIR, p.audioFilename);
+          return fs.existsSync(audioPath);
+        })
+        .map((p) => ({
+          id: p.id,
+          title: p.subject,
+          titleNl: p.subject,
+          theme: "Custom",
+          themeNl: "Eigen",
+          script: p.script,
+          audioUrl: `/api/podcast/audio/${p.audioFilename}`,
+          durationSeconds: p.durationSeconds,
+          voice: p.voice,
+          language: p.language,
+          perspective: p.angle,
+          length: p.length,
+          createdAt: p.createdAt?.toISOString() || new Date().toISOString(),
+          isCustom: true,
+          customDbId: p.id,
+        }));
+
+      const allPodcasts = [...genericPodcasts, ...customPodcastsList].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      res.json({ podcasts: allPodcasts });
+    } catch (error) {
+      console.error("Error fetching podcast history:", error);
+      res.status(500).json({ error: "Failed to fetch podcast history" });
     }
   });
 

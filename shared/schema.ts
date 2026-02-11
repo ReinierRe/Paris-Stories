@@ -64,3 +64,23 @@ export const customPodcasts = pgTable("custom_podcasts", {
 });
 
 export type CustomPodcast = typeof customPodcasts.$inferSelect;
+
+export const userPodcasts = pgTable("user_podcasts", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  cachedPodcastId: text("cached_podcast_id").notNull(),
+  topicName: text("topic_name").notNull(),
+  topicNameNl: text("topic_name_nl").notNull().default(""),
+  themeName: text("theme_name").notNull(),
+  themeNameNl: text("theme_name_nl").notNull().default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("user_podcast_lookup_idx").on(
+    table.userId,
+    table.cachedPodcastId
+  ),
+]);
+
+export type UserPodcast = typeof userPodcasts.$inferSelect;

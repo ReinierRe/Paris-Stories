@@ -65,9 +65,10 @@ Preferred communication style: Simple, everyday language.
 
 - **ORM**: Drizzle ORM with PostgreSQL dialect (node-postgres driver)
 - **Config**: `drizzle.config.ts` points to `DATABASE_URL` env var
-- **Schema**: `shared/schema.ts` defines `users` and `cached_podcasts` tables
+- **Schema**: `shared/schema.ts` defines `users`, `cached_podcasts`, `custom_podcasts`, and `user_podcasts` tables
 - **Podcast Caching**: `cached_podcasts` table stores generated scripts and audio filenames with a unique index on `(topicId, angle, voice, language, length)`. The generate endpoint checks this cache first — if a matching podcast exists and the audio file is present, it returns the cached result without regenerating. New podcasts are inserted into the cache after generation.
 - **Custom Podcasts**: `custom_podcasts` table stores user-created podcasts with userId, subject, angle, voice, language, length, script, audioFilename, durationSeconds. Each custom podcast is private to its creator. Angles are fixed: Historical, Modern Culture, Personal Stories. Endpoints: `POST /api/podcast/generate-custom`, `GET /api/podcast/custom`, `DELETE /api/podcast/custom/:id`.
+- **User Podcast History**: `user_podcasts` junction table links userId to cachedPodcastId with topic/theme name translations. Created automatically when a user generates a generic podcast. Endpoint: `GET /api/podcast/history` returns both generic (via junction table) and custom podcasts for the authenticated user, sorted by date. The `PodcastContext` on the frontend loads this history on login, merging with any in-progress local generation.
 - **Chat Models**: `shared/models/chat.ts` defines `conversations` and `messages` tables (used by replit integration chat/audio features)
 - **Current Storage**: `server/storage.ts` uses in-memory storage (`MemStorage`) for user data — the Drizzle/Postgres setup is available but the main podcast feature uses the database for caching
 - **Push Schema**: Use `npm run db:push` to sync schema to database

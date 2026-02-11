@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest, getApiUrl } from "@/lib/query-client";
 
 export interface Podcast {
   id: string;
@@ -28,6 +30,7 @@ interface PodcastContextValue {
   updatePodcast: (id: string, updates: Partial<Podcast>) => Promise<void>;
   removePodcast: (id: string) => Promise<void>;
   clearAllPodcasts: () => Promise<void>;
+  refreshFromServer: () => Promise<void>;
 }
 
 const STORAGE_KEY = "paris_stories_podcasts";
@@ -37,30 +40,8 @@ const PodcastContext = createContext<PodcastContextValue | null>(null);
 export function PodcastProvider({ children }: { children: ReactNode }) {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadPodcasts();
-  }, []);
-
-  const loadPodcasts = async () => {
-    try {
-      const shouldClear = await AsyncStorage.getItem("paris_stories_clear_once");
-      if (!shouldClear) {
-        await AsyncStorage.setItem("paris_stories_clear_once", "done");
-        await AsyncStorage.removeItem(STORAGE_KEY);
-        setIsLoading(false);
-        return;
-      }
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setPodcasts(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Failed to load podcasts:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [serverLoaded, setServerLoaded] = useState(false);
+  const { token, isAuthenticated } = useAuth();
 
   const savePodcasts = async (newPodcasts: Podcast[]) => {
     try {
@@ -69,6 +50,76 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
       console.error("Failed to save podcasts:", e);
     }
   };
+
+  const loadFromServer = useCallback(async () => {
+    if (!token || !isAuthenticated) return;
+    try {
+      const res = await apiRequest("GET", "/api/podcast/history");
+      const data = await res.json();
+      if (data.podcasts && Array.isArray(data.podcasts)) {
+        const baseUrl = getApiUrl();
+        const serverPodcasts: Podcast[] = data.podcasts.map((p: any) => ({
+          id: p.id,
+          title: p.title || "",
+          titleNl: p.titleNl || p.title || "",
+          theme: p.theme || "",
+          themeNl: p.themeNl || p.theme || "",
+          script: p.script || "",
+          audioUrl: p.audioUrl ? new URL(p.audioUrl, baseUrl).toString() : "",
+          language: p.language || "en",
+          voice: p.voice || "female",
+          perspective: p.perspective || "",
+          length: p.length || "short",
+          durationSeconds: p.durationSeconds || 0,
+          status: "ready" as const,
+          createdAt: p.createdAt || new Date().toISOString(),
+          isCustom: p.isCustom || false,
+          customDbId: p.customDbId || undefined,
+        }));
+
+        setPodcasts((prev) => {
+          const inProgress = prev.filter((p) => p.status === "generating");
+          const serverIds = new Set(serverPodcasts.map((p) => p.id));
+          const filteredInProgress = inProgress.filter((p) => !serverIds.has(p.id));
+          const merged = [...filteredInProgress, ...serverPodcasts];
+          savePodcasts(merged);
+          return merged;
+        });
+      }
+    } catch (e) {
+      console.error("Failed to load podcast history from server:", e);
+    }
+  }, [token, isAuthenticated]);
+
+  useEffect(() => {
+    const loadLocal = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          setPodcasts(JSON.parse(stored));
+        }
+      } catch (e) {
+        console.error("Failed to load podcasts:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadLocal();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && token && !isLoading && !serverLoaded) {
+      setServerLoaded(true);
+      loadFromServer();
+    }
+    if (!isAuthenticated) {
+      setServerLoaded(false);
+    }
+  }, [isAuthenticated, token, isLoading, serverLoaded, loadFromServer]);
+
+  const refreshFromServer = useCallback(async () => {
+    await loadFromServer();
+  }, [loadFromServer]);
 
   const addPodcast = useCallback(async (podcast: Podcast) => {
     setPodcasts((prev) => {
@@ -100,8 +151,8 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ podcasts, isLoading, addPodcast, updatePodcast, removePodcast, clearAllPodcasts }),
-    [podcasts, isLoading, addPodcast, updatePodcast, removePodcast, clearAllPodcasts],
+    () => ({ podcasts, isLoading, addPodcast, updatePodcast, removePodcast, clearAllPodcasts, refreshFromServer }),
+    [podcasts, isLoading, addPodcast, updatePodcast, removePodcast, clearAllPodcasts, refreshFromServer],
   );
 
   return <PodcastContext.Provider value={value}>{children}</PodcastContext.Provider>;

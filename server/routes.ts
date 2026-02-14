@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
-import { textToSpeech } from "./replit_integrations/audio/client";
+import { googleTextToSpeech, getGoogleVoice } from "./google-tts";
 import { requireAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
@@ -25,12 +25,6 @@ function generateId(): string {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
 }
 
-type Voice = "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer";
-
-function getVoice(voicePref: string): Voice {
-  if (voicePref === "male") return "onyx";
-  return "nova";
-}
 
 function getSystemPrompt(language: string, perspective: string, wordCount: number): string {
   const perspectiveMap: Record<string, { en: string; nl: string }> = {
@@ -258,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Script generated (${script.length} chars). Generating audio...`);
 
-      const openaiVoice = getVoice(voice);
+      const googleVoice = getGoogleVoice(voice, language);
 
       const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
       const chunks: string[] = [];
@@ -280,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < chunks.length; i++) {
         console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
         try {
-          const audio = await textToSpeech(chunks[i], openaiVoice, "wav");
+          const audio = await googleTextToSpeech(chunks[i], googleVoice);
           if (audio.length > 44) {
             audioBuffers.push(audio);
           }
@@ -431,7 +425,7 @@ Rules:
       const script = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
       console.log(`Custom script generated (${script.length} chars). Generating audio...`);
 
-      const openaiVoice = getVoice(voice);
+      const googleVoice = getGoogleVoice(voice, language);
       const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
       const chunks: string[] = [];
       let currentChunk = "";
@@ -452,7 +446,7 @@ Rules:
       for (let i = 0; i < chunks.length; i++) {
         console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
         try {
-          const audio = await textToSpeech(chunks[i], openaiVoice, "wav");
+          const audio = await googleTextToSpeech(chunks[i], googleVoice);
           if (audio.length > 44) {
             audioBuffers.push(audio);
           }

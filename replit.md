@@ -7,7 +7,7 @@ Paris Stories is an Expo React Native app with an Express backend that generates
 - **Frontend**: Expo React Native (mobile app served via Expo Go / landing page for web)
 - **Backend**: Express.js server on port 5000
 - **Database**: PostgreSQL with Drizzle ORM
-- **AI**: Anthropic Claude for script generation, OpenAI (via Replit AI Integrations) for text-to-speech audio generation
+- **AI**: Anthropic Claude (via Replit AI Integrations) for script generation, Google Cloud Text-to-Speech API for audio generation
 
 ## Project Structure
 ```
@@ -17,10 +17,9 @@ server/           - Express backend
   routes.ts       - API routes for podcast generation, history, custom podcasts
   auth.ts         - Token-based authentication (register, login, logout)
   storage.ts      - Database client and user queries
-  replit_integrations/ - AI integration modules (audio, chat, image, batch)
+  google-tts.ts   - Google Cloud Text-to-Speech client (voice mapping, WAV generation)
 shared/           - Shared types and database schema
   schema.ts       - Drizzle ORM table definitions (users, cachedPodcasts, customPodcasts, userPodcasts)
-  models/         - Additional schema models
 components/       - React Native components
 contexts/         - React contexts (Auth, Podcast)
 constants/        - Theme and color constants
@@ -44,7 +43,7 @@ patches/          - npm patch files
 
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string
-- `AI_INTEGRATIONS_OPENAI_API_KEY` / `AI_INTEGRATIONS_OPENAI_BASE_URL` - OpenAI via Replit AI Integrations (for TTS)
+- `GOOGLE_TTS_API_KEY` - Google Cloud API key (Text-to-Speech API must be enabled)
 - `AI_INTEGRATIONS_ANTHROPIC_API_KEY` / `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` - Anthropic via Replit AI Integrations (for script generation)
 
 ## Deployment
@@ -53,4 +52,5 @@ patches/          - npm patch files
 - Run: `NODE_ENV=production node server_dist/index.js`
 
 ## Recent Changes
+- 2026-02-14: Switched TTS from OpenAI to Google Cloud Text-to-Speech API (Wavenet voices, multi-language support)
 - 2026-02-14: Initial Replit setup - configured database, workflows, and deployment

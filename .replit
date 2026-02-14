@@ -13,10 +13,6 @@ run = ["bash", "-c", "NODE_ENV=production node server_dist/index.js"]
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 8082
-externalPort = 3001
-
 [env]
 PORT = "5000"
 

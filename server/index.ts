@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
+import { randomUUID } from "crypto";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -110,26 +111,79 @@ function getAppName(): string {
   }
 }
 
-function serveExpoManifest(platform: string, res: Response) {
-  const manifestPath = path.resolve(
-    process.cwd(),
-    "static-build",
-    platform,
-    "manifest.json",
-  );
+function getExpoConfig() {
+  try {
+    const appJsonPath = path.resolve(process.cwd(), "app.json");
+    const appJsonContent = fs.readFileSync(appJsonPath, "utf-8");
+    return JSON.parse(appJsonContent).expo || {};
+  } catch {
+    return {};
+  }
+}
 
-  if (!fs.existsSync(manifestPath)) {
+function serveExpoManifest(platform: string, req: Request, res: Response) {
+  const staticDir = path.resolve(process.cwd(), "static-build");
+  const metadataPath = path.resolve(staticDir, "metadata.json");
+
+  if (!fs.existsSync(metadataPath)) {
     return res
       .status(404)
       .json({ error: `Manifest not found for platform: ${platform}` });
   }
 
+  const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
+  const platformMetadata = metadata.fileMetadata?.[platform];
+
+  if (!platformMetadata) {
+    return res
+      .status(404)
+      .json({ error: `No metadata found for platform: ${platform}` });
+  }
+
+  const forwardedProto = req.header("x-forwarded-proto") || req.protocol || "https";
+  const host = req.header("x-forwarded-host") || req.get("host");
+  const baseUrl = `${forwardedProto}://${host}`;
+
+  const expoConfig = getExpoConfig();
+  const runtimeVersion = expoConfig.runtimeVersion || expoConfig.version || "1.0.0";
+
+  const bundleUrl = `${baseUrl}/${platformMetadata.bundle}`;
+
+  const assets = (platformMetadata.assets || []).map((asset: { path: string; ext: string }) => ({
+    url: `${baseUrl}/${asset.path}`,
+    contentType: asset.ext === "png" ? "image/png" :
+                 asset.ext === "jpg" || asset.ext === "jpeg" ? "image/jpeg" :
+                 asset.ext === "ttf" ? "font/ttf" :
+                 asset.ext === "otf" ? "font/otf" :
+                 "application/octet-stream",
+    key: asset.path.split("/").pop() || asset.path,
+  }));
+
+  const id = randomUUID();
+
+  const manifest = {
+    id,
+    createdAt: new Date().toISOString(),
+    runtimeVersion,
+    launchAsset: {
+      url: bundleUrl,
+      contentType: "application/javascript",
+      key: "bundle",
+    },
+    assets,
+    metadata: {},
+    extra: {
+      expoClient: {
+        ...expoConfig,
+        hostUri: host,
+      },
+    },
+  };
+
   res.setHeader("expo-protocol-version", "1");
   res.setHeader("expo-sfv-version", "0");
   res.setHeader("content-type", "application/json");
-
-  const manifest = fs.readFileSync(manifestPath, "utf-8");
-  res.send(manifest);
+  res.json(manifest);
 }
 
 function serveLandingPage({
@@ -185,7 +239,7 @@ function configureExpoAndLanding(app: express.Application) {
 
     const platform = req.header("expo-platform");
     if (platform && (platform === "ios" || platform === "android")) {
-      return serveExpoManifest(platform, res);
+      return serveExpoManifest(platform, req, res);
     }
 
     if (req.path === "/") {

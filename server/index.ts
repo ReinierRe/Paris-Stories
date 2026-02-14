@@ -4,7 +4,8 @@ import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
-import { randomUUID } from "crypto";
+import { spawn } from "child_process";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -14,6 +15,44 @@ declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
   }
+}
+
+const METRO_PORT = 8081;
+const isDev = process.env.NODE_ENV !== "production";
+
+function startMetroBundler() {
+  if (!isDev) return;
+
+  log("Starting Metro bundler on port", METRO_PORT);
+
+  const metro = spawn("npx", ["expo", "start", "--port", String(METRO_PORT), "--localhost"], {
+    stdio: ["pipe", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      CI: "1",
+      EXPO_PACKAGER_PROXY_URL: `https://${process.env.REPLIT_DEV_DOMAIN}`,
+      REACT_NATIVE_PACKAGER_HOSTNAME: process.env.REPLIT_DEV_DOMAIN || "0.0.0.0",
+      EXPO_PUBLIC_DOMAIN: `${process.env.REPLIT_DEV_DOMAIN}`,
+      EXPO_USE_FAST_RESOLVER: "1",
+    },
+    cwd: process.cwd(),
+  });
+
+  metro.stdout?.on("data", (data: Buffer) => {
+    const msg = data.toString().trim();
+    if (msg) log("[Metro]", msg);
+  });
+
+  metro.stderr?.on("data", (data: Buffer) => {
+    const msg = data.toString().trim();
+    if (msg) log("[Metro:err]", msg);
+  });
+
+  metro.on("close", (code: number | null) => {
+    log("[Metro] exited with code", code);
+  });
+
+  return metro;
 }
 
 function setupCors(app: express.Application) {
@@ -32,7 +71,6 @@ function setupCors(app: express.Application) {
 
     const origin = req.header("origin");
 
-    // Allow localhost origins for Expo web development (any port)
     const isLocalhost =
       origin?.startsWith("http://localhost:") ||
       origin?.startsWith("http://127.0.0.1:");
@@ -70,7 +108,7 @@ function setupBodyParsing(app: express.Application) {
 function setupRequestLogging(app: express.Application) {
   app.use((req, res, next) => {
     const start = Date.now();
-    const path = req.path;
+    const reqPath = req.path;
     let capturedJsonResponse: Record<string, unknown> | undefined = undefined;
 
     const originalResJson = res.json;
@@ -80,11 +118,11 @@ function setupRequestLogging(app: express.Application) {
     };
 
     res.on("finish", () => {
-      if (!path.startsWith("/api")) return;
+      if (!reqPath.startsWith("/api")) return;
 
       const duration = Date.now() - start;
 
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
@@ -109,82 +147,6 @@ function getAppName(): string {
   } catch {
     return "App Landing Page";
   }
-}
-
-function getExpoConfig() {
-  try {
-    const appJsonPath = path.resolve(process.cwd(), "app.json");
-    const appJsonContent = fs.readFileSync(appJsonPath, "utf-8");
-    return JSON.parse(appJsonContent).expo || {};
-  } catch {
-    return {};
-  }
-}
-
-function serveExpoManifest(platform: string, req: Request, res: Response) {
-  const staticDir = path.resolve(process.cwd(), "static-build");
-  const metadataPath = path.resolve(staticDir, "metadata.json");
-
-  if (!fs.existsSync(metadataPath)) {
-    return res
-      .status(404)
-      .json({ error: `Manifest not found for platform: ${platform}` });
-  }
-
-  const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
-  const platformMetadata = metadata.fileMetadata?.[platform];
-
-  if (!platformMetadata) {
-    return res
-      .status(404)
-      .json({ error: `No metadata found for platform: ${platform}` });
-  }
-
-  const forwardedProto = req.header("x-forwarded-proto") || req.protocol || "https";
-  const host = req.header("x-forwarded-host") || req.get("host");
-  const baseUrl = `${forwardedProto}://${host}`;
-
-  const expoConfig = getExpoConfig();
-  const runtimeVersion = expoConfig.runtimeVersion || expoConfig.version || "1.0.0";
-
-  const bundleUrl = `${baseUrl}/${platformMetadata.bundle}`;
-
-  const assets = (platformMetadata.assets || []).map((asset: { path: string; ext: string }) => ({
-    url: `${baseUrl}/${asset.path}`,
-    contentType: asset.ext === "png" ? "image/png" :
-                 asset.ext === "jpg" || asset.ext === "jpeg" ? "image/jpeg" :
-                 asset.ext === "ttf" ? "font/ttf" :
-                 asset.ext === "otf" ? "font/otf" :
-                 "application/octet-stream",
-    key: asset.path.split("/").pop() || asset.path,
-  }));
-
-  const id = randomUUID();
-
-  const manifest = {
-    id,
-    createdAt: new Date().toISOString(),
-    runtimeVersion,
-    launchAsset: {
-      url: bundleUrl,
-      contentType: "application/javascript",
-      key: "bundle",
-    },
-    assets,
-    metadata: {},
-    extra: {
-      expoClient: {
-        ...expoConfig,
-        sdkVersion: "54.0.0",
-        hostUri: host,
-      },
-    },
-  };
-
-  res.setHeader("expo-protocol-version", "1");
-  res.setHeader("expo-sfv-version", "0");
-  res.setHeader("content-type", "application/json");
-  res.json(manifest);
 }
 
 function serveLandingPage({
@@ -214,10 +176,60 @@ function serveLandingPage({
     .replace(/APP_NAME_PLACEHOLDER/g, appName);
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache");
   res.status(200).send(html);
 }
 
-function configureExpoAndLanding(app: express.Application) {
+function setupMetroProxy(app: express.Application) {
+  if (!isDev) return;
+
+  const metroProxy = createProxyMiddleware({
+    target: `http://127.0.0.1:${METRO_PORT}`,
+    changeOrigin: true,
+    ws: true,
+    on: {
+      error: (err) => {
+        log("[Proxy] Metro not ready yet:", (err as Error).message);
+      },
+    },
+  });
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+
+    const platform = req.header("expo-platform");
+    const isExpoDev = req.header("expo-dev-client-id") ||
+                      req.header("expo-runtime-version") ||
+                      platform;
+
+    if (isExpoDev) {
+      return metroProxy(req, res, next);
+    }
+
+    if (req.path === "/status" ||
+        req.path === "/inspector" ||
+        req.path === "/debugger-ui" ||
+        req.path === "/json" ||
+        req.path === "/json/list" ||
+        req.path.startsWith("/logs") ||
+        req.path.startsWith("/hot") ||
+        req.path.startsWith("/symbolicate") ||
+        req.path.startsWith("/.expo") ||
+        req.path.endsWith(".bundle") ||
+        req.path.endsWith(".map") ||
+        req.path.includes("__metro")) {
+      return metroProxy(req, res, next);
+    }
+
+    next();
+  });
+
+  log("Metro proxy configured for dev mode -> port", METRO_PORT);
+}
+
+function configureStaticAndLanding(app: express.Application) {
   const templatePath = path.resolve(
     process.cwd(),
     "server",
@@ -227,38 +239,31 @@ function configureExpoAndLanding(app: express.Application) {
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
   const appName = getAppName();
 
-  log("Serving static Expo files with dynamic manifest routing");
-
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
 
-    if (req.path !== "/" && req.path !== "/manifest") {
-      return next();
-    }
-
-    const platform = req.header("expo-platform");
-    if (platform && (platform === "ios" || platform === "android")) {
-      return serveExpoManifest(platform, req, res);
-    }
-
     if (req.path === "/") {
-      return serveLandingPage({
-        req,
-        res,
-        landingPageTemplate,
-        appName,
-      });
+      const platform = req.header("expo-platform");
+      if (!platform) {
+        return serveLandingPage({
+          req,
+          res,
+          landingPageTemplate,
+          appName,
+        });
+      }
     }
 
     next();
   });
 
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
-  app.use(express.static(path.resolve(process.cwd(), "static-build")));
 
-  log("Expo routing: Checking expo-platform header on / and /manifest");
+  if (!isDev) {
+    app.use(express.static(path.resolve(process.cwd(), "static-build")));
+  }
 }
 
 function setupErrorHandler(app: express.Application) {
@@ -283,13 +288,18 @@ function setupErrorHandler(app: express.Application) {
 }
 
 (async () => {
+  if (isDev) {
+    startMetroBundler();
+  }
+
   setupCors(app);
   setupBodyParsing(app);
   setupRequestLogging(app);
 
   await setupAuth(app);
 
-  configureExpoAndLanding(app);
+  setupMetroProxy(app);
+  configureStaticAndLanding(app);
 
   const server = await registerRoutes(app);
 
@@ -303,7 +313,10 @@ function setupErrorHandler(app: express.Application) {
       reusePort: true,
     },
     () => {
-      log(`express server serving on port ${port}`);
+      log(`Express server on port ${port}`);
+      if (isDev) {
+        log(`Metro bundler starting on port ${METRO_PORT}, proxied through Express`);
+      }
     },
   );
 })();

@@ -4,7 +4,8 @@ import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
-import { spawn } from "child_process";
+import * as net from "net";
+import { spawn, execSync, type ChildProcess } from "child_process";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
 const app = express();
@@ -19,11 +20,52 @@ declare module "http" {
 
 const METRO_PORT = 8081;
 const isDev = process.env.NODE_ENV !== "production";
+let metroProcess: ChildProcess | null = null;
 
-function startMetroBundler() {
+function isPortInUse(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    socket.setTimeout(1000);
+    socket.on("connect", () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.on("timeout", () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.on("error", () => {
+      resolve(false);
+    });
+    socket.connect(port, "127.0.0.1");
+  });
+}
+
+function killProcessOnPort(port: number) {
+  try {
+    const pids = execSync(`lsof -ti:${port} 2>/dev/null`).toString().trim();
+    if (pids) {
+      pids.split("\n").forEach((pid) => {
+        try {
+          process.kill(parseInt(pid), "SIGKILL");
+        } catch {}
+      });
+      log(`[Metro] Killed stale process(es) on port ${port}`);
+    }
+  } catch {}
+}
+
+async function startMetroBundler(): Promise<void> {
   if (!isDev) return;
 
-  log("Starting Metro bundler on port", METRO_PORT);
+  const portBusy = await isPortInUse(METRO_PORT);
+  if (portBusy) {
+    log(`[Metro] Port ${METRO_PORT} is busy, killing stale processes...`);
+    killProcessOnPort(METRO_PORT);
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+
+  log("[Metro] Starting bundler on port", METRO_PORT);
 
   const metro = spawn("npx", ["expo", "start", "--port", String(METRO_PORT), "--localhost"], {
     stdio: ["pipe", "pipe", "pipe"],
@@ -38,6 +80,8 @@ function startMetroBundler() {
     cwd: process.cwd(),
   });
 
+  metroProcess = metro;
+
   metro.stdout?.on("data", (data: Buffer) => {
     const msg = data.toString().trim();
     if (msg) log("[Metro]", msg);
@@ -45,45 +89,54 @@ function startMetroBundler() {
 
   metro.stderr?.on("data", (data: Buffer) => {
     const msg = data.toString().trim();
-    if (msg) log("[Metro:err]", msg);
+    if (msg && !msg.includes("DeprecationWarning")) log("[Metro:err]", msg);
   });
 
   metro.on("close", (code: number | null) => {
     log("[Metro] exited with code", code);
+    metroProcess = null;
   });
 
-  return metro;
+  await new Promise<void>((resolve) => {
+    const check = async () => {
+      const ready = await isPortInUse(METRO_PORT);
+      if (ready) {
+        log("[Metro] Bundler is ready");
+        resolve();
+      } else {
+        setTimeout(check, 1000);
+      }
+    };
+    setTimeout(check, 3000);
+    setTimeout(() => {
+      log("[Metro] Timed out waiting for Metro, continuing anyway");
+      resolve();
+    }, 30000);
+  });
 }
+
+function cleanupMetro() {
+  if (metroProcess) {
+    log("[Metro] Shutting down...");
+    metroProcess.kill("SIGTERM");
+    metroProcess = null;
+  }
+}
+
+process.on("SIGINT", () => { cleanupMetro(); process.exit(0); });
+process.on("SIGTERM", () => { cleanupMetro(); process.exit(0); });
 
 function setupCors(app: express.Application) {
   app.use((req, res, next) => {
-    const origins = new Set<string>();
-
-    if (process.env.REPLIT_DEV_DOMAIN) {
-      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
-    }
-
-    if (process.env.REPLIT_DOMAINS) {
-      process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
-        origins.add(`https://${d.trim()}`);
-      });
-    }
-
     const origin = req.header("origin");
-
-    const isLocalhost =
-      origin?.startsWith("http://localhost:") ||
-      origin?.startsWith("http://127.0.0.1:");
-
-    if (origin && (origins.has(origin) || isLocalhost)) {
+    if (origin) {
       res.header("Access-Control-Allow-Origin", origin);
-      res.header(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, OPTIONS",
-      );
-      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
       res.header("Access-Control-Allow-Credentials", "true");
+    } else {
+      res.header("Access-Control-Allow-Origin", "*");
     }
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, expo-platform, expo-runtime-version, expo-dev-client-id");
 
     if (req.method === "OPTIONS") {
       return res.sendStatus(200);
@@ -94,15 +147,24 @@ function setupCors(app: express.Application) {
 }
 
 function setupBodyParsing(app: express.Application) {
-  app.use(
-    express.json({
-      verify: (req, _res, buf) => {
-        req.rawBody = buf;
-      },
-    }),
-  );
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+    const platform = req.header("expo-platform");
+    if (platform || req.path === "/status" || req.path.endsWith(".bundle") || req.path.endsWith(".map")) {
+      return next();
+    }
+    next();
+  });
 
-  app.use(express.urlencoded({ extended: false }));
+  app.use("/api", express.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }));
+
+  app.use("/api", express.urlencoded({ extended: false }));
 }
 
 function setupRequestLogging(app: express.Application) {
@@ -167,9 +229,6 @@ function serveLandingPage({
   const baseUrl = `${protocol}://${host}`;
   const expsUrl = `${host}`;
 
-  log(`baseUrl`, baseUrl);
-  log(`expsUrl`, expsUrl);
-
   const html = landingPageTemplate
     .replace(/BASE_URL_PLACEHOLDER/g, baseUrl)
     .replace(/EXPS_URL_PLACEHOLDER/g, expsUrl)
@@ -188,8 +247,14 @@ function setupMetroProxy(app: express.Application) {
     changeOrigin: true,
     ws: true,
     on: {
-      error: (err) => {
-        log("[Proxy] Metro not ready yet:", (err as Error).message);
+      error: (err, _req, res) => {
+        log("[Proxy] Error:", (err as Error).message);
+        if (res && "writeHead" in res && !("writableEnded" in res && (res as any).writableEnded)) {
+          try {
+            (res as any).writeHead(502);
+            (res as any).end("Metro bundler not ready");
+          } catch {}
+        }
       },
     },
   });
@@ -199,34 +264,14 @@ function setupMetroProxy(app: express.Application) {
       return next();
     }
 
-    const platform = req.header("expo-platform");
-    const isExpoDev = req.header("expo-dev-client-id") ||
-                      req.header("expo-runtime-version") ||
-                      platform;
-
-    if (isExpoDev) {
-      return metroProxy(req, res, next);
+    if (req.path === "/" && !req.header("expo-platform")) {
+      return next();
     }
 
-    if (req.path === "/status" ||
-        req.path === "/inspector" ||
-        req.path === "/debugger-ui" ||
-        req.path === "/json" ||
-        req.path === "/json/list" ||
-        req.path.startsWith("/logs") ||
-        req.path.startsWith("/hot") ||
-        req.path.startsWith("/symbolicate") ||
-        req.path.startsWith("/.expo") ||
-        req.path.endsWith(".bundle") ||
-        req.path.endsWith(".map") ||
-        req.path.includes("__metro")) {
-      return metroProxy(req, res, next);
-    }
-
-    next();
+    metroProxy(req, res, next);
   });
 
-  log("Metro proxy configured for dev mode -> port", METRO_PORT);
+  log("[Proxy] Metro proxy configured -> port", METRO_PORT);
 }
 
 function configureStaticAndLanding(app: express.Application) {
@@ -240,22 +285,14 @@ function configureStaticAndLanding(app: express.Application) {
   const appName = getAppName();
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith("/api")) {
-      return next();
+    if (req.path === "/" && !req.header("expo-platform")) {
+      return serveLandingPage({
+        req,
+        res,
+        landingPageTemplate,
+        appName,
+      });
     }
-
-    if (req.path === "/") {
-      const platform = req.header("expo-platform");
-      if (!platform) {
-        return serveLandingPage({
-          req,
-          res,
-          landingPageTemplate,
-          appName,
-        });
-      }
-    }
-
     next();
   });
 
@@ -288,17 +325,14 @@ function setupErrorHandler(app: express.Application) {
 }
 
 (async () => {
-  if (isDev) {
-    startMetroBundler();
-  }
-
   setupCors(app);
-  setupBodyParsing(app);
   setupRequestLogging(app);
 
   await setupAuth(app);
 
   setupMetroProxy(app);
+
+  setupBodyParsing(app);
   configureStaticAndLanding(app);
 
   const server = await registerRoutes(app);
@@ -312,10 +346,11 @@ function setupErrorHandler(app: express.Application) {
       host: "0.0.0.0",
       reusePort: true,
     },
-    () => {
+    async () => {
       log(`Express server on port ${port}`);
       if (isDev) {
-        log(`Metro bundler starting on port ${METRO_PORT}, proxied through Express`);
+        await startMetroBundler();
+        log(`Metro bundler proxied through Express on port ${port}`);
       }
     },
   );

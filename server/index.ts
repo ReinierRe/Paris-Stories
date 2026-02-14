@@ -175,6 +175,7 @@ function serveExpoManifest(platform: string, req: Request, res: Response) {
     extra: {
       expoClient: {
         ...expoConfig,
+        sdkVersion: "54.0.0",
         hostUri: host,
       },
     },

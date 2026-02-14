@@ -51,6 +51,15 @@ patches/          - npm patch files
 - Build: `npm run server:build` (esbuild bundles server to server_dist/)
 - Run: `NODE_ENV=production node server_dist/index.js`
 
+## Development Architecture
+- In dev mode, Express on port 5000 proxies Expo Go requests to Metro bundler on port 8081
+- Metro is started as a child process by the Express server
+- API routes (/api/*) handled directly by Express
+- Landing page served by Express for browser requests (no expo-platform header)
+- In production, static-build/ files are served instead of Metro proxy
+
 ## Recent Changes
+- 2026-02-14: Added Metro dev server proxy - Express now proxies Expo Go requests to Metro bundler for live development
+- 2026-02-14: Added runtimeVersion (exposdk:54.0.0) to app.json for Expo Go SDK 54 compatibility
 - 2026-02-14: Switched TTS from OpenAI to Google Cloud Text-to-Speech API (Wavenet voices, multi-language support)
 - 2026-02-14: Initial Replit setup - configured database, workflows, and deployment

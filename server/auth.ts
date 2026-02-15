@@ -2,7 +2,16 @@ import type { Express, Request, Response, NextFunction } from "express";
 import * as admin from "firebase-admin";
 import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser } from "./storage";
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON!);
+if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is required. Add your Firebase service account JSON to secrets.");
+}
+
+let serviceAccount: admin.ServiceAccount;
+try {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+} catch (e) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON contains invalid JSON. Please check the value in your secrets.");
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

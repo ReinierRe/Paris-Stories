@@ -1,8 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { auth } from "@/lib/firebase";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+} from "firebase/auth";
 import { getApiUrl, setOnUnauthorized } from "@/lib/query-client";
-
-const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
 
 interface AuthUser {
   id: string;
@@ -27,105 +32,106 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const verifyToken = useCallback(async (authToken: string): Promise<boolean> => {
+  const verifyWithBackend = useCallback(async (idToken: string): Promise<AuthUser | null> => {
     try {
       const baseUrl = getApiUrl();
-      const url = new URL("/api/auth/me", baseUrl);
+      const url = new URL("/api/auth/verify", baseUrl);
       const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${authToken}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
       });
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user);
-        setToken(authToken);
-        return true;
+        return data.user;
       }
-      return false;
+      return null;
     } catch {
-      return false;
+      return null;
     }
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const stored = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-        if (stored) {
-          const valid = await verifyToken(stored);
-          if (!valid) {
-            await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const idToken = await firebaseUser.getIdToken();
+          const backendUser = await verifyWithBackend(idToken);
+          if (backendUser) {
+            setUser(backendUser);
+            setToken(idToken);
+          } else {
+            setUser(null);
+            setToken(null);
           }
+        } catch {
+          setUser(null);
+          setToken(null);
         }
-      } catch {}
+      } else {
+        setUser(null);
+        setToken(null);
+      }
       setIsLoading(false);
-    })();
-  }, [verifyToken]);
+    });
+
+    return unsubscribe;
+  }, [verifyWithBackend]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const baseUrl = getApiUrl();
-      const url = new URL("/api/auth/login", baseUrl);
-      const res = await fetch(url.toString(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        await AsyncStorage.setItem(AUTH_TOKEN_KEY, data.token);
-        setToken(data.token);
-        setUser(data.user);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await credential.user.getIdToken();
+      const backendUser = await verifyWithBackend(idToken);
+      if (backendUser) {
+        setUser(backendUser);
+        setToken(idToken);
         return { success: true };
       }
-
-      return { success: false, error: data.error || "Login failed" };
-    } catch (err) {
-      return { success: false, error: "Could not connect to server" };
+      return { success: false, error: "Failed to verify with server" };
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") {
+        return { success: false, error: "Invalid email or password" };
+      }
+      if (code === "auth/too-many-requests") {
+        return { success: false, error: "Too many attempts. Please try again later." };
+      }
+      return { success: false, error: err?.message || "Login failed" };
     }
-  }, []);
+  }, [verifyWithBackend]);
 
   const register = useCallback(async (email: string, password: string, firstName: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const baseUrl = getApiUrl();
-      const url = new URL("/api/auth/register", baseUrl);
-      const res = await fetch(url.toString(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, firstName }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        await AsyncStorage.setItem(AUTH_TOKEN_KEY, data.token);
-        setToken(data.token);
-        setUser(data.user);
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(credential.user, { displayName: firstName });
+      const idToken = await credential.user.getIdToken();
+      const backendUser = await verifyWithBackend(idToken);
+      if (backendUser) {
+        setUser(backendUser);
+        setToken(idToken);
         return { success: true };
       }
-
-      return { success: false, error: data.error || "Registration failed" };
-    } catch (err) {
-      return { success: false, error: "Could not connect to server" };
+      return { success: false, error: "Failed to verify with server" };
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === "auth/email-already-in-use") {
+        return { success: false, error: "Email already registered" };
+      }
+      if (code === "auth/weak-password") {
+        return { success: false, error: "Password must be at least 6 characters" };
+      }
+      return { success: false, error: err?.message || "Registration failed" };
     }
-  }, []);
+  }, [verifyWithBackend]);
 
   const logout = useCallback(async () => {
     try {
-      if (token) {
-        const baseUrl = getApiUrl();
-        const url = new URL("/api/auth/logout", baseUrl);
-        await fetch(url.toString(), {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
-      }
-      await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+      await signOut(auth);
       setUser(null);
       setToken(null);
     } catch {}
-  }, [token]);
+  }, []);
 
   const logoutRef = useRef(logout);
   logoutRef.current = logout;

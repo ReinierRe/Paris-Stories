@@ -1,140 +1,89 @@
 import type { Express, Request, Response, NextFunction } from "express";
-import crypto from "crypto";
-import bcrypt from "bcryptjs";
-import { getUserByEmail, createUser, getUser } from "./storage";
+import * as admin from "firebase-admin";
+import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser } from "./storage";
 
-const tokenStore = new Map<
-  string,
-  {
-    user: {
-      id: string;
-      email: string;
-      firstName?: string | null;
-    };
-    createdAt: number;
-  }
->();
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON!);
 
-setInterval(() => {
-  const now = Date.now();
-  const maxAge = 7 * 24 * 60 * 60 * 1000;
-  for (const [token, data] of tokenStore) {
-    if (now - data.createdAt > maxAge) {
-      tokenStore.delete(token);
-    }
-  }
-}, 60 * 60 * 1000);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
-function generateToken(): string {
-  return crypto.randomBytes(48).toString("hex");
-}
-
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7);
-    const session = tokenStore.get(token);
-    if (session) {
-      (req as any).user = session.user;
-      return next();
-    }
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Authentication required" });
   }
-  return res.status(401).json({ error: "Authentication required" });
-}
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const token = authHeader.slice(7);
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    let user = await getUserByFirebaseUid(decoded.uid);
+
+    if (!user) {
+      const email = decoded.email;
+      if (email) {
+        user = await getUserByEmail(email);
+        if (!user) {
+          user = await createFirebaseUser(email, decoded.uid, decoded.name);
+        }
+      }
+    }
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    (req as any).user = { id: user.id, email: user.email, firstName: user.firstName };
+    return next();
+  } catch (err) {
+    console.error("Auth verification error:", err);
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
 
 export async function setupAuth(app: Express): Promise<void> {
-  app.post("/api/auth/register", async (req: Request, res: Response) => {
+  app.post("/api/auth/verify", async (req: Request, res: Response) => {
     try {
-      const { email, password, firstName } = req.body;
-
-      if (!email || !EMAIL_REGEX.test(email)) {
-        return res.status(400).json({ error: "Valid email is required" });
-      }
-      if (!password || password.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
-      if (!firstName || !firstName.trim()) {
-        return res.status(400).json({ error: "First name is required" });
+      const { idToken } = req.body;
+      if (!idToken) {
+        return res.status(400).json({ error: "ID token is required" });
       }
 
-      const existing = await getUserByEmail(email.toLowerCase());
-      if (existing) {
-        return res.status(409).json({ error: "Email already registered" });
-      }
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      let user = await getUserByFirebaseUid(decoded.uid);
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await createUser(email.toLowerCase(), hashedPassword, firstName.trim());
-
-      const token = generateToken();
-      tokenStore.set(token, {
-        user: { id: user.id, email: user.email, firstName: user.firstName },
-        createdAt: Date.now(),
-      });
-
-      return res.json({
-        token,
-        user: { id: user.id, email: user.email, firstName: user.firstName },
-      });
-    } catch (err) {
-      console.error("Registration error:", err);
-      return res.status(500).json({ error: "Registration failed" });
-    }
-  });
-
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
-    try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res.status(400).json({ error: "Email and password are required" });
-      }
-
-      const user = await getUserByEmail(email.toLowerCase());
       if (!user) {
-        return res.status(401).json({ error: "Invalid email or password" });
-      }
+        const email = decoded.email;
+        if (!email) {
+          return res.status(400).json({ error: "Email not available from Firebase" });
+        }
 
-      const valid = await bcrypt.compare(password, user.password);
-      if (!valid) {
-        return res.status(401).json({ error: "Invalid email or password" });
+        user = await getUserByEmail(email);
+        if (user) {
+          const { db } = await import("./storage");
+          const { users } = await import("@shared/schema");
+          const { eq } = await import("drizzle-orm");
+          await db.update(users).set({ firebaseUid: decoded.uid }).where(eq(users.id, user.id));
+          user = { ...user, firebaseUid: decoded.uid };
+        } else {
+          user = await createFirebaseUser(email, decoded.uid, decoded.name);
+        }
       }
-
-      const token = generateToken();
-      tokenStore.set(token, {
-        user: { id: user.id, email: user.email, firstName: user.firstName },
-        createdAt: Date.now(),
-      });
 
       return res.json({
-        token,
         user: { id: user.id, email: user.email, firstName: user.firstName },
       });
     } catch (err) {
-      console.error("Login error:", err);
-      return res.status(500).json({ error: "Login failed" });
+      console.error("Verify error:", err);
+      return res.status(401).json({ error: "Invalid token" });
     }
   });
 
-  app.get("/api/auth/me", (req: Request, res: Response) => {
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.slice(7);
-      const session = tokenStore.get(token);
-      if (session) {
-        return res.json({ user: session.user });
-      }
-    }
-    return res.status(401).json({ error: "Not authenticated" });
+  app.get("/api/auth/me", requireAuth, (req: Request, res: Response) => {
+    return res.json({ user: (req as any).user });
   });
 
-  app.post("/api/auth/logout", (req: Request, res: Response) => {
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.slice(7);
-      tokenStore.delete(token);
-    }
+  app.post("/api/auth/logout", (_req: Request, res: Response) => {
     return res.json({ success: true });
   });
 }

@@ -1,8 +1,6 @@
 import { fetch } from "expo/fetch";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-
-const AUTH_TOKEN_KEY = "@paris_stories_auth_token";
+import { auth } from "@/lib/firebase";
 
 let onUnauthorizedCallback: (() => void) | null = null;
 
@@ -24,8 +22,9 @@ export function getApiUrl(): string {
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-    if (token) {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const token = await currentUser.getIdToken();
       return { Authorization: `Bearer ${token}` };
     }
   } catch {}

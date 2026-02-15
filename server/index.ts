@@ -76,6 +76,9 @@ async function startMetroBundler(): Promise<void> {
       REACT_NATIVE_PACKAGER_HOSTNAME: process.env.REPLIT_DEV_DOMAIN || "0.0.0.0",
       EXPO_PUBLIC_DOMAIN: `${process.env.REPLIT_DEV_DOMAIN}`,
       EXPO_USE_FAST_RESOLVER: "1",
+      EXPO_PUBLIC_FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || "",
+      EXPO_PUBLIC_FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || "",
+      EXPO_PUBLIC_FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || "",
     },
     cwd: process.cwd(),
   });

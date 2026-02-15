@@ -15,7 +15,7 @@ app/              - Expo React Native screens (tabs, player, login, etc.)
 server/           - Express backend
   index.ts        - Server entry point (port 5000)
   routes.ts       - API routes for podcast generation, history, custom podcasts
-  auth.ts         - Token-based authentication (register, login, logout)
+  auth.ts         - Firebase Authentication (Admin SDK token verification, user sync)
   storage.ts      - Database client and user queries
   google-tts.ts   - Google Cloud Text-to-Speech client (voice mapping, WAV generation)
 shared/           - Shared types and database schema
@@ -36,7 +36,7 @@ patches/          - npm patch files
 - `npm run expo:dev` - Start Expo dev server (for native development)
 
 ## Database Tables
-- `users` - User accounts with email/password auth
+- `users` - User accounts with Firebase Authentication (firebaseUid, email, optional password for legacy)
 - `cached_podcasts` - Pre-generated podcast cache (by topic/angle/voice/language/length)
 - `custom_podcasts` - User-created custom podcasts
 - `user_podcasts` - Links users to cached podcasts they've listened to
@@ -45,6 +45,8 @@ patches/          - npm patch files
 - `DATABASE_URL` - PostgreSQL connection string
 - `GOOGLE_TTS_API_KEY` - Google Cloud API key (Text-to-Speech API must be enabled)
 - `AI_INTEGRATIONS_ANTHROPIC_API_KEY` / `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` - Anthropic via Replit AI Integrations (for script generation)
+- `FIREBASE_API_KEY` / `FIREBASE_PROJECT_ID` / `FIREBASE_APP_ID` - Firebase web app config (forwarded as EXPO_PUBLIC_* to frontend)
+- `FIREBASE_SERVICE_ACCOUNT_JSON` - Firebase Admin SDK service account JSON (for backend token verification)
 
 ## Deployment
 - Target: Autoscale
@@ -59,6 +61,7 @@ patches/          - npm patch files
 - In production, static-build/ files are served instead of Metro proxy
 
 ## Recent Changes
+- 2026-02-15: Replaced custom email/password auth with Firebase Authentication (Firebase Admin SDK on backend, Firebase Auth SDK on frontend)
 - 2026-02-14: Added Metro dev server proxy - Express now proxies Expo Go requests to Metro bundler for live development
 - 2026-02-14: Added runtimeVersion (exposdk:54.0.0) to app.json for Expo Go SDK 54 compatibility
 - 2026-02-14: Switched TTS from OpenAI to Google Cloud Text-to-Speech API (Wavenet voices, multi-language support)

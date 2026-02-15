@@ -1140,9 +1140,9 @@ function setupErrorHandler(app2) {
 (async () => {
   setupCors(app);
   setupRequestLogging(app);
+  setupBodyParsing(app);
   await setupAuth(app);
   setupMetroProxy(app);
-  setupBodyParsing(app);
   configureStaticAndLanding(app);
   const server = await registerRoutes(app);
   setupErrorHandler(app);

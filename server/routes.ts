@@ -25,6 +25,38 @@ function generateId(): string {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
 }
 
+interface GenerationJob {
+  status: "generating" | "ready" | "error";
+  progress?: string;
+  result?: {
+    id: string;
+    script: string;
+    audioUrl: string;
+    durationSeconds: number;
+    cached: boolean;
+    subject?: string;
+    angle?: string;
+    voice?: string;
+    language?: string;
+    length?: string;
+    createdAt?: string;
+    customDbId?: string;
+  };
+  error?: string;
+  createdAt: number;
+}
+
+const generationJobs = new Map<string, GenerationJob>();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, job] of generationJobs) {
+    if (now - job.createdAt > 30 * 60 * 1000) {
+      generationJobs.delete(id);
+    }
+  }
+}, 10 * 60 * 1000);
+
 
 function getSystemPrompt(language: string, perspective: string, wordCount: number): string {
   const perspectiveMap: Record<string, { en: string; nl: string }> = {
@@ -171,8 +203,104 @@ async function concatenateWavBuffers(buffers: Buffer[]): Promise<Buffer> {
   return Buffer.concat([header, ...pcmChunks]);
 }
 
+async function generateScriptAndAudio(params: {
+  systemPrompt: string;
+  userPrompt: string;
+  voice: string;
+  language: string;
+  topicName: string;
+  jobId: string;
+}): Promise<{ script: string; filename: string; durationSeconds: number; combinedAudio: Buffer }> {
+  const job = generationJobs.get(params.jobId);
+
+  if (job) job.progress = "Writing script...";
+  console.log(`Generating script for "${params.topicName}"...`);
+
+  const scriptResponse = await anthropic.messages.create({
+    model: "claude-sonnet-4-5",
+    max_tokens: 8192,
+    messages: [{ role: "user", content: params.userPrompt }],
+    system: params.systemPrompt,
+  });
+
+  const script = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
+  console.log(`Script generated (${script.length} chars). Generating audio...`);
+
+  if (job) job.progress = "Generating audio...";
+
+  const googleVoice = getGoogleVoice(params.voice, params.language);
+  const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  for (const paragraph of paragraphs) {
+    if (currentChunk.length + paragraph.length > 800 && currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = paragraph;
+    } else {
+      currentChunk += (currentChunk ? "\n\n" : "") + paragraph;
+    }
+  }
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  const audioBuffers: Buffer[] = [];
+  for (let i = 0; i < chunks.length; i++) {
+    if (job) job.progress = `Generating audio (${i + 1}/${chunks.length})...`;
+    console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
+    try {
+      const audio = await googleTextToSpeech(chunks[i], googleVoice);
+      if (audio.length > 44) {
+        audioBuffers.push(audio);
+      }
+    } catch (err) {
+      console.error(`  TTS chunk ${i + 1} failed:`, err);
+    }
+  }
+
+  if (audioBuffers.length === 0) {
+    throw new Error("Audio generation failed");
+  }
+
+  const combinedAudio = await concatenateWavBuffers(audioBuffers);
+  const id = generateId();
+  const filename = `${id}.wav`;
+  const filepath = path.join(AUDIO_DIR, filename);
+  fs.writeFileSync(filepath, combinedAudio);
+
+  let durationSeconds = 0;
+  if (combinedAudio.length >= 44) {
+    const wavChannels = combinedAudio.readUInt16LE(22);
+    const wavSampleRate = combinedAudio.readUInt32LE(24);
+    const wavBitsPerSample = combinedAudio.readUInt16LE(34);
+    const wavByteRate = wavSampleRate * wavChannels * (wavBitsPerSample / 8);
+    const dataInfo = findDataChunk(combinedAudio);
+    const pcmSize = dataInfo ? dataInfo.size : (combinedAudio.length - 44);
+    durationSeconds = Math.round(pcmSize / wavByteRate);
+  }
+
+  console.log(`Podcast "${params.topicName}" ready (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
+
+  return { script, filename, durationSeconds, combinedAudio };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/podcast/audio", express.static(AUDIO_DIR));
+
+  app.get("/api/podcast/job/:jobId", requireAuth, (req: Request, res: Response) => {
+    const jobId = req.params.jobId as string;
+    const job = generationJobs.get(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+    res.json({
+      status: job.status,
+      progress: job.progress,
+      result: job.result,
+      error: job.error,
+    });
+  });
 
   app.post("/api/podcast/generate", requireAuth, async (req: Request, res: Response) => {
     try {
@@ -221,136 +349,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             return res.json({
-              id: cached.id,
-              script: cached.script,
-              audioUrl: `/api/podcast/audio/${cached.audioFilename}`,
-              durationSeconds: cached.durationSeconds,
-              cached: true,
+              status: "ready",
+              result: {
+                id: cached.id,
+                script: cached.script,
+                audioUrl: `/api/podcast/audio/${cached.audioFilename}`,
+                durationSeconds: cached.durationSeconds,
+                cached: true,
+              },
             });
           }
         }
       }
 
-      const id = generateId();
-      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750);
-
-      const userPrompt =
-        language === "nl"
-          ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)`
-          : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
-
-      console.log(`Generating script for "${topicName}" [${cacheAngle || "no angle"}/${voice}/${language}/${cacheLength}]...`);
-      const scriptResponse = await anthropic.messages.create({
-        model: "claude-sonnet-4-5",
-        max_tokens: 8192,
-        messages: [{ role: "user", content: userPrompt }],
-        system: systemPrompt,
+      const jobId = generateId();
+      generationJobs.set(jobId, {
+        status: "generating",
+        progress: "Starting...",
+        createdAt: Date.now(),
       });
 
-      const script =
-        scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
+      res.json({ jobId, status: "generating" });
 
-      console.log(`Script generated (${script.length} chars). Generating audio...`);
+      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750);
+      const userPrompt = language === "nl"
+        ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)`
+        : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
 
-      const googleVoice = getGoogleVoice(voice, language);
-
-      const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
-      const chunks: string[] = [];
-      let currentChunk = "";
-
-      for (const paragraph of paragraphs) {
-        if (currentChunk.length + paragraph.length > 800 && currentChunk.length > 0) {
-          chunks.push(currentChunk.trim());
-          currentChunk = paragraph;
-        } else {
-          currentChunk += (currentChunk ? "\n\n" : "") + paragraph;
-        }
-      }
-      if (currentChunk.trim()) {
-        chunks.push(currentChunk.trim());
-      }
-
-      const audioBuffers: Buffer[] = [];
-      for (let i = 0; i < chunks.length; i++) {
-        console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
-        try {
-          const audio = await googleTextToSpeech(chunks[i], googleVoice);
-          if (audio.length > 44) {
-            audioBuffers.push(audio);
+      generateScriptAndAudio({
+        systemPrompt,
+        userPrompt,
+        voice,
+        language,
+        topicName,
+        jobId,
+      }).then(async ({ script, filename, durationSeconds }) => {
+        let cachedId = jobId;
+        if (topicId) {
+          try {
+            const [inserted] = await db.insert(cachedPodcasts).values({
+              topicId,
+              angle: cacheAngle,
+              voice,
+              language,
+              length: cacheLength,
+              script,
+              audioFilename: filename,
+              durationSeconds,
+            }).returning();
+            cachedId = inserted.id;
+            console.log(`Cached podcast for "${topicName}"`);
+          } catch (cacheErr) {
+            console.error("Failed to cache podcast:", cacheErr);
           }
-        } catch (err) {
-          console.error(`  TTS chunk ${i + 1} failed:`, err);
         }
-      }
 
-      if (audioBuffers.length === 0) {
-        return res.status(500).json({ error: "Audio generation failed" });
-      }
+        if (userId && topicId) {
+          try {
+            await db.insert(userPodcasts).values({
+              userId,
+              cachedPodcastId: cachedId,
+              topicName: topicName || "",
+              topicNameNl: topicNameNl || topicName || "",
+              themeName: themeName || "",
+              themeNameNl: themeNameNl || themeName || "",
+            }).onConflictDoNothing();
+          } catch (e) {
+            console.error("Failed to save user-podcast link:", e);
+          }
+        }
 
-      const combinedAudio = await concatenateWavBuffers(audioBuffers);
-
-      const filename = `${id}.wav`;
-      const filepath = path.join(AUDIO_DIR, filename);
-      fs.writeFileSync(filepath, combinedAudio);
-
-      let durationSeconds = 0;
-      if (combinedAudio.length >= 44) {
-        const wavChannels = combinedAudio.readUInt16LE(22);
-        const wavSampleRate = combinedAudio.readUInt32LE(24);
-        const wavBitsPerSample = combinedAudio.readUInt16LE(34);
-        const wavByteRate = wavSampleRate * wavChannels * (wavBitsPerSample / 8);
-        const dataInfo = findDataChunk(combinedAudio);
-        const pcmSize = dataInfo ? dataInfo.size : (combinedAudio.length - 44);
-        durationSeconds = Math.round(pcmSize / wavByteRate);
-      }
-
-      console.log(`Podcast "${topicName}" ready (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
-
-      let cachedId = id;
-      if (topicId) {
-        try {
-          const [inserted] = await db.insert(cachedPodcasts).values({
-            topicId,
-            angle: cacheAngle,
-            voice,
-            language,
-            length: cacheLength,
+        const job = generationJobs.get(jobId);
+        if (job) {
+          job.status = "ready";
+          job.result = {
+            id: cachedId,
             script,
-            audioFilename: filename,
+            audioUrl: `/api/podcast/audio/${filename}`,
             durationSeconds,
-          }).returning();
-          cachedId = inserted.id;
-          console.log(`Cached podcast for "${topicName}"`);
-        } catch (cacheErr) {
-          console.error("Failed to cache podcast:", cacheErr);
+            cached: false,
+          };
         }
-      }
-
-      if (userId && topicId) {
-        try {
-          await db.insert(userPodcasts).values({
-            userId,
-            cachedPodcastId: cachedId,
-            topicName: topicName || "",
-            topicNameNl: topicNameNl || topicName || "",
-            themeName: themeName || "",
-            themeNameNl: themeNameNl || themeName || "",
-          }).onConflictDoNothing();
-        } catch (e) {
-          console.error("Failed to save user-podcast link:", e);
+      }).catch((error) => {
+        console.error("Error generating podcast:", error);
+        const job = generationJobs.get(jobId);
+        if (job) {
+          job.status = "error";
+          job.error = "Failed to generate podcast";
         }
-      }
-
-      res.json({
-        id: cachedId,
-        script,
-        audioUrl: `/api/podcast/audio/${filename}`,
-        durationSeconds,
-        cached: false,
       });
     } catch (error) {
-      console.error("Error generating podcast:", error);
-      res.status(500).json({ error: "Failed to generate podcast" });
+      console.error("Error starting podcast generation:", error);
+      res.status(500).json({ error: "Failed to start podcast generation" });
     }
   });
 
@@ -412,99 +502,75 @@ Rules:
         ? `Schrijf een podcast over: ${subject} (in de context van Parijs)`
         : `Write a podcast about: ${subject} (in the context of Paris)`;
 
-      const id = generateId();
+      const jobId = generateId();
+      generationJobs.set(jobId, {
+        status: "generating",
+        progress: "Starting...",
+        createdAt: Date.now(),
+      });
 
       console.log(`Generating custom podcast for user ${userId}: "${subject}" [${angle}/${voice}/${language}]...`);
-      const scriptResponse = await anthropic.messages.create({
-        model: "claude-sonnet-4-5",
-        max_tokens: 8192,
-        messages: [{ role: "user", content: userPrompt }],
-        system: systemPrompt,
-      });
 
-      const script = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
-      console.log(`Custom script generated (${script.length} chars). Generating audio...`);
+      res.json({ jobId, status: "generating" });
 
-      const googleVoice = getGoogleVoice(voice, language);
-      const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
-      const chunks: string[] = [];
-      let currentChunk = "";
-
-      for (const paragraph of paragraphs) {
-        if (currentChunk.length + paragraph.length > 800 && currentChunk.length > 0) {
-          chunks.push(currentChunk.trim());
-          currentChunk = paragraph;
-        } else {
-          currentChunk += (currentChunk ? "\n\n" : "") + paragraph;
-        }
-      }
-      if (currentChunk.trim()) {
-        chunks.push(currentChunk.trim());
-      }
-
-      const audioBuffers: Buffer[] = [];
-      for (let i = 0; i < chunks.length; i++) {
-        console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
-        try {
-          const audio = await googleTextToSpeech(chunks[i], googleVoice);
-          if (audio.length > 44) {
-            audioBuffers.push(audio);
-          }
-        } catch (err) {
-          console.error(`  TTS chunk ${i + 1} failed:`, err);
-        }
-      }
-
-      if (audioBuffers.length === 0) {
-        return res.status(500).json({ error: "Audio generation failed" });
-      }
-
-      const combinedAudio = await concatenateWavBuffers(audioBuffers);
-      const filename = `custom_${id}.wav`;
-      const filepath = path.join(AUDIO_DIR, filename);
-      fs.writeFileSync(filepath, combinedAudio);
-
-      let durationSeconds = 0;
-      if (combinedAudio.length >= 44) {
-        const wavChannels = combinedAudio.readUInt16LE(22);
-        const wavSampleRate = combinedAudio.readUInt32LE(24);
-        const wavBitsPerSample = combinedAudio.readUInt16LE(34);
-        const wavByteRate = wavSampleRate * wavChannels * (wavBitsPerSample / 8);
-        const dataInfo = findDataChunk(combinedAudio);
-        const pcmSize = dataInfo ? dataInfo.size : (combinedAudio.length - 44);
-        durationSeconds = Math.round(pcmSize / wavByteRate);
-      }
-
-      const [saved] = await db.insert(customPodcasts).values({
-        id,
-        userId,
-        subject,
-        angle,
+      generateScriptAndAudio({
+        systemPrompt,
+        userPrompt,
         voice,
         language,
-        length: lengthId || "short",
-        script,
-        audioFilename: filename,
-        durationSeconds,
-      }).returning();
+        topicName: subject,
+        jobId,
+      }).then(async ({ script, filename, durationSeconds }) => {
+        const customFilename = `custom_${filename}`;
+        const oldPath = path.join(AUDIO_DIR, filename);
+        const newPath = path.join(AUDIO_DIR, customFilename);
+        fs.renameSync(oldPath, newPath);
 
-      console.log(`Custom podcast "${subject}" ready for user ${userId} (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
+        const id = generateId();
+        const [saved] = await db.insert(customPodcasts).values({
+          id,
+          userId,
+          subject,
+          angle,
+          voice,
+          language,
+          length: lengthId || "short",
+          script,
+          audioFilename: customFilename,
+          durationSeconds,
+        }).returning();
 
-      res.json({
-        id: saved.id,
-        subject: saved.subject,
-        script: saved.script,
-        audioUrl: `/api/podcast/audio/${saved.audioFilename}`,
-        durationSeconds: saved.durationSeconds,
-        angle: saved.angle,
-        voice: saved.voice,
-        language: saved.language,
-        length: saved.length,
-        createdAt: saved.createdAt,
+        console.log(`Custom podcast "${subject}" ready for user ${userId} (${durationSeconds}s)`);
+
+        const job = generationJobs.get(jobId);
+        if (job) {
+          job.status = "ready";
+          job.result = {
+            id: saved.id,
+            subject: saved.subject,
+            script: saved.script,
+            audioUrl: `/api/podcast/audio/${saved.audioFilename}`,
+            durationSeconds: saved.durationSeconds,
+            angle: saved.angle,
+            voice: saved.voice,
+            language: saved.language,
+            length: saved.length,
+            createdAt: saved.createdAt?.toISOString(),
+            customDbId: saved.id,
+            cached: false,
+          };
+        }
+      }).catch((error) => {
+        console.error("Error generating custom podcast:", error);
+        const job = generationJobs.get(jobId);
+        if (job) {
+          job.status = "error";
+          job.error = "Failed to generate custom podcast";
+        }
       });
     } catch (error) {
-      console.error("Error generating custom podcast:", error);
-      res.status(500).json({ error: "Failed to generate custom podcast" });
+      console.error("Error starting custom podcast generation:", error);
+      res.status(500).json({ error: "Failed to start custom podcast generation" });
     }
   });
 

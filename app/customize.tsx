@@ -172,12 +172,54 @@ export default function CustomizeScreen() {
 
       const data = await res.json();
 
-      await updatePodcast(podcastId, {
-        script: data.script,
-        audioUrl: data.audioUrl,
-        durationSeconds: data.durationSeconds || 0,
-        status: "ready",
-      });
+      if (data.status === "ready" && data.result) {
+        await updatePodcast(podcastId, {
+          script: data.result.script,
+          audioUrl: data.result.audioUrl,
+          durationSeconds: data.result.durationSeconds || 0,
+          status: "ready",
+        });
+      } else if (data.jobId) {
+        const pollForResult = async () => {
+          const maxAttempts = 120;
+          for (let i = 0; i < maxAttempts; i++) {
+            await new Promise((r) => setTimeout(r, 3000));
+            try {
+              const pollRes = await apiRequest("GET", `/api/podcast/job/${data.jobId}`);
+              if (pollRes.status === 404) {
+                await updatePodcast(podcastId, {
+                  status: "error",
+                  errorMessage: "Generation was interrupted. Please try again.",
+                });
+                return;
+              }
+              const pollData = await pollRes.json();
+
+              if (pollData.status === "ready" && pollData.result) {
+                await updatePodcast(podcastId, {
+                  script: pollData.result.script,
+                  audioUrl: pollData.result.audioUrl,
+                  durationSeconds: pollData.result.durationSeconds || 0,
+                  status: "ready",
+                });
+                return;
+              } else if (pollData.status === "error") {
+                await updatePodcast(podcastId, {
+                  status: "error",
+                  errorMessage: pollData.error || "Failed to generate podcast. Please try again.",
+                });
+                return;
+              }
+            } catch {
+            }
+          }
+          await updatePodcast(podcastId, {
+            status: "error",
+            errorMessage: "Generation timed out. Please try again.",
+          });
+        };
+        pollForResult();
+      }
     } catch (error) {
       console.error("Generation failed:", error);
       await updatePodcast(podcastId, {

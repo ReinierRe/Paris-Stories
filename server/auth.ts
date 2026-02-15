@@ -1,8 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import { getUserByEmail, createUser, getUser, setResetToken, getUserByResetToken, updatePassword, clearResetToken } from "./storage";
-import { sendPasswordResetEmail } from "./email";
+import { getUserByEmail, createUser, getUser } from "./storage";
 
 const tokenStore = new Map<
   string,
@@ -137,69 +136,5 @@ export async function setupAuth(app: Express): Promise<void> {
       tokenStore.delete(token);
     }
     return res.json({ success: true });
-  });
-
-  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
-    try {
-      const { email } = req.body;
-
-      if (!email || !EMAIL_REGEX.test(email)) {
-        return res.status(400).json({ error: "Valid email is required" });
-      }
-
-      const user = await getUserByEmail(email.toLowerCase());
-      if (!user) {
-        return res.json({ success: true });
-      }
-
-      const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiry = new Date(Date.now() + 60 * 60 * 1000);
-
-      const hashedCode = crypto.createHash("sha256").update(resetCode).digest("hex");
-      await setResetToken(user.id, hashedCode, expiry);
-
-      try {
-        await sendPasswordResetEmail(email.toLowerCase(), resetCode, user.firstName);
-        console.log(`Password reset email sent to ${email}`);
-      } catch (emailErr) {
-        console.error("Failed to send reset email:", emailErr);
-        return res.status(500).json({ error: "Failed to send reset email. Please try again later." });
-      }
-
-      return res.json({ success: true });
-    } catch (err) {
-      console.error("Forgot password error:", err);
-      return res.status(500).json({ error: "Something went wrong" });
-    }
-  });
-
-  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
-    try {
-      const { email, code, newPassword } = req.body;
-
-      if (!email || !code || !newPassword) {
-        return res.status(400).json({ error: "Email, code, and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
-
-      const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
-      const user = await getUserByResetToken(email.toLowerCase(), hashedCode);
-
-      if (!user) {
-        return res.status(400).json({ error: "Invalid or expired reset code" });
-      }
-
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await updatePassword(user.id, hashedPassword);
-      await clearResetToken(user.id);
-
-      return res.json({ success: true });
-    } catch (err) {
-      console.error("Reset password error:", err);
-      return res.status(500).json({ error: "Something went wrong" });
-    }
   });
 }

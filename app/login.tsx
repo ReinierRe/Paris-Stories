@@ -14,7 +14,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -22,7 +21,6 @@ type Mode = "login" | "register";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { login, register, isLoading } = useAuth();
 
   const [mode, setMode] = useState<Mode>("login");
@@ -175,12 +173,6 @@ export default function LoginScreen() {
                 />
               </Pressable>
             </View>
-
-            {mode === "login" && (
-              <Pressable onPress={() => router.push("/forgot-password")} style={styles.forgotContainer}>
-                <Text style={styles.forgotText}>Forgot password?</Text>
-              </Pressable>
-            )}
 
             {error && (
               <View style={styles.errorContainer}>
@@ -341,14 +333,5 @@ const styles = StyleSheet.create({
   toggleLink: {
     color: Colors.light.accent,
     fontFamily: "DMSans_600SemiBold",
-  },
-  forgotContainer: {
-    alignSelf: "flex-end",
-    marginTop: -4,
-  },
-  forgotText: {
-    fontFamily: "DMSans_400Regular",
-    fontSize: 13,
-    color: Colors.light.accent,
   },
 });

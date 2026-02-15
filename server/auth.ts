@@ -1,5 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
-import * as admin from "firebase-admin";
+import admin from "firebase-admin";
 import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser } from "./storage";
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
@@ -13,9 +13,11 @@ try {
   throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON contains invalid JSON. Please check the value in your secrets.");
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;

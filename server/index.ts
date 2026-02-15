@@ -286,17 +286,25 @@ function configureStaticAndLanding(app: express.Application) {
     "templates",
     "landing-page.html",
   );
-  const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
+  let landingPageTemplate: string | null = null;
+  try {
+    landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
+  } catch {
+    log("Landing page template not found, / will return simple response");
+  }
   const appName = getAppName();
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path === "/" && !req.header("expo-platform")) {
-      return serveLandingPage({
-        req,
-        res,
-        landingPageTemplate,
-        appName,
-      });
+      if (landingPageTemplate) {
+        return serveLandingPage({
+          req,
+          res,
+          landingPageTemplate,
+          appName,
+        });
+      }
+      return res.status(200).send(`<html><body><h1>${appName}</h1><p>Server is running</p></body></html>`);
     }
     next();
   });

@@ -1097,16 +1097,24 @@ function configureStaticAndLanding(app2) {
     "templates",
     "landing-page.html"
   );
-  const landingPageTemplate = fs2.readFileSync(templatePath, "utf-8");
+  let landingPageTemplate = null;
+  try {
+    landingPageTemplate = fs2.readFileSync(templatePath, "utf-8");
+  } catch {
+    log("Landing page template not found, / will return simple response");
+  }
   const appName = getAppName();
   app2.use((req, res, next) => {
     if (req.path === "/" && !req.header("expo-platform")) {
-      return serveLandingPage({
-        req,
-        res,
-        landingPageTemplate,
-        appName
-      });
+      if (landingPageTemplate) {
+        return serveLandingPage({
+          req,
+          res,
+          landingPageTemplate,
+          appName
+        });
+      }
+      return res.status(200).send(`<html><body><h1>${appName}</h1><p>Server is running</p></body></html>`);
     }
     next();
   });

@@ -246,7 +246,15 @@ async function googleTextToSpeech(text2, voice) {
 // server/auth.ts
 init_storage();
 import * as admin from "firebase-admin";
-var serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is required. Add your Firebase service account JSON to secrets.");
+}
+var serviceAccount;
+try {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+} catch (e) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON contains invalid JSON. Please check the value in your secrets.");
+}
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -859,6 +867,7 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 var app = express2();
 app.set("trust proxy", 1);
 var log = console.log;
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 var METRO_PORT = 8081;
 var isDev = process.env.NODE_ENV !== "production";
 var metroProcess = null;
@@ -1071,7 +1080,7 @@ function setupMetroProxy(app2) {
     }
   });
   app2.use((req, res, next) => {
-    if (req.path.startsWith("/api")) {
+    if (req.path.startsWith("/api") || req.path === "/healthz") {
       return next();
     }
     if (req.path === "/" && !req.header("expo-platform")) {

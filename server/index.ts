@@ -12,6 +12,8 @@ const app = express();
 app.set("trust proxy", 1);
 const log = console.log;
 
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -263,7 +265,7 @@ function setupMetroProxy(app: express.Application) {
   });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith("/api")) {
+    if (req.path.startsWith("/api") || req.path === "/healthz") {
       return next();
     }
 

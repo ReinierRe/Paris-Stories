@@ -63,39 +63,33 @@ function getChirp3Instructions(language: string): string {
   if (language === "nl") {
     return `
 
-## Audio-Engineering voor Chirp 3: HD (VERPLICHT)
-De audio wordt gegenereerd met Google Chirp 3: HD. Dit is een geavanceerd spraakmodel dat het beste klinkt bij natuurlijke, menselijke tekst. Volg deze regels strikt:
+## Schrijfstijl voor spraak (VERPLICHT)
+De audio wordt gegenereerd met Google Chirp 3: HD. Schrijf in platte tekst, geen opmaak.
 
-1. **Pauze-markers:** Gebruik \`[pause short]\` voor een korte adempauze (komma-effect) en \`[pause long]\` voor een langere stilte tussen alinea's of bij dramatische momenten.
-2. **Schrijf 'Slordig':** Chirp 3 klinkt het beste bij menselijke imperfecties. Gebruik contracties en informeel taalgebruik: "Ik dacht 't al" i.p.v. "Ik dacht het al", "'t Is niet wat je denkt" i.p.v. "Het is niet wat je denkt", "D'r was niemand" i.p.v. "Er was niemand".
-3. **Emotionele Cues:** Chirp 3 begrijpt contextuele hints tussen haken. Gebruik ze spaarzaam maar effectief: \`[fluisterend]\`, \`[enthousiast]\`, \`[verbaasd]\`, \`[peinzend]\`. Voorbeeld: "[fluisterend] Kijk daar eens..." of "[enthousiast] Dít is de Eiffeltoren!"
-4. **Geen SSML:** Gebruik GEEN \`<speak>\`, \`<break>\`, \`<prosody>\` of andere SSML-tags. Alleen platte tekst met pauze-markers en emotionele cues.
-
-Voorbeeld van correcte output:
-Parijs in de herfst... [pause short] er is niets dat daarop lijkt. [pause long] De manier waarop 't licht valt op de Seine... Heb je je wel eens afgevraagd waarom de stad de 'Stad van het Licht' wordt genoemd? [pause short] Nou... 't is niet wat je denkt. [fluisterend] Het heeft niets met elektriciteit te maken.
+Regels:
+1. **Platte tekst:** Schrijf gewone tekst. Gebruik GEEN SSML-tags (\`<speak>\`, \`<break>\`, \`<prosody>\`), GEEN pauze-markers (\`[pause short]\`, \`[pause long]\`), en GEEN emotionele cues (\`[fluisterend]\` etc.).
+2. **Contracties:** Gebruik natuurlijke samentrekkingen: "'t is" i.p.v. "het is", "d'r" i.p.v. "er", "m'n" i.p.v. "mijn".
+3. **Geen stopwoordjes:** Vermijd woorden als "Tja,", "Hè,", "Kijk,", "Hoor je dat?", "Weet je wat?", "Echt waar,", "Luister...". Vertel gewoon het verhaal zonder dit soort vulwoorden.
+4. **Pauzes via interpunctie:** Gebruik drie puntjes (...) voor een korte denkpauze en een liggend streepje (—) voor een tussenzin. Dat is genoeg voor natuurlijk ritme.
 
 BELANGRIJK:
-- Schrijf in platte tekst, GEEN SSML-tags.
-- Gebruik GEEN markdown-opmaak of koppen.
-- Gebruik contracties en informele spreektaal voor een natuurlijk klinkend resultaat.`;
+- Schrijf in platte tekst, GEEN SSML-tags, GEEN markers tussen haken.
+- Gebruik GEEN markdown-opmaak of koppen.`;
   }
   return `
 
-## Audio Engineering for Chirp 3: HD (MANDATORY)
-The audio will be generated with Google Chirp 3: HD. This is an advanced speech model that sounds best with natural, human-like text. Follow these rules strictly:
+## Writing Style for Speech (MANDATORY)
+The audio will be generated with Google Chirp 3: HD. Write in plain text, no formatting.
 
-1. **Pause markers:** Use \`[pause short]\` for a brief breathing pause (comma effect) and \`[pause long]\` for a longer silence between paragraphs or at dramatic moments.
-2. **Write 'Messy':** Chirp 3 sounds best with human imperfections. Use contractions and informal language: "I'd never" instead of "I would never", "it's not what you'd think" instead of "it is not what you would think".
-3. **Emotional Cues:** Chirp 3 understands contextual hints in brackets. Use them sparingly but effectively: \`[whispering]\`, \`[excited]\`, \`[surprised]\`, \`[thoughtful]\`. Example: "[whispering] Look at that..." or "[excited] This is the Eiffel Tower!"
-4. **No SSML:** Do NOT use \`<speak>\`, \`<break>\`, \`<prosody>\` or any other SSML tags. Only plain text with pause markers and emotional cues.
-
-Example of correct output:
-Paris in autumn... [pause short] there's nothing quite like it. [pause long] The way the light falls on the Seine... Have you ever wondered why they call it the 'City of Light'? [pause short] Well... it's not what you'd think. [whispering] It's got nothing to do with electricity.
+Rules:
+1. **Plain text:** Write ordinary text. Do NOT use SSML tags (\`<speak>\`, \`<break>\`, \`<prosody>\`), NO pause markers (\`[pause short]\`, \`[pause long]\`), and NO emotional cues (\`[whispering]\` etc.).
+2. **Contractions:** Use natural contractions: "it's" instead of "it is", "they'd" instead of "they would".
+3. **No filler words:** Avoid words like "Well,", "Look,", "You know what?", "Honestly,", "Listen...", "Here's the thing—". Just tell the story without filler.
+4. **Pauses via punctuation:** Use ellipses (...) for a brief thinking pause and an em dash (—) for an aside. That's enough for natural rhythm.
 
 IMPORTANT:
-- Write in plain text, NO SSML tags.
-- Do NOT use markdown formatting or headings.
-- Use contractions and informal speech for a natural-sounding result.`;
+- Write in plain text, NO SSML tags, NO markers in brackets.
+- Do NOT use markdown formatting or headings.`;
 }
 
 function getSsmlInstructions(language: string): string {
@@ -212,7 +206,7 @@ Houd de toon informatief en nuchter, met af en toe een persoonlijke noot. Vermij
 ## Audio-optimalisatie (voor TTS)
 Om natuurlijk te klinken, hanteer je deze regels:
 1. **Punctuatie als ademhaling:** Gebruik drie puntjes (...) voor een korte denkpauze. Gebruik een liggend streepje (—) voor een tussenzin.
-2. **Spreektaal:** Gebruik af en toe woorden als "Tja,", "Kijk,", "Weet je," om de tekst conversationeel te houden. Maar overdrijf niet — het moet natuurlijk klinken.
+2. **Geen stopwoordjes:** Vermijd vulwoorden als "Tja,", "Kijk,", "Hè,", "Hoor je dat?", "Weet je wat?", "Echt waar,", "Luister...". Vertel gewoon het verhaal zonder dit soort opvulling.
 3. **Zinsopbouw:** Wissel korte en langere zinnen af. Vermijd ingewikkelde bijzinnen.
 4. **Concreet:** Noem specifieke namen, data, adressen en feiten. Dat maakt het verhaal geloofwaardig en informatief.
 
@@ -237,7 +231,7 @@ Keep the tone informative and down-to-earth, with occasional personal touches. A
 ## Audio Optimization (for TTS)
 To sound natural, follow these rules:
 1. **Punctuation as breathing:** Use ellipses (...) for a brief thinking pause. Use an em dash (—) for an aside.
-2. **Conversational speech:** Occasionally use words like "Well,", "Look,", "You know," to keep it conversational. But don't overdo it — it should sound natural.
+2. **No filler words:** Avoid filler words like "Well,", "Look,", "You know what?", "Honestly,", "Listen...", "Here's the thing—", "Hear that?". Just tell the story without filler.
 3. **Sentence structure:** Alternate short and longer sentences. Avoid complex subordinate clauses.
 4. **Be specific:** Mention specific names, dates, addresses, and facts. This makes the story credible and informative.
 
@@ -298,9 +292,13 @@ async function concatenateWavBuffers(buffers: Buffer[]): Promise<Buffer> {
     }
   }
 
-  const fadeMs = 15;
+  const fadeMs = 40;
   const fadeSamples = Math.floor(sampleRate * (fadeMs / 1000));
   const bytesPerSample = bitsPerSample / 8;
+
+  const silenceMs = 100;
+  const silenceSamples = Math.floor(sampleRate * (silenceMs / 1000));
+  const silenceBuffer = Buffer.alloc(silenceSamples * bytesPerSample);
 
   for (let i = 0; i < pcmChunks.length; i++) {
     const chunk = pcmChunks[i];
@@ -329,7 +327,15 @@ async function concatenateWavBuffers(buffers: Buffer[]): Promise<Buffer> {
     }
   }
 
-  const totalPcmSize = pcmChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const finalChunks: Buffer[] = [];
+  for (let i = 0; i < pcmChunks.length; i++) {
+    finalChunks.push(pcmChunks[i]);
+    if (i < pcmChunks.length - 1) {
+      finalChunks.push(silenceBuffer);
+    }
+  }
+
+  const totalPcmSize = finalChunks.reduce((sum, chunk) => sum + chunk.length, 0);
   const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
   const blockAlign = numChannels * (bitsPerSample / 8);
 
@@ -348,7 +354,7 @@ async function concatenateWavBuffers(buffers: Buffer[]): Promise<Buffer> {
   header.write("data", 36);
   header.writeUInt32LE(totalPcmSize, 40);
 
-  return Buffer.concat([header, ...pcmChunks]);
+  return Buffer.concat([header, ...finalChunks]);
 }
 
 async function generateScriptAndAudio(params: {
@@ -668,7 +674,7 @@ Houd de toon informatief en nuchter, met af en toe een persoonlijke noot. Vermij
 ## Audio-optimalisatie (voor TTS)
 Om natuurlijk te klinken, hanteer je deze regels:
 1. **Punctuatie als ademhaling:** Gebruik drie puntjes (...) voor een korte denkpauze. Gebruik een liggend streepje (—) voor een tussenzin.
-2. **Spreektaal:** Gebruik af en toe woorden als "Tja,", "Kijk,", "Weet je," om de tekst conversationeel te houden. Maar overdrijf niet — het moet natuurlijk klinken.
+2. **Geen stopwoordjes:** Vermijd vulwoorden als "Tja,", "Kijk,", "Hè,", "Hoor je dat?", "Weet je wat?", "Echt waar,", "Luister...". Vertel gewoon het verhaal zonder dit soort opvulling.
 3. **Zinsopbouw:** Wissel korte en langere zinnen af. Vermijd ingewikkelde bijzinnen.
 4. **Concreet:** Noem specifieke namen, data, adressen en feiten. Dat maakt het verhaal geloofwaardig en informatief.
 
@@ -691,7 +697,7 @@ Keep the tone informative and down-to-earth, with occasional personal touches. A
 ## Audio Optimization (for TTS)
 To sound natural, follow these rules:
 1. **Punctuation as breathing:** Use ellipses (...) for a brief thinking pause. Use an em dash (—) for an aside.
-2. **Conversational speech:** Occasionally use words like "Well,", "Look,", "You know," to keep it conversational. But don't overdo it — it should sound natural.
+2. **No filler words:** Avoid filler words like "Well,", "Look,", "You know what?", "Honestly,", "Listen...", "Here's the thing—", "Hear that?". Just tell the story without filler.
 3. **Sentence structure:** Alternate short and longer sentences. Avoid complex subordinate clauses.
 4. **Be specific:** Mention specific names, dates, addresses, and facts. This makes the story credible and informative.
 

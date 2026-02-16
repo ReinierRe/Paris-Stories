@@ -17,12 +17,12 @@ export type GoogleVoice = {
 
 const LANGUAGE_VOICES: Record<string, Record<string, GoogleVoice>> = {
   nl: {
-    male: { languageCode: "nl-NL", name: "nl-NL-Chirp3-HD-Charon", ssmlGender: "MALE", voiceType: "chirp3" },
-    female: { languageCode: "nl-NL", name: "nl-NL-Chirp3-HD-Aoede", ssmlGender: "FEMALE", voiceType: "chirp3" },
+    male: { languageCode: "nl-NL", name: "nl-NL-Chirp3-HD-Algieba", ssmlGender: "MALE", voiceType: "chirp3" },
+    female: { languageCode: "nl-NL", name: "nl-NL-Chirp3-HD-Callirrhoe", ssmlGender: "FEMALE", voiceType: "chirp3" },
   },
   en: {
-    male: { languageCode: "en-US", name: "en-US-Chirp3-HD-Charon", ssmlGender: "MALE", voiceType: "chirp3" },
-    female: { languageCode: "en-US", name: "en-US-Chirp3-HD-Aoede", ssmlGender: "FEMALE", voiceType: "chirp3" },
+    male: { languageCode: "en-US", name: "en-US-Chirp3-HD-Algieba", ssmlGender: "MALE", voiceType: "chirp3" },
+    female: { languageCode: "en-US", name: "en-US-Chirp3-HD-Callirrhoe", ssmlGender: "FEMALE", voiceType: "chirp3" },
   },
   fr: {
     male: { languageCode: "fr-FR", name: "fr-FR-Neural2-B", ssmlGender: "MALE", voiceType: "neural2" },
@@ -108,7 +108,12 @@ export async function googleTextToSpeech(
 
   let input: Record<string, string>;
   if (voice.voiceType === "chirp3") {
-    input = { markup: text };
+    const cleanText = text
+      .replace(/\[pause short\]|\[pause long\]|\[pause\]/gi, "")
+      .replace(/\[(fluisterend|enthousiast|verbaasd|peinzend|whispering|excited|surprised|thoughtful)\]/gi, "")
+      .replace(/ {2,}/g, " ")
+      .trim();
+    input = { text: cleanText };
   } else {
     const isSsml = text.trim().startsWith("<speak>");
     input = isSsml ? { ssml: text } : { text };

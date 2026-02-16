@@ -255,6 +255,37 @@ async function concatenateWavBuffers(buffers: Buffer[]): Promise<Buffer> {
     }
   }
 
+  const fadeMs = 15;
+  const fadeSamples = Math.floor(sampleRate * (fadeMs / 1000));
+  const bytesPerSample = bitsPerSample / 8;
+
+  for (let i = 0; i < pcmChunks.length; i++) {
+    const chunk = pcmChunks[i];
+    const totalSamples = Math.floor(chunk.length / bytesPerSample);
+
+    if (i > 0) {
+      const samplesToFade = Math.min(fadeSamples, totalSamples);
+      for (let s = 0; s < samplesToFade; s++) {
+        const offset = s * bytesPerSample;
+        if (offset + 1 >= chunk.length) break;
+        const sample = chunk.readInt16LE(offset);
+        const gain = s / samplesToFade;
+        chunk.writeInt16LE(Math.round(sample * gain), offset);
+      }
+    }
+
+    if (i < pcmChunks.length - 1) {
+      const samplesToFade = Math.min(fadeSamples, totalSamples);
+      for (let s = 0; s < samplesToFade; s++) {
+        const offset = chunk.length - ((samplesToFade - s) * bytesPerSample);
+        if (offset < 0 || offset + 1 >= chunk.length) continue;
+        const sample = chunk.readInt16LE(offset);
+        const gain = (samplesToFade - 1 - s) / samplesToFade;
+        chunk.writeInt16LE(Math.round(sample * gain), offset);
+      }
+    }
+  }
+
   const totalPcmSize = pcmChunks.reduce((sum, chunk) => sum + chunk.length, 0);
   const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
   const blockAlign = numChannels * (bitsPerSample / 8);

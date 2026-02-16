@@ -243,6 +243,161 @@ async function googleTextToSpeech(text2, voice) {
   return wrapPcmInWav(pcmData);
 }
 
+// server/elevenlabs-tts.ts
+import { Buffer as Buffer3 } from "node:buffer";
+var ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech";
+var SAMPLE_RATE2 = 24e3;
+var NUM_CHANNELS2 = 1;
+var BITS_PER_SAMPLE2 = 16;
+var LANGUAGE_VOICES2 = {
+  nl: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  en: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  fr: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  es: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  de: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  it: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  pt: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  ja: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  },
+  zh: {
+    male: { voiceId: "pNInz6obpgDQGcFmaJgB", name: "Adam" },
+    female: { voiceId: "21m00Tcm4TlvDq8ikWAM", name: "Rachel" }
+  }
+};
+function getElevenLabsVoice(voicePref, language = "nl") {
+  const lang = language.toLowerCase();
+  const langVoices = LANGUAGE_VOICES2[lang];
+  if (!langVoices) {
+    console.warn(`Unknown language "${language}" for ElevenLabs TTS, defaulting to Dutch (nl)`);
+  }
+  const voices = langVoices || LANGUAGE_VOICES2["nl"];
+  if (voicePref === "male") return voices.male;
+  return voices.female;
+}
+async function getElevenLabsApiKey() {
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const xReplitToken = process.env.REPL_IDENTITY ? "repl " + process.env.REPL_IDENTITY : process.env.WEB_REPL_RENEWAL ? "depl " + process.env.WEB_REPL_RENEWAL : null;
+  if (!xReplitToken) {
+    throw new Error("ElevenLabs: Replit identity token not available");
+  }
+  if (!hostname) {
+    throw new Error("ElevenLabs: REPLIT_CONNECTORS_HOSTNAME not set");
+  }
+  const res = await fetch(
+    "https://" + hostname + "/api/v2/connection?include_secrets=true&connector_names=elevenlabs",
+    {
+      headers: {
+        Accept: "application/json",
+        X_REPLIT_TOKEN: xReplitToken
+      }
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`ElevenLabs: Failed to fetch credentials (${res.status})`);
+  }
+  const data = await res.json();
+  const connectionSettings = data.items?.[0];
+  if (!connectionSettings || !connectionSettings.settings.api_key) {
+    throw new Error("ElevenLabs not connected - API key not found");
+  }
+  return connectionSettings.settings.api_key;
+}
+function wrapPcmInWav2(pcmData) {
+  const byteRate = SAMPLE_RATE2 * NUM_CHANNELS2 * (BITS_PER_SAMPLE2 / 8);
+  const blockAlign = NUM_CHANNELS2 * (BITS_PER_SAMPLE2 / 8);
+  const dataSize = pcmData.length;
+  const headerSize = 44;
+  const header = Buffer3.alloc(headerSize);
+  header.write("RIFF", 0);
+  header.writeUInt32LE(dataSize + headerSize - 8, 4);
+  header.write("WAVE", 8);
+  header.write("fmt ", 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
+  header.writeUInt16LE(NUM_CHANNELS2, 22);
+  header.writeUInt32LE(SAMPLE_RATE2, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(BITS_PER_SAMPLE2, 34);
+  header.write("data", 36);
+  header.writeUInt32LE(dataSize, 40);
+  return Buffer3.concat([header, pcmData]);
+}
+async function elevenLabsTextToSpeech(text2, voice) {
+  const apiKey = await getElevenLabsApiKey();
+  const response = await fetch(`${ELEVENLABS_TTS_URL}/${voice.voiceId}`, {
+    method: "POST",
+    headers: {
+      "xi-api-key": apiKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      text: text2,
+      model_id: "eleven_multilingual_v2",
+      output_format: "pcm_24000",
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+        style: 0,
+        use_speaker_boost: true
+      }
+    })
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`ElevenLabs TTS API error (${response.status}): ${errorText}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  const pcmData = Buffer3.from(arrayBuffer);
+  return wrapPcmInWav2(pcmData);
+}
+
+// server/tts.ts
+var DEFAULT_PROVIDER = "elevenlabs";
+function getActiveProvider() {
+  const env = process.env.TTS_PROVIDER?.toLowerCase();
+  if (env === "google" || env === "elevenlabs") return env;
+  return DEFAULT_PROVIDER;
+}
+async function textToSpeech(text2, voicePref, language, provider) {
+  const activeProvider = provider || getActiveProvider();
+  if (activeProvider === "elevenlabs") {
+    try {
+      const voice = getElevenLabsVoice(voicePref, language);
+      return await elevenLabsTextToSpeech(text2, voice);
+    } catch (err) {
+      console.warn(`ElevenLabs TTS failed, falling back to Google TTS:`, err);
+      const googleVoice2 = getGoogleVoice(voicePref, language);
+      return await googleTextToSpeech(text2, googleVoice2);
+    }
+  }
+  const googleVoice = getGoogleVoice(voicePref, language);
+  return await googleTextToSpeech(text2, googleVoice);
+}
+
 // server/auth.ts
 init_storage();
 import admin from "firebase-admin";
@@ -498,7 +653,8 @@ async function generateScriptAndAudio(params) {
   const script = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
   console.log(`Script generated (${script.length} chars). Generating audio...`);
   if (job) job.progress = "Generating audio...";
-  const googleVoice = getGoogleVoice(params.voice, params.language);
+  const ttsProvider = getActiveProvider();
+  console.log(`Using TTS provider: ${ttsProvider}`);
   const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
   const chunks = [];
   let currentChunk = "";
@@ -518,7 +674,7 @@ async function generateScriptAndAudio(params) {
     if (job) job.progress = `Generating audio (${i + 1}/${chunks.length})...`;
     console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
     try {
-      const audio = await googleTextToSpeech(chunks[i], googleVoice);
+      const audio = await textToSpeech(chunks[i], params.voice, params.language);
       if (audio.length > 44) {
         audioBuffers.push(audio);
       }

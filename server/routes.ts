@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
-import { googleTextToSpeech, getGoogleVoice } from "./google-tts";
+import { textToSpeech, getActiveProvider } from "./tts";
 import { requireAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
@@ -228,7 +228,9 @@ async function generateScriptAndAudio(params: {
 
   if (job) job.progress = "Generating audio...";
 
-  const googleVoice = getGoogleVoice(params.voice, params.language);
+  const ttsProvider = getActiveProvider();
+  console.log(`Using TTS provider: ${ttsProvider}`);
+
   const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
   const chunks: string[] = [];
   let currentChunk = "";
@@ -250,7 +252,7 @@ async function generateScriptAndAudio(params: {
     if (job) job.progress = `Generating audio (${i + 1}/${chunks.length})...`;
     console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
     try {
-      const audio = await googleTextToSpeech(chunks[i], googleVoice);
+      const audio = await textToSpeech(chunks[i], params.voice, params.language);
       if (audio.length > 44) {
         audioBuffers.push(audio);
       }

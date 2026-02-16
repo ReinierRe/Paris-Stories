@@ -7,7 +7,8 @@ Paris Stories is an Expo React Native app with an Express backend that generates
 - **Frontend**: Expo React Native (mobile app served via Expo Go / landing page for web)
 - **Backend**: Express.js server on port 5000
 - **Database**: PostgreSQL with Drizzle ORM
-- **AI**: Anthropic Claude (via Replit AI Integrations) for script generation, Google Cloud Text-to-Speech API for audio generation
+- **AI**: Anthropic Claude (via Replit AI Integrations) for script generation
+- **TTS**: ElevenLabs (default, via Replit connector) and Google Cloud Text-to-Speech (fallback) for audio generation
 
 ## Project Structure
 ```
@@ -17,7 +18,9 @@ server/           - Express backend
   routes.ts       - API routes for podcast generation, history, custom podcasts
   auth.ts         - Firebase Authentication (Admin SDK token verification, user sync)
   storage.ts      - Database client and user queries
-  google-tts.ts   - Google Cloud Text-to-Speech client (voice mapping, WAV generation)
+  tts.ts          - Unified TTS interface (ElevenLabs default, Google fallback)
+  elevenlabs-tts.ts - ElevenLabs TTS client (multilingual v2, PCM→WAV)
+  google-tts.ts   - Google Cloud Text-to-Speech client (Wavenet voices, WAV generation)
 shared/           - Shared types and database schema
   schema.ts       - Drizzle ORM table definitions (users, cachedPodcasts, customPodcasts, userPodcasts)
 components/       - React Native components
@@ -61,6 +64,8 @@ patches/          - npm patch files
 - In production, static-build/ files are served instead of Metro proxy
 
 ## Recent Changes
+- 2026-02-16: Added ElevenLabs TTS as default provider (via Replit connector), Google TTS as automatic fallback. Unified TTS interface in server/tts.ts. Set TTS_PROVIDER env var to "google" to switch back.
+- 2026-02-16: Async podcast generation with job polling (prevents timeout on long podcasts), 404 fast-fail on lost jobs
 - 2026-02-15: Replaced custom email/password auth with Firebase Authentication (Firebase Admin SDK on backend, Firebase Auth SDK on frontend)
 - 2026-02-14: Added Metro dev server proxy - Express now proxies Expo Go requests to Metro bundler for live development
 - 2026-02-14: Added runtimeVersion (exposdk:54.0.0) to app.json for Expo Go SDK 54 compatibility

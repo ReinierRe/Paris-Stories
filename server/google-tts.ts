@@ -95,8 +95,11 @@ export async function googleTextToSpeech(
     throw new Error("GOOGLE_TTS_API_KEY environment variable is not set");
   }
 
+  const isSsml = text.trim().startsWith("<speak>");
+  const input = isSsml ? { ssml: text } : { text };
+
   const requestBody = {
-    input: { text },
+    input,
     voice: {
       languageCode: voice.languageCode,
       name: voice.name,

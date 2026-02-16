@@ -217,8 +217,10 @@ async function googleTextToSpeech(text2, voice) {
   if (!apiKey) {
     throw new Error("GOOGLE_TTS_API_KEY environment variable is not set");
   }
+  const isSsml = text2.trim().startsWith("<speak>");
+  const input = isSsml ? { ssml: text2 } : { text: text2 };
   const requestBody = {
-    input: { text: text2 },
+    input,
     voice: {
       languageCode: voice.languageCode,
       name: voice.name,
@@ -512,7 +514,55 @@ setInterval(() => {
     }
   }
 }, 10 * 60 * 1e3);
-function getSystemPrompt(language, perspective, wordCount) {
+function getSsmlInstructions(language) {
+  if (language === "nl") {
+    return `
+
+## SSML-opmaak (VERPLICHT)
+De audio wordt gegenereerd met Google Wavenet. Je MOET het volledige script in SSML-formaat schrijven om natuurlijke spraak te bereiken.
+
+Omsluit het hele script met \`<speak>\` tags. Gebruik deze SSML-tags door het hele script:
+- \`<break time="300ms"/>\` tot \`<break time="800ms"/>\` voor natuurlijke adempauzes en dramatische stiltes
+- \`<prosody rate="90%">...</prosody>\` om belangrijke passages langzamer voor te lezen
+- \`<prosody rate="105%">...</prosody>\` om energieke passages iets sneller voor te lezen
+- \`<emphasis level="strong">...</emphasis>\` voor woorden die eruit moeten springen
+
+Voorbeeld van correcte output:
+<speak>De regen valt op de kasseien... <break time="400ms"/> en daar, om de hoek, <prosody rate="90%">zie je het licht van een klein cafeetje.</prosody> <break time="300ms"/> <emphasis level="strong">Dit</emphasis> is het Parijs dat de meeste toeristen nooit zien.</speak>
+
+BELANGRIJK:
+- Het HELE script moet binnen \`<speak>...</speak>\` tags staan.
+- Gebruik GEEN markdown-opmaak of koppen in het SSML-script.
+- Elke alinea moet zelfstandig zijn qua SSML-tags: open en sluit tags als \`<prosody>\` en \`<emphasis>\` altijd binnen dezelfde alinea. Laat tags NOOIT doorlopen over meerdere alinea's.
+- Gebruik ALLEEN de tags uit de bovenstaande lijst (\`<break>\`, \`<prosody>\`, \`<emphasis>\`). Geen andere SSML-tags.`;
+  }
+  return `
+
+## SSML Formatting (MANDATORY)
+The audio will be generated with Google Wavenet. You MUST write the entire script in SSML format to achieve natural speech.
+
+Wrap the entire script in \`<speak>\` tags. Use these SSML tags throughout the script:
+- \`<break time="300ms"/>\` to \`<break time="800ms"/>\` for natural breathing pauses and dramatic silences
+- \`<prosody rate="90%">...</prosody>\` to slow down important passages
+- \`<prosody rate="105%">...</prosody>\` to slightly speed up energetic passages
+- \`<emphasis level="strong">...</emphasis>\` for words that need to stand out
+
+Example of correct output:
+<speak>Rain falls on the cobblestones... <break time="400ms"/> and there, around the corner, <prosody rate="90%">you see the light of a small cafe.</prosody> <break time="300ms"/> <emphasis level="strong">This</emphasis> is the Paris most tourists never see.</speak>
+
+IMPORTANT:
+- The ENTIRE script must be within \`<speak>...</speak>\` tags.
+- Do NOT use markdown formatting or headings inside the SSML script.
+- Each paragraph must be self-contained for SSML tags: always open and close tags like \`<prosody>\` and \`<emphasis>\` within the same paragraph. NEVER let tags span across multiple paragraphs.
+- Use ONLY the tags listed above (\`<break>\`, \`<prosody>\`, \`<emphasis>\`). No other SSML tags.`;
+}
+function stripSsmlTags(text2) {
+  let clean = text2.replace(/<[^>]+>/g, "");
+  clean = clean.replace(/\n{3,}/g, "\n\n");
+  clean = clean.replace(/ {2,}/g, " ");
+  return clean.trim();
+}
+function getSystemPrompt(language, perspective, wordCount, ttsProvider) {
   const perspectiveMap = {
     historical: {
       en: "Use a factual, chronological storytelling approach. Include specific dates, names, and historical context. Weave the facts into a compelling narrative rather than a dry summary.",
@@ -577,7 +627,7 @@ Om de robotachtige toon van Text-to-Speech te doorbreken, hanteer je deze regels
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Neem de luisteraar mee naar een specifiek moment of een specifieke plek in Parijs.
 - Lengte: schrijf ongeveer ${wordCount} woorden.
-- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.`;
+- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.${ttsProvider === "google" ? getSsmlInstructions("nl") : ""}`;
   }
   return `## Your Role
 You are a charismatic solo podcast storyteller. You are not a news anchor, but a 'local guide' walking through Paris with the listener. Your storytelling style is intimate, immersive, and full of emotion. You write in fluent, natural English.
@@ -603,7 +653,7 @@ To break the robotic tone of Text-to-Speech, follow these rules:
 - Use 'you' to build a direct connection with the listener.
 - Take the listener to a specific moment or a specific place in Paris.
 - Length: write approximately ${wordCount} words.
-- End with a thought that stays with the listener after the audio has stopped.`;
+- End with a thought that stays with the listener after the audio has stopped.${ttsProvider === "google" ? getSsmlInstructions("en") : ""}`;
 }
 function findDataChunk(wav) {
   let pos = 12;
@@ -674,12 +724,15 @@ async function generateScriptAndAudio(params) {
     messages: [{ role: "user", content: params.userPrompt }],
     system: params.systemPrompt
   });
-  const script = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
-  console.log(`Script generated (${script.length} chars). Generating audio...`);
+  const rawScript = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
+  console.log(`Script generated (${rawScript.length} chars). Generating audio...`);
   if (job) job.progress = "Generating audio...";
   const ttsProvider = params.ttsProvider || getActiveProvider();
-  console.log(`Using TTS provider: ${ttsProvider}`);
-  const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
+  const isSsml = rawScript.trim().startsWith("<speak>");
+  console.log(`Using TTS provider: ${ttsProvider}${isSsml ? " (SSML)" : ""}`);
+  const displayScript = isSsml ? stripSsmlTags(rawScript) : rawScript;
+  const scriptForAudio = isSsml ? rawScript.replace(/^<speak>\s*/i, "").replace(/\s*<\/speak>\s*$/i, "") : rawScript;
+  const paragraphs = scriptForAudio.split(/\n\n+/).filter((p) => p.trim());
   const chunks = [];
   let currentChunk = "";
   for (const paragraph of paragraphs) {
@@ -693,17 +746,30 @@ async function generateScriptAndAudio(params) {
   if (currentChunk.trim()) {
     chunks.push(currentChunk.trim());
   }
+  const ttsChunks = isSsml ? chunks.map((chunk) => `<speak>${chunk}</speak>`) : chunks;
   const audioBuffers = [];
-  for (let i = 0; i < chunks.length; i++) {
-    if (job) job.progress = `Generating audio (${i + 1}/${chunks.length})...`;
-    console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
+  for (let i = 0; i < ttsChunks.length; i++) {
+    if (job) job.progress = `Generating audio (${i + 1}/${ttsChunks.length})...`;
+    console.log(`  TTS chunk ${i + 1}/${ttsChunks.length}...`);
     try {
-      const audio = await textToSpeech(chunks[i], params.voice, params.language, ttsProvider);
+      const audio = await textToSpeech(ttsChunks[i], params.voice, params.language, ttsProvider);
       if (audio.length > 44) {
         audioBuffers.push(audio);
       }
     } catch (err) {
       console.error(`  TTS chunk ${i + 1} failed:`, err);
+      if (isSsml) {
+        console.log(`  Retrying chunk ${i + 1} as plain text (SSML fallback)...`);
+        try {
+          const plainChunk = stripSsmlTags(ttsChunks[i]);
+          const audio = await textToSpeech(plainChunk, params.voice, params.language, ttsProvider);
+          if (audio.length > 44) {
+            audioBuffers.push(audio);
+          }
+        } catch (retryErr) {
+          console.error(`  TTS chunk ${i + 1} plain-text retry also failed:`, retryErr);
+        }
+      }
     }
   }
   if (audioBuffers.length === 0) {
@@ -725,7 +791,7 @@ async function generateScriptAndAudio(params) {
     durationSeconds = Math.round(pcmSize / wavByteRate);
   }
   console.log(`Podcast "${params.topicName}" ready (${(combinedAudio.length / 1024 / 1024).toFixed(1)} MB, ${durationSeconds}s)`);
-  return { script, filename, durationSeconds, combinedAudio };
+  return { script: displayScript, filename, durationSeconds, combinedAudio };
 }
 async function registerRoutes(app2) {
   app2.use("/api/podcast/audio", express.static(AUDIO_DIR));
@@ -799,7 +865,7 @@ async function registerRoutes(app2) {
         createdAt: Date.now()
       });
       res.json({ jobId, status: "generating" });
-      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750);
+      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, ttsProvider);
       const userPrompt = language === "nl" ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)` : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
       generateScriptAndAudio({
         systemPrompt,
@@ -913,7 +979,7 @@ Om de robotachtige toon van Text-to-Speech te doorbreken, hanteer je deze regels
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Neem de luisteraar mee naar een specifiek moment of een specifieke plek in Parijs.
 - Lengte: schrijf ongeveer ${wordCount || 400} woorden.
-- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.` : `## Your Role
+- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.${ttsProvider === "google" ? getSsmlInstructions("nl") : ""}` : `## Your Role
 You are a charismatic solo podcast storyteller. You are not a news anchor, but a 'local guide' walking through Paris with the listener. Your storytelling style is intimate, immersive, and full of emotion. You write in fluent, natural English.
 
 ## Perspective
@@ -937,7 +1003,7 @@ To break the robotic tone of Text-to-Speech, follow these rules:
 - Use 'you' to build a direct connection with the listener.
 - Take the listener to a specific moment or a specific place in Paris.
 - Length: write approximately ${wordCount || 400} words.
-- End with a thought that stays with the listener after the audio has stopped.`;
+- End with a thought that stays with the listener after the audio has stopped.${ttsProvider === "google" ? getSsmlInstructions("en") : ""}`;
       const userPrompt = language === "nl" ? `Schrijf een podcast over: ${subject} (in de context van Parijs)` : `Write a podcast about: ${subject} (in the context of Paris)`;
       const jobId = generateId();
       generationJobs.set(jobId, {

@@ -64,6 +64,7 @@ patches/          - npm patch files
 - In production, static-build/ files are served instead of Metro proxy
 
 ## Recent Changes
+- 2026-02-16: Rewrote podcast generation prompts — charismatic "local guide" role, TTS audio optimization (punctuation pacing, conversational elements, sensory anchors, self-correction), auto-tone selection (Mysterieus/Energiek/Nostalgisch/Elegant). SSML output for Google Wavenet (break, prosody, emphasis tags) with per-chunk wrapping and plain-text fallback on SSML errors.
 - 2026-02-16: Added ElevenLabs TTS as default provider (via Replit connector), Google TTS as automatic fallback. Unified TTS interface in server/tts.ts. Set TTS_PROVIDER env var to "google" to switch back.
 - 2026-02-16: Async podcast generation with job polling (prevents timeout on long podcasts), 404 fast-fail on lost jobs
 - 2026-02-15: Replaced custom email/password auth with Firebase Authentication (Firebase Admin SDK on backend, Firebase Auth SDK on frontend)

@@ -653,7 +653,7 @@ async function generateScriptAndAudio(params) {
   const script = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
   console.log(`Script generated (${script.length} chars). Generating audio...`);
   if (job) job.progress = "Generating audio...";
-  const ttsProvider = getActiveProvider();
+  const ttsProvider = params.ttsProvider || getActiveProvider();
   console.log(`Using TTS provider: ${ttsProvider}`);
   const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
   const chunks = [];
@@ -674,7 +674,7 @@ async function generateScriptAndAudio(params) {
     if (job) job.progress = `Generating audio (${i + 1}/${chunks.length})...`;
     console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
     try {
-      const audio = await textToSpeech(chunks[i], params.voice, params.language);
+      const audio = await textToSpeech(chunks[i], params.voice, params.language, ttsProvider);
       if (audio.length > 44) {
         audioBuffers.push(audio);
       }
@@ -720,7 +720,7 @@ async function registerRoutes(app2) {
   });
   app2.post("/api/podcast/generate", requireAuth, async (req, res) => {
     try {
-      const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId } = req.body;
+      const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId, ttsProvider } = req.body;
       const userId = req.user?.id;
       if (!topicName || !voice || !language) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -783,7 +783,8 @@ async function registerRoutes(app2) {
         voice,
         language,
         topicName,
-        jobId
+        jobId,
+        ttsProvider: ttsProvider || void 0
       }).then(async ({ script, filename, durationSeconds }) => {
         let cachedId = jobId;
         if (topicId) {
@@ -844,7 +845,7 @@ async function registerRoutes(app2) {
   });
   app2.post("/api/podcast/generate-custom", requireAuth, async (req, res) => {
     try {
-      const { subject, angle, voice, language, wordCount, lengthId } = req.body;
+      const { subject, angle, voice, language, wordCount, lengthId, ttsProvider } = req.body;
       const userId = req.user?.id;
       if (!subject || !angle || !voice || !language || !userId) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -904,7 +905,8 @@ Rules:
         voice,
         language,
         topicName: subject,
-        jobId
+        jobId,
+        ttsProvider: ttsProvider || void 0
       }).then(async ({ script, filename, durationSeconds }) => {
         const customFilename = `custom_${filename}`;
         const oldPath = path.join(AUDIO_DIR, filename);

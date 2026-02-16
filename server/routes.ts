@@ -210,6 +210,7 @@ async function generateScriptAndAudio(params: {
   language: string;
   topicName: string;
   jobId: string;
+  ttsProvider?: "elevenlabs" | "google";
 }): Promise<{ script: string; filename: string; durationSeconds: number; combinedAudio: Buffer }> {
   const job = generationJobs.get(params.jobId);
 
@@ -228,7 +229,7 @@ async function generateScriptAndAudio(params: {
 
   if (job) job.progress = "Generating audio...";
 
-  const ttsProvider = getActiveProvider();
+  const ttsProvider = params.ttsProvider || getActiveProvider();
   console.log(`Using TTS provider: ${ttsProvider}`);
 
   const paragraphs = script.split(/\n\n+/).filter((p) => p.trim());
@@ -252,7 +253,7 @@ async function generateScriptAndAudio(params: {
     if (job) job.progress = `Generating audio (${i + 1}/${chunks.length})...`;
     console.log(`  TTS chunk ${i + 1}/${chunks.length}...`);
     try {
-      const audio = await textToSpeech(chunks[i], params.voice, params.language);
+      const audio = await textToSpeech(chunks[i], params.voice, params.language, ttsProvider as any);
       if (audio.length > 44) {
         audioBuffers.push(audio);
       }
@@ -306,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast/generate", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId } = req.body;
+      const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId, ttsProvider } = req.body;
       const userId = (req as any).user?.id;
 
       if (!topicName || !voice || !language) {
@@ -385,6 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         language,
         topicName,
         jobId,
+        ttsProvider: ttsProvider || undefined,
       }).then(async ({ script, filename, durationSeconds }) => {
         let cachedId = jobId;
         if (topicId) {
@@ -448,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast/generate-custom", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { subject, angle, voice, language, wordCount, lengthId } = req.body;
+      const { subject, angle, voice, language, wordCount, lengthId, ttsProvider } = req.body;
       const userId = (req as any).user?.id;
 
       if (!subject || !angle || !voice || !language || !userId) {
@@ -522,6 +524,7 @@ Rules:
         language,
         topicName: subject,
         jobId,
+        ttsProvider: ttsProvider || undefined,
       }).then(async ({ script, filename, durationSeconds }) => {
         const customFilename = `custom_${filename}`;
         const oldPath = path.join(AUDIO_DIR, filename);

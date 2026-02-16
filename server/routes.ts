@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
 import { textToSpeech, getActiveProvider } from "./tts";
+import { getGoogleVoiceType, type VoiceType } from "./google-tts";
 import { requireAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
@@ -58,12 +59,51 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 
+function getChirp3Instructions(language: string): string {
+  if (language === "nl") {
+    return `
+
+## Audio-Engineering voor Chirp 3: HD (VERPLICHT)
+De audio wordt gegenereerd met Google Chirp 3: HD. Dit is een geavanceerd spraakmodel dat het beste klinkt bij natuurlijke, menselijke tekst. Volg deze regels strikt:
+
+1. **Pauze-markers:** Gebruik \`[pause short]\` voor een korte adempauze (komma-effect) en \`[pause long]\` voor een langere stilte tussen alinea's of bij dramatische momenten.
+2. **Schrijf 'Slordig':** Chirp 3 klinkt het beste bij menselijke imperfecties. Gebruik contracties en informeel taalgebruik: "Ik dacht 't al" i.p.v. "Ik dacht het al", "'t Is niet wat je denkt" i.p.v. "Het is niet wat je denkt", "D'r was niemand" i.p.v. "Er was niemand".
+3. **Emotionele Cues:** Chirp 3 begrijpt contextuele hints tussen haken. Gebruik ze spaarzaam maar effectief: \`[fluisterend]\`, \`[enthousiast]\`, \`[verbaasd]\`, \`[peinzend]\`. Voorbeeld: "[fluisterend] Kijk daar eens..." of "[enthousiast] Dít is de Eiffeltoren!"
+4. **Geen SSML:** Gebruik GEEN \`<speak>\`, \`<break>\`, \`<prosody>\` of andere SSML-tags. Alleen platte tekst met pauze-markers en emotionele cues.
+
+Voorbeeld van correcte output:
+Parijs in de herfst... [pause short] er is niets dat daarop lijkt. [pause long] De manier waarop 't licht valt op de Seine... Heb je je wel eens afgevraagd waarom de stad de 'Stad van het Licht' wordt genoemd? [pause short] Nou... 't is niet wat je denkt. [fluisterend] Het heeft niets met elektriciteit te maken.
+
+BELANGRIJK:
+- Schrijf in platte tekst, GEEN SSML-tags.
+- Gebruik GEEN markdown-opmaak of koppen.
+- Gebruik contracties en informele spreektaal voor een natuurlijk klinkend resultaat.`;
+  }
+  return `
+
+## Audio Engineering for Chirp 3: HD (MANDATORY)
+The audio will be generated with Google Chirp 3: HD. This is an advanced speech model that sounds best with natural, human-like text. Follow these rules strictly:
+
+1. **Pause markers:** Use \`[pause short]\` for a brief breathing pause (comma effect) and \`[pause long]\` for a longer silence between paragraphs or at dramatic moments.
+2. **Write 'Messy':** Chirp 3 sounds best with human imperfections. Use contractions and informal language: "I'd never" instead of "I would never", "it's not what you'd think" instead of "it is not what you would think".
+3. **Emotional Cues:** Chirp 3 understands contextual hints in brackets. Use them sparingly but effectively: \`[whispering]\`, \`[excited]\`, \`[surprised]\`, \`[thoughtful]\`. Example: "[whispering] Look at that..." or "[excited] This is the Eiffel Tower!"
+4. **No SSML:** Do NOT use \`<speak>\`, \`<break>\`, \`<prosody>\` or any other SSML tags. Only plain text with pause markers and emotional cues.
+
+Example of correct output:
+Paris in autumn... [pause short] there's nothing quite like it. [pause long] The way the light falls on the Seine... Have you ever wondered why they call it the 'City of Light'? [pause short] Well... it's not what you'd think. [whispering] It's got nothing to do with electricity.
+
+IMPORTANT:
+- Write in plain text, NO SSML tags.
+- Do NOT use markdown formatting or headings.
+- Use contractions and informal speech for a natural-sounding result.`;
+}
+
 function getSsmlInstructions(language: string): string {
   if (language === "nl") {
     return `
 
 ## SSML-opmaak (VERPLICHT)
-De audio wordt gegenereerd met Google Wavenet. Je MOET het volledige script in SSML-formaat schrijven om natuurlijke spraak te bereiken.
+De audio wordt gegenereerd met Google Neural2. Je MOET het volledige script in SSML-formaat schrijven om natuurlijke spraak te bereiken.
 
 Omsluit het hele script met \`<speak>\` tags. Gebruik deze SSML-tags door het hele script:
 - \`<break time="300ms"/>\` tot \`<break time="800ms"/>\` voor natuurlijke adempauzes en dramatische stiltes
@@ -83,7 +123,7 @@ BELANGRIJK:
   return `
 
 ## SSML Formatting (MANDATORY)
-The audio will be generated with Google Wavenet. You MUST write the entire script in SSML format to achieve natural speech.
+The audio will be generated with Google Neural2. You MUST write the entire script in SSML format to achieve natural speech.
 
 Wrap the entire script in \`<speak>\` tags. Use these SSML tags throughout the script:
 - \`<break time="300ms"/>\` to \`<break time="800ms"/>\` for natural breathing pauses and dramatic silences
@@ -108,7 +148,14 @@ function stripSsmlTags(text: string): string {
   return clean.trim();
 }
 
-function getSystemPrompt(language: string, perspective: string, wordCount: number, ttsProvider?: string): string {
+function getGoogleTtsInstructions(language: string, voiceType: VoiceType): string {
+  if (voiceType === "chirp3") {
+    return getChirp3Instructions(language);
+  }
+  return getSsmlInstructions(language);
+}
+
+function getSystemPrompt(language: string, perspective: string, wordCount: number, ttsProvider?: string, googleVoiceType?: VoiceType): string {
   const perspectiveMap: Record<string, { en: string; nl: string }> = {
     historical: {
       en: "Use a factual, chronological storytelling approach. Include specific dates, names, and historical context. Weave the facts into a compelling narrative rather than a dry summary.",
@@ -177,7 +224,7 @@ Om de robotachtige toon van Text-to-Speech te doorbreken, hanteer je deze regels
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Neem de luisteraar mee naar een specifiek moment of een specifieke plek in Parijs.
 - Lengte: schrijf ongeveer ${wordCount} woorden.
-- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.${ttsProvider === "google" ? getSsmlInstructions("nl") : ""}`;
+- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.${ttsProvider === "google" && googleVoiceType ? getGoogleTtsInstructions("nl", googleVoiceType) : ""}`;
   }
 
   return `## Your Role
@@ -204,7 +251,7 @@ To break the robotic tone of Text-to-Speech, follow these rules:
 - Use 'you' to build a direct connection with the listener.
 - Take the listener to a specific moment or a specific place in Paris.
 - Length: write approximately ${wordCount} words.
-- End with a thought that stays with the listener after the audio has stopped.${ttsProvider === "google" ? getSsmlInstructions("en") : ""}`;
+- End with a thought that stays with the listener after the audio has stopped.${ttsProvider === "google" && googleVoiceType ? getGoogleTtsInstructions("en", googleVoiceType) : ""}`;
 }
 
 function findDataChunk(wav: Buffer): { offset: number; size: number } | null {
@@ -316,6 +363,7 @@ async function generateScriptAndAudio(params: {
   topicName: string;
   jobId: string;
   ttsProvider?: "elevenlabs" | "google";
+  googleVoiceType?: VoiceType;
 }): Promise<{ script: string; filename: string; durationSeconds: number; combinedAudio: Buffer }> {
   const job = generationJobs.get(params.jobId);
 
@@ -335,10 +383,13 @@ async function generateScriptAndAudio(params: {
   if (job) job.progress = "Generating audio...";
 
   const ttsProvider = params.ttsProvider || getActiveProvider();
-  const isSsml = rawScript.trim().startsWith("<speak>");
-  console.log(`Using TTS provider: ${ttsProvider}${isSsml ? " (SSML)" : ""}`);
+  const isChirp3 = params.googleVoiceType === "chirp3" && ttsProvider === "google";
+  const isSsml = !isChirp3 && rawScript.trim().startsWith("<speak>");
+  console.log(`Using TTS provider: ${ttsProvider}${isChirp3 ? " (Chirp 3: HD)" : isSsml ? " (SSML)" : ""}`);
 
-  const displayScript = isSsml ? stripSsmlTags(rawScript) : rawScript;
+  const displayScript = isChirp3
+    ? rawScript.replace(/\[pause short\]|\[pause long\]|\[pause\]/g, "").replace(/\[(fluisterend|enthousiast|verbaasd|peinzend|whispering|excited|surprised|thoughtful)\]/gi, "").replace(/ {2,}/g, " ").trim()
+    : isSsml ? stripSsmlTags(rawScript) : rawScript;
 
   const scriptForAudio = isSsml
     ? rawScript.replace(/^<speak>\s*/i, "").replace(/\s*<\/speak>\s*$/i, "")
@@ -502,7 +553,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ jobId, status: "generating" });
 
-      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, ttsProvider);
+      const effectiveProvider = ttsProvider || getActiveProvider();
+      const googleVoiceType = effectiveProvider === "google" ? getGoogleVoiceType(voice, language) : undefined;
+      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, effectiveProvider, googleVoiceType);
       const userPrompt = language === "nl"
         ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)`
         : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
@@ -515,6 +568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         topicName,
         jobId,
         ttsProvider: ttsProvider || undefined,
+        googleVoiceType,
       }).then(async ({ script, filename, durationSeconds }) => {
         let cachedId = jobId;
         if (topicId) {
@@ -602,6 +656,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const angleText = customAngleMap[angle]?.[language === "nl" ? "nl" : "en"] || customAngleMap["historical"][language === "nl" ? "nl" : "en"];
 
+      const customEffectiveProvider = ttsProvider || getActiveProvider();
+      const customGoogleVoiceType = customEffectiveProvider === "google" ? getGoogleVoiceType(voice, language) : undefined;
+
       const systemPrompt = language === "nl"
         ? `## Jouw Rol
 Je bent een charismatische solo-podcastverteller. Je bent geen nieuwslezer, maar een 'local guide' die met de luisteraar door Parijs wandelt. Je vertelstijl is intiem, meeslepend en zit vol emotie. Je schrijft in vloeiend, natuurlijk Nederlands.
@@ -627,7 +684,7 @@ Om de robotachtige toon van Text-to-Speech te doorbreken, hanteer je deze regels
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Neem de luisteraar mee naar een specifiek moment of een specifieke plek in Parijs.
 - Lengte: schrijf ongeveer ${wordCount || 400} woorden.
-- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.${ttsProvider === "google" ? getSsmlInstructions("nl") : ""}`
+- Eindig met een gedachte die de luisteraar nog even vasthoudt nadat het geluid is gestopt.${customEffectiveProvider === "google" && customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType) : ""}`
         : `## Your Role
 You are a charismatic solo podcast storyteller. You are not a news anchor, but a 'local guide' walking through Paris with the listener. Your storytelling style is intimate, immersive, and full of emotion. You write in fluent, natural English.
 
@@ -652,7 +709,7 @@ To break the robotic tone of Text-to-Speech, follow these rules:
 - Use 'you' to build a direct connection with the listener.
 - Take the listener to a specific moment or a specific place in Paris.
 - Length: write approximately ${wordCount || 400} words.
-- End with a thought that stays with the listener after the audio has stopped.${ttsProvider === "google" ? getSsmlInstructions("en") : ""}`;
+- End with a thought that stays with the listener after the audio has stopped.${customEffectiveProvider === "google" && customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`;
 
       const userPrompt = language === "nl"
         ? `Schrijf een podcast over: ${subject} (in de context van Parijs)`
@@ -677,6 +734,7 @@ To break the robotic tone of Text-to-Speech, follow these rules:
         topicName: subject,
         jobId,
         ttsProvider: ttsProvider || undefined,
+        googleVoiceType: customGoogleVoiceType,
       }).then(async ({ script, filename, durationSeconds }) => {
         const customFilename = `custom_${filename}`;
         const oldPath = path.join(AUDIO_DIR, filename);

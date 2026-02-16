@@ -6,48 +6,51 @@ const SAMPLE_RATE = 24000;
 const NUM_CHANNELS = 1;
 const BITS_PER_SAMPLE = 16;
 
+export type VoiceType = "chirp3" | "neural2" | "wavenet";
+
 export type GoogleVoice = {
   languageCode: string;
   name: string;
   ssmlGender: "MALE" | "FEMALE" | "NEUTRAL";
+  voiceType: VoiceType;
 };
 
 const LANGUAGE_VOICES: Record<string, Record<string, GoogleVoice>> = {
   nl: {
-    male: { languageCode: "nl-NL", name: "nl-NL-Wavenet-B", ssmlGender: "MALE" },
-    female: { languageCode: "nl-NL", name: "nl-NL-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "nl-NL", name: "nl-NL-Chirp3-HD-Charon", ssmlGender: "MALE", voiceType: "chirp3" },
+    female: { languageCode: "nl-NL", name: "nl-NL-Chirp3-HD-Aoede", ssmlGender: "FEMALE", voiceType: "chirp3" },
   },
   en: {
-    male: { languageCode: "en-US", name: "en-US-Wavenet-D", ssmlGender: "MALE" },
-    female: { languageCode: "en-US", name: "en-US-Wavenet-F", ssmlGender: "FEMALE" },
+    male: { languageCode: "en-US", name: "en-US-Chirp3-HD-Charon", ssmlGender: "MALE", voiceType: "chirp3" },
+    female: { languageCode: "en-US", name: "en-US-Chirp3-HD-Aoede", ssmlGender: "FEMALE", voiceType: "chirp3" },
   },
   fr: {
-    male: { languageCode: "fr-FR", name: "fr-FR-Wavenet-B", ssmlGender: "MALE" },
-    female: { languageCode: "fr-FR", name: "fr-FR-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "fr-FR", name: "fr-FR-Neural2-B", ssmlGender: "MALE", voiceType: "neural2" },
+    female: { languageCode: "fr-FR", name: "fr-FR-Neural2-A", ssmlGender: "FEMALE", voiceType: "neural2" },
   },
   es: {
-    male: { languageCode: "es-ES", name: "es-ES-Wavenet-B", ssmlGender: "MALE" },
-    female: { languageCode: "es-ES", name: "es-ES-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "es-ES", name: "es-ES-Neural2-B", ssmlGender: "MALE", voiceType: "neural2" },
+    female: { languageCode: "es-ES", name: "es-ES-Neural2-A", ssmlGender: "FEMALE", voiceType: "neural2" },
   },
   de: {
-    male: { languageCode: "de-DE", name: "de-DE-Wavenet-B", ssmlGender: "MALE" },
-    female: { languageCode: "de-DE", name: "de-DE-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "de-DE", name: "de-DE-Neural2-B", ssmlGender: "MALE", voiceType: "neural2" },
+    female: { languageCode: "de-DE", name: "de-DE-Neural2-A", ssmlGender: "FEMALE", voiceType: "neural2" },
   },
   it: {
-    male: { languageCode: "it-IT", name: "it-IT-Wavenet-C", ssmlGender: "MALE" },
-    female: { languageCode: "it-IT", name: "it-IT-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "it-IT", name: "it-IT-Neural2-C", ssmlGender: "MALE", voiceType: "neural2" },
+    female: { languageCode: "it-IT", name: "it-IT-Neural2-A", ssmlGender: "FEMALE", voiceType: "neural2" },
   },
   pt: {
-    male: { languageCode: "pt-BR", name: "pt-BR-Wavenet-B", ssmlGender: "MALE" },
-    female: { languageCode: "pt-BR", name: "pt-BR-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "pt-BR", name: "pt-BR-Neural2-B", ssmlGender: "MALE", voiceType: "neural2" },
+    female: { languageCode: "pt-BR", name: "pt-BR-Neural2-A", ssmlGender: "FEMALE", voiceType: "neural2" },
   },
   ja: {
-    male: { languageCode: "ja-JP", name: "ja-JP-Wavenet-C", ssmlGender: "MALE" },
-    female: { languageCode: "ja-JP", name: "ja-JP-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "ja-JP", name: "ja-JP-Neural2-C", ssmlGender: "MALE", voiceType: "neural2" },
+    female: { languageCode: "ja-JP", name: "ja-JP-Neural2-B", ssmlGender: "FEMALE", voiceType: "neural2" },
   },
   zh: {
-    male: { languageCode: "cmn-CN", name: "cmn-CN-Wavenet-B", ssmlGender: "MALE" },
-    female: { languageCode: "cmn-CN", name: "cmn-CN-Wavenet-A", ssmlGender: "FEMALE" },
+    male: { languageCode: "cmn-CN", name: "cmn-CN-Wavenet-B", ssmlGender: "MALE", voiceType: "wavenet" },
+    female: { languageCode: "cmn-CN", name: "cmn-CN-Wavenet-A", ssmlGender: "FEMALE", voiceType: "wavenet" },
   },
 };
 
@@ -86,6 +89,14 @@ function wrapPcmInWav(pcmData: Buffer): Buffer {
   return Buffer.concat([header, pcmData]);
 }
 
+export function isChirp3Voice(voice: GoogleVoice): boolean {
+  return voice.voiceType === "chirp3";
+}
+
+export function getGoogleVoiceType(voicePref: string, language: string = "nl"): VoiceType {
+  return getGoogleVoice(voicePref, language).voiceType;
+}
+
 export async function googleTextToSpeech(
   text: string,
   voice: GoogleVoice
@@ -95,8 +106,22 @@ export async function googleTextToSpeech(
     throw new Error("GOOGLE_TTS_API_KEY environment variable is not set");
   }
 
-  const isSsml = text.trim().startsWith("<speak>");
-  const input = isSsml ? { ssml: text } : { text };
+  let input: Record<string, string>;
+  if (voice.voiceType === "chirp3") {
+    input = { text };
+  } else {
+    const isSsml = text.trim().startsWith("<speak>");
+    input = isSsml ? { ssml: text } : { text };
+  }
+
+  const audioConfig: Record<string, unknown> = {
+    audioEncoding: "LINEAR16" as const,
+    sampleRateHertz: SAMPLE_RATE,
+  };
+
+  if (voice.voiceType === "chirp3") {
+    audioConfig.speakingRate = 0.85;
+  }
 
   const requestBody = {
     input,
@@ -105,10 +130,7 @@ export async function googleTextToSpeech(
       name: voice.name,
       ssmlGender: voice.ssmlGender,
     },
-    audioConfig: {
-      audioEncoding: "LINEAR16" as const,
-      sampleRateHertz: SAMPLE_RATE,
-    },
+    audioConfig,
   };
 
   const response = await fetch(`${GOOGLE_TTS_URL}?key=${apiKey}`, {

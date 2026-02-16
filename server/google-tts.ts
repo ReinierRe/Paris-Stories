@@ -108,7 +108,7 @@ export async function googleTextToSpeech(
 
   let input: Record<string, string>;
   if (voice.voiceType === "chirp3") {
-    input = { text };
+    input = { markup: text };
   } else {
     const isSsml = text.trim().startsWith("<speak>");
     input = isSsml ? { ssml: text } : { text };
@@ -118,10 +118,6 @@ export async function googleTextToSpeech(
     audioEncoding: "LINEAR16" as const,
     sampleRateHertz: SAMPLE_RATE,
   };
-
-  if (voice.voiceType === "chirp3") {
-    audioConfig.speakingRate = 0.85;
-  }
 
   const requestBody = {
     input,

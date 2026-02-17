@@ -17,7 +17,7 @@ import { themes, podcastLengths } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { apiRequest } from "@/lib/query-client";
 
-type Step = "angle" | "voice" | "language" | "length" | "ttsProvider" | "confirm";
+type Step = "angle" | "voice" | "language" | "length" | "confirm";
 
 function ChoiceCard({
   selected,
@@ -73,15 +73,14 @@ export default function CustomizeScreen() {
   const currentTheme = themes.find((t) => t.id === params.themeId);
   const hasAngles = !!(currentTheme?.angles && currentTheme.angles.length > 0);
   const steps: Step[] = hasAngles
-    ? ["angle", "voice", "language", "length", "ttsProvider", "confirm"]
-    : ["voice", "language", "length", "ttsProvider", "confirm"];
+    ? ["angle", "voice", "language", "length", "confirm"]
+    : ["voice", "language", "length", "confirm"];
 
   const [currentStep, setCurrentStep] = useState(0);
   const [angle, setAngle] = useState("");
   const [voice, setVoice] = useState<"male" | "female">("female");
   const [language, setLanguage] = useState<"nl" | "en">("nl");
   const [length, setLength] = useState("short");
-  const [ttsProvider, setTtsProvider] = useState<"elevenlabs" | "google">("elevenlabs");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const step = steps[currentStep];
@@ -90,7 +89,6 @@ export default function CustomizeScreen() {
     step === "voice" ? true :
     step === "language" ? true :
     step === "length" ? true :
-    step === "ttsProvider" ? true :
     step === "confirm" ? true : false;
 
   const stepTitle = () => {
@@ -99,7 +97,6 @@ export default function CustomizeScreen() {
       case "voice": return "Select a voice";
       case "language": return "Pick a language";
       case "length": return "Podcast length";
-      case "ttsProvider": return "Voice engine";
       case "confirm": return "Ready to create";
     }
   };
@@ -110,7 +107,6 @@ export default function CustomizeScreen() {
       case "voice": return "Who narrates your podcast?";
       case "language": return "Which language do you prefer?";
       case "length": return "How long should the podcast be?";
-      case "ttsProvider": return "Which text-to-speech engine should generate the audio?";
       case "confirm": return `Your podcast about "${params.topicName}" is ready to be created`;
     }
   };
@@ -172,7 +168,6 @@ export default function CustomizeScreen() {
         language,
         wordCount: selectedLength?.words || 750,
         lengthId: length,
-        ttsProvider,
       });
 
       const data = await res.json();
@@ -311,26 +306,6 @@ export default function CustomizeScreen() {
           </View>
         );
 
-      case "ttsProvider":
-        return (
-          <View style={styles.choicesContainer}>
-            <ChoiceCard
-              selected={ttsProvider === "elevenlabs"}
-              onPress={() => setTtsProvider("elevenlabs")}
-              icon={<Ionicons name="flash" size={20} color={ttsProvider === "elevenlabs" ? Colors.light.accent : Colors.light.textSecondary} />}
-              title="ElevenLabs"
-              subtitle="Premium AI voices, natural and expressive"
-            />
-            <ChoiceCard
-              selected={ttsProvider === "google"}
-              onPress={() => setTtsProvider("google")}
-              icon={<Ionicons name="logo-google" size={20} color={ttsProvider === "google" ? Colors.light.accent : Colors.light.textSecondary} />}
-              title="Google"
-              subtitle="Google Wavenet voices, reliable and clear"
-            />
-          </View>
-        );
-
       case "confirm":
         return (
           <View style={styles.confirmContainer}>
@@ -362,11 +337,6 @@ export default function CustomizeScreen() {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Length</Text>
                 <Text style={styles.summaryValue}>{selectedLength?.name} ({selectedLength?.duration})</Text>
-              </View>
-              <View style={styles.summaryDivider} />
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Voice Engine</Text>
-                <Text style={styles.summaryValue}>{ttsProvider === "elevenlabs" ? "ElevenLabs" : "Google"}</Text>
               </View>
             </View>
 

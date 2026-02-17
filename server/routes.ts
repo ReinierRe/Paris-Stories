@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
-import { textToSpeech, getActiveProvider } from "./tts";
+import { textToSpeech } from "./tts";
 import { getGoogleVoiceType, type VoiceType } from "./google-tts";
 import { requireAuth } from "./auth";
 import * as fs from "fs";
@@ -149,7 +149,7 @@ function getGoogleTtsInstructions(language: string, voiceType: VoiceType): strin
   return getSsmlInstructions(language);
 }
 
-function getSystemPrompt(language: string, perspective: string, wordCount: number, ttsProvider?: string, googleVoiceType?: VoiceType): string {
+function getSystemPrompt(language: string, perspective: string, wordCount: number, googleVoiceType?: VoiceType): string {
   const perspectiveMap: Record<string, { en: string; nl: string }> = {
     historical: {
       en: "Use a factual, chronological storytelling approach. Include specific dates, names, and historical context. Weave the facts into a compelling narrative rather than a dry summary.",
@@ -216,7 +216,7 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Schrijf in vloeiende alinea's zonder koppen of opsommingstekens.
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Lengte: schrijf ongeveer ${wordCount} woorden.
-- Eindig met een interessant feit of een gedachte die blijft hangen.${ttsProvider === "google" && googleVoiceType ? getGoogleTtsInstructions("nl", googleVoiceType) : ""}`;
+- Eindig met een interessant feit of een gedachte die blijft hangen.${googleVoiceType ? getGoogleTtsInstructions("nl", googleVoiceType) : ""}`;
   }
 
   return `## Your Role
@@ -241,7 +241,7 @@ To sound natural, follow these rules:
 - Write in flowing paragraphs without headings or bullet points.
 - Use 'you' to build a direct connection with the listener.
 - Length: write approximately ${wordCount} words.
-- End with an interesting fact or a thought that lingers.${ttsProvider === "google" && googleVoiceType ? getGoogleTtsInstructions("en", googleVoiceType) : ""}`;
+- End with an interesting fact or a thought that lingers.${googleVoiceType ? getGoogleTtsInstructions("en", googleVoiceType) : ""}`;
 }
 
 function findDataChunk(wav: Buffer): { offset: number; size: number } | null {
@@ -364,7 +364,6 @@ async function generateScriptAndAudio(params: {
   language: string;
   topicName: string;
   jobId: string;
-  ttsProvider?: "elevenlabs" | "google";
   googleVoiceType?: VoiceType;
 }): Promise<{ script: string; filename: string; durationSeconds: number; combinedAudio: Buffer }> {
   const job = generationJobs.get(params.jobId);
@@ -384,10 +383,9 @@ async function generateScriptAndAudio(params: {
 
   if (job) job.progress = "Generating audio...";
 
-  const ttsProvider = params.ttsProvider || getActiveProvider();
-  const isChirp3 = params.googleVoiceType === "chirp3" && ttsProvider === "google";
+  const isChirp3 = params.googleVoiceType === "chirp3";
   const isSsml = !isChirp3 && rawScript.trim().startsWith("<speak>");
-  console.log(`Using TTS provider: ${ttsProvider}${isChirp3 ? " (Chirp 3: HD)" : isSsml ? " (SSML)" : ""}`);
+  console.log(`Using Google TTS${isChirp3 ? " (Chirp 3: HD)" : isSsml ? " (SSML)" : ""}`);
 
   const displayScript = isChirp3
     ? rawScript.replace(/\[pause short\]|\[pause long\]|\[pause\]/g, "").replace(/\[(fluisterend|enthousiast|verbaasd|peinzend|whispering|excited|surprised|thoughtful)\]/gi, "").replace(/ {2,}/g, " ").trim()
@@ -422,7 +420,7 @@ async function generateScriptAndAudio(params: {
     if (job) job.progress = `Generating audio (${i + 1}/${ttsChunks.length})...`;
     console.log(`  TTS chunk ${i + 1}/${ttsChunks.length}...`);
     try {
-      const audio = await textToSpeech(ttsChunks[i], params.voice, params.language, ttsProvider as any);
+      const audio = await textToSpeech(ttsChunks[i], params.voice, params.language);
       if (audio.length > 44) {
         audioBuffers.push(audio);
       }
@@ -432,7 +430,7 @@ async function generateScriptAndAudio(params: {
         console.log(`  Retrying chunk ${i + 1} as plain text (SSML fallback)...`);
         try {
           const plainChunk = stripSsmlTags(ttsChunks[i]);
-          const audio = await textToSpeech(plainChunk, params.voice, params.language, ttsProvider as any);
+          const audio = await textToSpeech(plainChunk, params.voice, params.language);
           if (audio.length > 44) {
             audioBuffers.push(audio);
           }
@@ -488,7 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast/generate", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId, ttsProvider } = req.body;
+      const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId } = req.body;
       const userId = (req as any).user?.id;
 
       if (!topicName || !voice || !language) {
@@ -555,9 +553,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ jobId, status: "generating" });
 
-      const effectiveProvider = ttsProvider || getActiveProvider();
-      const googleVoiceType = effectiveProvider === "google" ? getGoogleVoiceType(voice, language) : undefined;
-      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, effectiveProvider, googleVoiceType);
+      const googleVoiceType = getGoogleVoiceType(voice, language);
+      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, googleVoiceType);
       const userPrompt = language === "nl"
         ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)`
         : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
@@ -569,7 +566,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         language,
         topicName,
         jobId,
-        ttsProvider: ttsProvider || undefined,
         googleVoiceType,
       }).then(async ({ script, filename, durationSeconds }) => {
         let cachedId = jobId;
@@ -634,7 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast/generate-custom", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { subject, angle, voice, language, wordCount, lengthId, ttsProvider } = req.body;
+      const { subject, angle, voice, language, wordCount, lengthId } = req.body;
       const userId = (req as any).user?.id;
 
       if (!subject || !angle || !voice || !language || !userId) {
@@ -658,8 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const angleText = customAngleMap[angle]?.[language === "nl" ? "nl" : "en"] || customAngleMap["historical"][language === "nl" ? "nl" : "en"];
 
-      const customEffectiveProvider = ttsProvider || getActiveProvider();
-      const customGoogleVoiceType = customEffectiveProvider === "google" ? getGoogleVoiceType(voice, language) : undefined;
+      const customGoogleVoiceType = getGoogleVoiceType(voice, language);
 
       const systemPrompt = language === "nl"
         ? `## Jouw Rol
@@ -684,7 +679,7 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Schrijf in vloeiende alinea's zonder koppen of opsommingstekens.
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Lengte: schrijf ongeveer ${wordCount || 400} woorden.
-- Eindig met een interessant feit of een gedachte die blijft hangen.${customEffectiveProvider === "google" && customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType) : ""}`
+- Eindig met een interessant feit of een gedachte die blijft hangen.${customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType) : ""}`
         : `## Your Role
 You are a knowledgeable solo podcast storyteller. You are an experienced guide walking through Paris with the listener. Your style is warm but grounded — you share facts and context in an accessible, relaxed way. You write in fluent, natural English.
 
@@ -707,7 +702,7 @@ To sound natural, follow these rules:
 - Write in flowing paragraphs without headings or bullet points.
 - Use 'you' to build a direct connection with the listener.
 - Length: write approximately ${wordCount || 400} words.
-- End with an interesting fact or a thought that lingers.${customEffectiveProvider === "google" && customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`;
+- End with an interesting fact or a thought that lingers.${customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`;
 
       const userPrompt = language === "nl"
         ? `Schrijf een podcast over: ${subject} (in de context van Parijs)`
@@ -731,7 +726,6 @@ To sound natural, follow these rules:
         language,
         topicName: subject,
         jobId,
-        ttsProvider: ttsProvider || undefined,
         googleVoiceType: customGoogleVoiceType,
       }).then(async ({ script, filename, durationSeconds }) => {
         const customFilename = `custom_${filename}`;

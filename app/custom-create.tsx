@@ -19,7 +19,7 @@ import { podcastLengths } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { apiRequest } from "@/lib/query-client";
 
-type Step = "subject" | "angle" | "voice" | "language" | "length" | "ttsProvider" | "confirm";
+type Step = "subject" | "angle" | "voice" | "language" | "length" | "confirm";
 
 const CUSTOM_ANGLES = [
   {
@@ -85,7 +85,7 @@ export default function CustomCreateScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const inputRef = useRef<TextInput>(null);
 
-  const steps: Step[] = ["subject", "angle", "voice", "language", "length", "ttsProvider", "confirm"];
+  const steps: Step[] = ["subject", "angle", "voice", "language", "length", "confirm"];
 
   const [currentStep, setCurrentStep] = useState(0);
   const [subject, setSubject] = useState("");
@@ -93,7 +93,6 @@ export default function CustomCreateScreen() {
   const [voice, setVoice] = useState<"male" | "female">("female");
   const [language, setLanguage] = useState<"nl" | "en">("nl");
   const [length, setLength] = useState("short");
-  const [ttsProvider, setTtsProvider] = useState<"elevenlabs" | "google">("elevenlabs");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const step = steps[currentStep];
@@ -111,7 +110,6 @@ export default function CustomCreateScreen() {
       case "voice": return "Select a voice";
       case "language": return "Pick a language";
       case "length": return "Podcast length";
-      case "ttsProvider": return "Voice engine";
       case "confirm": return "Ready to create";
     }
   };
@@ -123,7 +121,6 @@ export default function CustomCreateScreen() {
       case "voice": return "Who narrates your podcast?";
       case "language": return "Which language do you prefer?";
       case "length": return "How long should the podcast be?";
-      case "ttsProvider": return "Which text-to-speech engine should generate the audio?";
       case "confirm": return `Your podcast about "${trimmedSubject}" is ready to be created`;
     }
   };
@@ -183,7 +180,6 @@ export default function CustomCreateScreen() {
         language,
         wordCount: selectedLength?.words || 400,
         lengthId: length,
-        ttsProvider,
       });
 
       const data = await res.json();
@@ -348,26 +344,6 @@ export default function CustomCreateScreen() {
           </View>
         );
 
-      case "ttsProvider":
-        return (
-          <View style={styles.choicesContainer}>
-            <ChoiceCard
-              selected={ttsProvider === "elevenlabs"}
-              onPress={() => setTtsProvider("elevenlabs")}
-              icon={<Ionicons name="flash" size={20} color={ttsProvider === "elevenlabs" ? Colors.light.accent : Colors.light.textSecondary} />}
-              title="ElevenLabs"
-              subtitle="Premium AI voices, natural and expressive"
-            />
-            <ChoiceCard
-              selected={ttsProvider === "google"}
-              onPress={() => setTtsProvider("google")}
-              icon={<Ionicons name="logo-google" size={20} color={ttsProvider === "google" ? Colors.light.accent : Colors.light.textSecondary} />}
-              title="Google"
-              subtitle="Google Wavenet voices, reliable and clear"
-            />
-          </View>
-        );
-
       case "confirm":
         return (
           <View style={styles.confirmContainer}>
@@ -395,11 +371,6 @@ export default function CustomCreateScreen() {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Length</Text>
                 <Text style={styles.summaryValue}>{selectedLength?.name} ({selectedLength?.duration})</Text>
-              </View>
-              <View style={styles.summaryDivider} />
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Voice Engine</Text>
-                <Text style={styles.summaryValue}>{ttsProvider === "elevenlabs" ? "ElevenLabs" : "Google"}</Text>
               </View>
             </View>
 

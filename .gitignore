@@ -33,9 +33,18 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
 
 # typescript
 *.tsbuildinfo
 .vercel
 
-.env
+# Build artifacts
+server_dist/
+static-build/
+
+# Generated audio files
+podcast-audio/
+
+# Attached assets (development screenshots)
+attached_assets/

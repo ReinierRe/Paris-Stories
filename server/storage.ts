@@ -14,18 +14,6 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
   return user;
 }
 
-export async function createUser(
-  email: string,
-  hashedPassword: string,
-  firstName?: string,
-): Promise<User> {
-  const [user] = await db
-    .insert(users)
-    .values({ email, password: hashedPassword, firstName: firstName || null })
-    .returning();
-  return user;
-}
-
 export async function getUserByFirebaseUid(uid: string): Promise<User | undefined> {
   const [user] = await db.select().from(users).where(eq(users.firebaseUid, uid));
   return user;

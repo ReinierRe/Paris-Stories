@@ -38,7 +38,7 @@ patches/          - npm patch files
 - `npm run expo:dev` - Start Expo dev server (for native development)
 
 ## Database Tables
-- `users` - User accounts with Firebase Authentication (firebaseUid, email, optional password for legacy)
+- `users` - User accounts with Firebase Authentication (firebaseUid, email)
 - `cached_podcasts` - Pre-generated podcast cache (by topic/angle/voice/language/length)
 - `custom_podcasts` - User-created custom podcasts
 - `user_podcasts` - Links users to cached podcasts they've listened to
@@ -63,6 +63,8 @@ patches/          - npm patch files
 - In production, static-build/ files are served instead of Metro proxy
 
 ## Recent Changes
+- 2026-02-17: Production cleanup — removed bcryptjs (unused), legacy password-based auth functions, Python module, stale build artifacts. Updated .gitignore for podcast-audio/, server_dist/, static-build/, attached_assets/.
+- 2026-02-17: Script prompt improvements — no abbreviations (het i.p.v. 't), no dashes or ellipses, phonetically clear text for TTS.
 - 2026-02-17: Removed ElevenLabs TTS entirely — Google Cloud TTS is now the sole provider. Removed provider selection step from podcast creation flows. Cleaned up elevenlabs-tts.ts, TTS_PROVIDER env var, and all related UI/backend code.
 - 2026-02-16: Upgraded Google TTS voices — Chirp 3: HD for NL/EN, Neural2 for FR/ES/DE/IT/PT/JA (full SSML), Wavenet kept for ZH. Voice type auto-detected per language, prompt instructions adapt accordingly.
 - 2026-02-16: Rewrote podcast generation prompts — factual "local guide" role, no filler words, plain text for Chirp 3, SSML for Wavenet/Neural2.

@@ -70,6 +70,38 @@ const slides: Slide[] = [
   },
 ];
 
+function PhoneMockup({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={mockupStyles.phoneFrame}>
+      <View style={mockupStyles.phoneNotch}>
+        <Text style={mockupStyles.phoneTime}>13:12</Text>
+        <View style={mockupStyles.phoneNotchDot} />
+      </View>
+      <View style={mockupStyles.phoneContent}>
+        {children}
+      </View>
+    </View>
+  );
+}
+
+function PodcastItem({ category, title, voice, duration, lang, color }: {
+  category: string; title: string; voice: string; duration: string; lang: string; color: string;
+}) {
+  return (
+    <View style={mockupStyles.podcastItem}>
+      <Text style={[mockupStyles.podcastCategory, { color }]}>{category}</Text>
+      <Text style={mockupStyles.podcastTitle}>{title}</Text>
+      <View style={mockupStyles.podcastMeta}>
+        <Text style={mockupStyles.podcastMetaText}>{lang}</Text>
+        <View style={mockupStyles.podcastMetaDot} />
+        <Text style={mockupStyles.podcastMetaText}>{voice}</Text>
+        <View style={mockupStyles.podcastMetaDot} />
+        <Text style={mockupStyles.podcastMetaText}>{duration}</Text>
+      </View>
+    </View>
+  );
+}
+
 function SlideContent({ slide, index }: { slide: Slide; index: number }) {
   const categoryIcons = [
     { name: "History", image: require("@/assets/images/category-history.png") },
@@ -96,18 +128,80 @@ function SlideContent({ slide, index }: { slide: Slide; index: number }) {
     );
   }
 
-  if (slide.features) {
+  if (index === 1) {
     return (
       <View style={slideStyles.visualContainer}>
-        <View style={slideStyles.featureList}>
-          {slide.features.map((feature, i) => (
-            <View key={i} style={slideStyles.featureRow}>
-              <View style={slideStyles.featureIconCircle}>
-                <Ionicons name={feature.icon as any} size={22} color="#C4A265" />
+        <PhoneMockup>
+          <Text style={mockupStyles.screenTitle}>My Podcasts</Text>
+          <Text style={mockupStyles.screenSubtitle}>20 ready</Text>
+          <PodcastItem category="MUSEUMS" title="Musée d'Orsay" voice="Male" duration="2:09" lang="EN" color="#5B9BD5" />
+          <PodcastItem category="FRENCH REVOLUTION" title="Danton: Stem van het Volk" voice="Female" duration="4:16" lang="NL" color="#E06060" />
+          <PodcastItem category="EPIC BUILDINGS" title="The Panthéon" voice="Male" duration="3:09" lang="EN" color="#7A8B9A" />
+          <PodcastItem category="CULINARY" title="Café Culture" voice="Female" duration="2:36" lang="EN" color="#E0A040" />
+        </PhoneMockup>
+      </View>
+    );
+  }
+
+  if (index === 2) {
+    return (
+      <View style={slideStyles.visualContainer}>
+        <PhoneMockup>
+          <Text style={mockupStyles.screenTitle}>Paris Stories</Text>
+          <Text style={mockupStyles.screenSubtitle}>Explore categories</Text>
+          <View style={mockupStyles.categoryList}>
+            {categoryIcons.slice(0, 5).map((cat, i) => (
+              <View key={i} style={mockupStyles.categoryRow}>
+                <Image source={cat.image} style={mockupStyles.categoryRowIcon} />
+                <View style={mockupStyles.categoryRowText}>
+                  <Text style={mockupStyles.categoryRowName}>{cat.name}</Text>
+                  <Text style={mockupStyles.categoryRowCount}>{[8, 6, 10, 8, 7][i]} topics</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.3)" />
               </View>
-              <Text style={slideStyles.featureText}>{feature.text}</Text>
-            </View>
-          ))}
+            ))}
+          </View>
+        </PhoneMockup>
+      </View>
+    );
+  }
+
+  if (index === 3) {
+    return (
+      <View style={slideStyles.visualContainer}>
+        <View style={mockupStyles.dualPhoneRow}>
+          <View style={mockupStyles.dualPhoneWrapper}>
+            <PhoneMockup>
+              <View style={mockupStyles.customHeader}>
+                <Ionicons name="arrow-back" size={14} color="rgba(255,255,255,0.5)" />
+                <Text style={mockupStyles.customLabel}>CUSTOM PODCAST</Text>
+              </View>
+              <Text style={mockupStyles.customTitle}>Your subject</Text>
+              <Text style={mockupStyles.customSubtitle}>What Paris story would you like?</Text>
+              <View style={mockupStyles.textareaBox}>
+                <Text style={mockupStyles.textareaText}>I am visiting Montmartre, tell me about Picasso's life here</Text>
+              </View>
+              <View style={mockupStyles.continueBtn}>
+                <Text style={mockupStyles.continueBtnText}>Continue</Text>
+                <Ionicons name="arrow-forward" size={12} color="#FFF" />
+              </View>
+            </PhoneMockup>
+          </View>
+          <View style={mockupStyles.dualPhoneWrapper}>
+            <PhoneMockup>
+              <View style={mockupStyles.customHeader}>
+                <Ionicons name="arrow-back" size={14} color="rgba(255,255,255,0.5)" />
+                <Text style={mockupStyles.customLabel}>CUSTOM PODCAST</Text>
+              </View>
+              <Text style={mockupStyles.customTitle}>Choose your angle</Text>
+              <Text style={mockupStyles.customSubtitle}>How should we tell the story?</Text>
+              {["Historical", "Modern Culture", "Personal Stories"].map((angle, i) => (
+                <View key={i} style={[mockupStyles.angleRow, i === 0 && mockupStyles.angleRowSelected]}>
+                  <Text style={mockupStyles.angleName}>{angle}</Text>
+                </View>
+              ))}
+            </PhoneMockup>
+          </View>
         </View>
       </View>
     );
@@ -479,6 +573,195 @@ const slideStyles = StyleSheet.create({
     fontSize: 16,
     color: "rgba(255, 255, 255, 0.85)",
     flex: 1,
+  },
+});
+
+const mockupStyles = StyleSheet.create({
+  phoneFrame: {
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    overflow: "hidden",
+    paddingBottom: 12,
+  },
+  phoneNotch: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  phoneTime: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.5)",
+  },
+  phoneNotchDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+  },
+  phoneContent: {
+    paddingHorizontal: 14,
+    gap: 6,
+  },
+  screenTitle: {
+    fontFamily: "DMSans_700Bold",
+    fontSize: 18,
+    color: "#FFFFFF",
+  },
+  screenSubtitle: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.4)",
+    marginBottom: 8,
+  },
+  podcastItem: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+  },
+  podcastCategory: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 9,
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  podcastTitle: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 14,
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  podcastMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  podcastMetaText: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 10,
+    color: "rgba(255, 255, 255, 0.4)",
+  },
+  podcastMetaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  categoryList: {
+    gap: 4,
+  },
+  categoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 10,
+    padding: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+  },
+  categoryRowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  categoryRowText: {
+    flex: 1,
+  },
+  categoryRowName: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 13,
+    color: "#FFFFFF",
+  },
+  categoryRowCount: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 10,
+    color: "rgba(255, 255, 255, 0.4)",
+  },
+  dualPhoneRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  dualPhoneWrapper: {
+    flex: 1,
+  },
+  customHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  customLabel: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 9,
+    color: "#C4A265",
+    letterSpacing: 0.5,
+  },
+  customTitle: {
+    fontFamily: "DMSans_700Bold",
+    fontSize: 14,
+    color: "#FFFFFF",
+    marginBottom: 2,
+  },
+  customSubtitle: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 10,
+    color: "rgba(255, 255, 255, 0.4)",
+    marginBottom: 8,
+  },
+  textareaBox: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    padding: 8,
+    minHeight: 50,
+    marginBottom: 8,
+  },
+  textareaText: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 10,
+    color: "rgba(255, 255, 255, 0.6)",
+    lineHeight: 15,
+  },
+  continueBtn: {
+    backgroundColor: "#C4A265",
+    borderRadius: 8,
+    paddingVertical: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  continueBtnText: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 11,
+    color: "#FFFFFF",
+  },
+  angleRow: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+  },
+  angleRowSelected: {
+    borderColor: "rgba(196, 162, 101, 0.4)",
+    backgroundColor: "rgba(196, 162, 101, 0.08)",
+  },
+  angleName: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 11,
+    color: "#FFFFFF",
   },
 });
 

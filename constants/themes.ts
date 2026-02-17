@@ -73,6 +73,7 @@ export const themes: Theme[] = [
     nameNl: "Franse Revolutie",
     icon: "flag",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-french-revolution.png"),
     color: "#C0392B",
     angles: [
       {
@@ -157,6 +158,7 @@ export const themes: Theme[] = [
     nameNl: "Musea",
     icon: "museum",
     iconFamily: "MaterialIcons",
+    iconImage: require("@/assets/images/category-museums.png"),
     color: "#2980B9",
     angles: [
       {
@@ -249,6 +251,7 @@ export const themes: Theme[] = [
     nameNl: "Iconische Gebouwen",
     icon: "business",
     iconFamily: "MaterialIcons",
+    iconImage: require("@/assets/images/category-epic-buildings.png"),
     color: "#34495E",
     topics: [
       {
@@ -315,6 +318,7 @@ export const themes: Theme[] = [
     nameNl: "Moderne Geschiedenis",
     icon: "history",
     iconFamily: "MaterialIcons",
+    iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#8E44AD",
     topics: [
       {
@@ -381,6 +385,7 @@ export const themes: Theme[] = [
     nameNl: "Wijken",
     icon: "map",
     iconFamily: "Feather",
+    iconImage: require("@/assets/images/category-neighborhoods.png"),
     color: "#27AE60",
     angles: [
       {
@@ -477,10 +482,11 @@ export const themes: Theme[] = [
   },
   {
     id: "food-drinks",
-    name: "Food & Drinks",
-    nameNl: "Eten & Drinken",
+    name: "Culinary",
+    nameNl: "Culinair",
     icon: "restaurant",
     iconFamily: "MaterialIcons",
+    iconImage: require("@/assets/images/category-culinary.png"),
     color: "#E67E22",
     topics: [
       {

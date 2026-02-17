@@ -9,6 +9,7 @@ import {
   LayoutAnimation,
   UIManager,
   Alert,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -59,6 +60,9 @@ function ThemeCard({ theme }: { theme: Theme }) {
   };
 
   const renderIcon = () => {
+    if (theme.iconImage) {
+      return <Image source={theme.iconImage} style={{ width: 44, height: 44, borderRadius: 12 }} />;
+    }
     const iconProps = { size: 22, color: "#FFFFFF" };
     if (theme.iconFamily === "MaterialIcons") {
       return <MaterialIcons name={theme.icon as any} {...iconProps} />;
@@ -75,9 +79,13 @@ function ThemeCard({ theme }: { theme: Theme }) {
         style={({ pressed }) => [styles.themeHeader, pressed && styles.themeHeaderPressed]}
         onPress={toggleExpand}
       >
-        <View style={[styles.themeIconContainer, { backgroundColor: theme.color }]}>
-          {renderIcon()}
-        </View>
+        {theme.iconImage ? (
+          renderIcon()
+        ) : (
+          <View style={[styles.themeIconContainer, { backgroundColor: theme.color }]}>
+            {renderIcon()}
+          </View>
+        )}
         <View style={styles.themeTextContainer}>
           <Text style={styles.themeName}>{theme.name}</Text>
           <Text style={styles.themeTopicCount}>

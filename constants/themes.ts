@@ -21,6 +21,7 @@ export interface Theme {
   nameNl: string;
   icon: string;
   iconFamily: "Ionicons" | "MaterialIcons" | "MaterialCommunityIcons" | "Feather";
+  iconImage?: any;
   color: string;
   topics: Topic[];
   angles?: Angle[];
@@ -33,6 +34,7 @@ export const themes: Theme[] = [
     nameNl: "Geschiedenis",
     icon: "book",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-history.png"),
     color: "#6B4226",
     topics: [
       {

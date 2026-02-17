@@ -1,0 +1,268 @@
+import React from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Pressable,
+  Platform,
+  Alert,
+  Image,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import Colors from "@/constants/colors";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePodcasts } from "@/contexts/PodcastContext";
+
+function ProfileHeader({ user, onLogout }: { user: { id: string; email?: string; firstName?: string }; onLogout: () => void }) {
+  const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : "?");
+
+  return (
+    <View style={styles.profileHeader}>
+      <View style={styles.avatarContainer}>
+        <Text style={styles.avatarText}>{initial}</Text>
+      </View>
+      <Text style={styles.profileName}>{user.firstName || "Traveler"}</Text>
+      {user.email && <Text style={styles.profileEmail}>{user.email}</Text>}
+    </View>
+  );
+}
+
+function StatCard({ icon, value, label }: { icon: string; value: string | number; label: string }) {
+  return (
+    <View style={styles.statCard}>
+      <Ionicons name={icon as any} size={20} color="#C4A265" />
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function MenuItem({ icon, label, onPress, destructive }: { icon: string; label: string; onPress: () => void; destructive?: boolean }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+      onPress={onPress}
+    >
+      <Ionicons
+        name={icon as any}
+        size={20}
+        color={destructive ? Colors.light.error : Colors.light.textSecondary}
+      />
+      <Text style={[styles.menuItemLabel, destructive && styles.menuItemLabelDestructive]}>{label}</Text>
+      <Ionicons name="chevron-forward" size={16} color={Colors.light.textTertiary} />
+    </Pressable>
+  );
+}
+
+export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
+  const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { user, logout } = useAuth();
+  const { podcasts } = usePodcasts();
+
+  const totalPodcasts = podcasts.length;
+  const readyPodcasts = podcasts.filter((p) => p.status === "ready").length;
+
+  const handleLogout = () => {
+    if (Platform.OS === "web") {
+      logout();
+      return;
+    }
+    Alert.alert("Sign out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Sign out", style: "destructive", onPress: logout },
+    ]);
+  };
+
+  if (!user) return null;
+
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + 16 + webTopInset, paddingBottom: insets.bottom + 100 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.screenTitle}>My Profile</Text>
+
+        <ProfileHeader user={user} onLogout={handleLogout} />
+
+        <View style={styles.statsRow}>
+          <StatCard icon="headset" value={totalPodcasts} label="Total" />
+          <StatCard icon="checkmark-circle" value={readyPodcasts} label="Ready" />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.menuCard}>
+            <View style={styles.aboutRow}>
+              <Image
+                source={require("@/assets/images/icon.png")}
+                style={styles.aboutIcon}
+              />
+              <View style={styles.aboutText}>
+                <Text style={styles.aboutAppName}>Paris Stories</Text>
+                <Text style={styles.aboutVersion}>Version 1.0.0</Text>
+              </View>
+            </View>
+            <Text style={styles.aboutDescription}>
+              Discover the hidden stories of Paris through AI-powered audio tours. From the French Revolution to hidden neighborhoods, every story is crafted with care.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.menuCard}>
+            <MenuItem icon="log-out-outline" label="Sign out" onPress={handleLogout} destructive />
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+  },
+  screenTitle: {
+    fontSize: 34,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.primary,
+    letterSpacing: -0.5,
+    marginBottom: 24,
+  },
+  profileHeader: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.light.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  avatarText: {
+    fontSize: 32,
+    fontFamily: "DMSans_700Bold",
+    color: "#FFFFFF",
+  },
+  profileName: {
+    fontSize: 22,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.text,
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 14,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 28,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.light.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.cardBorder,
+    padding: 16,
+    alignItems: "center",
+    gap: 6,
+  },
+  statValue: {
+    fontSize: 24,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.text,
+  },
+  statLabel: {
+    fontSize: 13,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontFamily: "DMSans_600SemiBold",
+    color: Colors.light.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    paddingLeft: 4,
+  },
+  menuCard: {
+    backgroundColor: Colors.light.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.cardBorder,
+    overflow: "hidden",
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    gap: 12,
+  },
+  menuItemPressed: {
+    backgroundColor: "rgba(0,0,0,0.03)",
+  },
+  menuItemLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.text,
+  },
+  menuItemLabelDestructive: {
+    color: Colors.light.error,
+  },
+  aboutRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    gap: 12,
+  },
+  aboutIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+  },
+  aboutText: {
+    flex: 1,
+  },
+  aboutAppName: {
+    fontSize: 16,
+    fontFamily: "DMSans_600SemiBold",
+    color: Colors.light.text,
+  },
+  aboutVersion: {
+    fontSize: 13,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  aboutDescription: {
+    fontSize: 14,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    lineHeight: 21,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+});

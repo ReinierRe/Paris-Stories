@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const verifyWithBackend = useCallback(async (idToken: string): Promise<AuthUser | null> => {
+  const verifyWithBackend = useCallback(async (idToken: string): Promise<{ user: AuthUser | null; error?: string }> => {
     try {
       const baseUrl = getApiUrl();
       const url = new URL("/api/auth/verify", baseUrl);
@@ -43,11 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
-        return data.user;
+        return { user: data.user };
       }
-      return null;
-    } catch {
-      return null;
+      const errorText = await res.text().catch(() => "");
+      return { user: null, error: `Server returned ${res.status}: ${errorText}` };
+    } catch (err: any) {
+      return { user: null, error: err?.message || "Network error" };
     }
   }, []);
 
@@ -56,11 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (firebaseUser) {
         try {
           const idToken = await firebaseUser.getIdToken();
-          const backendUser = await verifyWithBackend(idToken);
-          if (backendUser) {
-            setUser(backendUser);
+          const result = await verifyWithBackend(idToken);
+          if (result.user) {
+            setUser(result.user);
             setToken(idToken);
           } else {
+            console.warn("Auth state verify failed:", result.error);
             setUser(null);
             setToken(null);
           }
@@ -82,13 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await credential.user.getIdToken();
-      const backendUser = await verifyWithBackend(idToken);
-      if (backendUser) {
-        setUser(backendUser);
+      const result = await verifyWithBackend(idToken);
+      if (result.user) {
+        setUser(result.user);
         setToken(idToken);
         return { success: true };
       }
-      return { success: false, error: "Failed to verify with server" };
+      return { success: false, error: result.error || "Failed to verify with server" };
     } catch (err: any) {
       const code = err?.code;
       if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") {
@@ -106,13 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName: firstName });
       const idToken = await credential.user.getIdToken();
-      const backendUser = await verifyWithBackend(idToken);
-      if (backendUser) {
-        setUser(backendUser);
+      const result = await verifyWithBackend(idToken);
+      if (result.user) {
+        setUser(result.user);
         setToken(idToken);
         return { success: true };
       }
-      return { success: false, error: "Failed to verify with server" };
+      return { success: false, error: result.error || "Failed to verify with server" };
     } catch (err: any) {
       const code = err?.code;
       if (code === "auth/email-already-in-use") {

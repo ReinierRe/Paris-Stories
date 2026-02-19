@@ -34,6 +34,7 @@ export default function PlayerScreen() {
   const soundRef = useRef<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [audioError, setAudioError] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showScript, setShowScript] = useState(false);
@@ -41,6 +42,9 @@ export default function PlayerScreen() {
   useEffect(() => {
     if (podcast?.audioUrl) {
       loadAudio();
+    } else if (podcast) {
+      setIsLoading(false);
+      setAudioError(true);
     }
     return () => {
       if (soundRef.current) {
@@ -50,6 +54,8 @@ export default function PlayerScreen() {
   }, [podcast?.audioUrl]);
 
   const loadAudio = async () => {
+    setAudioError(false);
+    setIsLoading(true);
     try {
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
@@ -67,6 +73,7 @@ export default function PlayerScreen() {
     } catch (error) {
       console.error("Failed to load audio:", error);
       setIsLoading(false);
+      setAudioError(true);
     }
   };
 
@@ -80,6 +87,10 @@ export default function PlayerScreen() {
         setIsPlaying(false);
         soundRef.current?.setPositionAsync(0);
       }
+    } else if (status.error) {
+      console.error("Playback error:", status.error);
+      setAudioError(true);
+      setIsPlaying(false);
     }
   };
 
@@ -148,11 +159,30 @@ export default function PlayerScreen() {
         </ScrollView>
       ) : (
         <View style={styles.artworkContainer}>
-          <View style={styles.artwork}>
-            <View style={styles.artworkInner}>
-              <Ionicons name="headset" size={64} color={Colors.light.accent} />
+          {audioError ? (
+            <View style={styles.errorCard}>
+              <View style={styles.errorIconCircle}>
+                <Ionicons name="cloud-offline-outline" size={40} color={Colors.light.accent} />
+              </View>
+              <Text style={styles.errorTitle}>Audio unavailable</Text>
+              <Text style={styles.errorDescription}>
+                The audio file for this podcast could not be loaded. You can still read the script using the button above.
+              </Text>
+              <Pressable
+                style={({ pressed }) => [styles.retryButton, pressed && { opacity: 0.8 }]}
+                onPress={loadAudio}
+              >
+                <Ionicons name="refresh" size={16} color="#FFFFFF" />
+                <Text style={styles.retryButtonText}>Try again</Text>
+              </Pressable>
             </View>
-          </View>
+          ) : (
+            <View style={styles.artwork}>
+              <View style={styles.artworkInner}>
+                <Ionicons name="headset" size={64} color={Colors.light.accent} />
+              </View>
+            </View>
+          )}
 
           <View style={styles.podcastMeta}>
             <Text style={styles.podcastThemeLabel}>{podcast.theme}</Text>
@@ -238,6 +268,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "DMSans_600SemiBold",
     color: Colors.light.accent,
+  },
+  errorCard: {
+    alignItems: "center",
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  errorIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(196, 162, 101, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.text,
+  },
+  errorDescription: {
+    fontSize: 14,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    textAlign: "center",
+    lineHeight: 21,
+  },
+  retryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.light.accent,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontFamily: "DMSans_600SemiBold",
+    color: "#FFFFFF",
   },
   topBar: {
     flexDirection: "row",

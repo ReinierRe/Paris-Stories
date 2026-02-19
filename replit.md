@@ -63,6 +63,7 @@ patches/          - npm patch files
 - In production, static-build/ files are served instead of Metro proxy
 
 ## Recent Changes
+- 2026-02-19: Migrated audio storage to Replit Object Storage for persistence across deployments. Audio files uploaded to Object Storage bucket, with local filesystem as fast cache. New /api/podcast/audio-stream/:filename endpoint serves from local cache first, falls back to Object Storage. Player has graceful error handling with retry for unreachable audio.
 - 2026-02-17: Production cleanup — removed bcryptjs (unused), legacy password-based auth functions, Python module, stale build artifacts. Updated .gitignore for podcast-audio/, server_dist/, static-build/, attached_assets/.
 - 2026-02-17: Script prompt improvements — no abbreviations (het i.p.v. 't), no dashes or ellipses, phonetically clear text for TTS.
 - 2026-02-17: Removed ElevenLabs TTS entirely — Google Cloud TTS is now the sole provider. Removed provider selection step from podcast creation flows. Cleaned up elevenlabs-tts.ts, TTS_PROVIDER env var, and all related UI/backend code.

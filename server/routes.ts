@@ -11,6 +11,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "./storage";
 import { cachedPodcasts, customPodcasts, userPodcasts } from "@shared/schema";
 import { desc } from "drizzle-orm";
+import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
@@ -20,6 +21,82 @@ const anthropic = new Anthropic({
 const AUDIO_DIR = path.resolve(process.cwd(), "podcast-audio");
 if (!fs.existsSync(AUDIO_DIR)) {
   fs.mkdirSync(AUDIO_DIR, { recursive: true });
+}
+
+function getAudioBucketName(): string {
+  const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID || "";
+  if (!bucketId) {
+    throw new Error("DEFAULT_OBJECT_STORAGE_BUCKET_ID not set");
+  }
+  return bucketId;
+}
+
+async function uploadAudioToStorage(filename: string, audioBuffer: Buffer): Promise<void> {
+  const bucketName = getAudioBucketName();
+  const bucket = objectStorageClient.bucket(bucketName);
+  const file = bucket.file(`podcast-audio/${filename}`);
+  await file.save(audioBuffer, {
+    contentType: "audio/wav",
+    resumable: false,
+  });
+  console.log(`Uploaded ${filename} to Object Storage`);
+}
+
+async function audioExistsInStorage(filename: string): Promise<boolean> {
+  try {
+    const bucketName = getAudioBucketName();
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(`podcast-audio/${filename}`);
+    const [exists] = await file.exists();
+    return exists;
+  } catch {
+    return false;
+  }
+}
+
+async function deleteAudioFromStorage(filename: string): Promise<void> {
+  try {
+    const bucketName = getAudioBucketName();
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(`podcast-audio/${filename}`);
+    const [exists] = await file.exists();
+    if (exists) {
+      await file.delete();
+      console.log(`Deleted ${filename} from Object Storage`);
+    }
+  } catch (err) {
+    console.error(`Failed to delete ${filename} from Object Storage:`, err);
+  }
+}
+
+async function streamAudioFromStorage(filename: string, res: Response): Promise<boolean> {
+  try {
+    const bucketName = getAudioBucketName();
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(`podcast-audio/${filename}`);
+    const [exists] = await file.exists();
+    if (!exists) return false;
+
+    const [metadata] = await file.getMetadata();
+    res.set({
+      "Content-Type": "audio/wav",
+      "Content-Length": String(metadata.size || 0),
+      "Cache-Control": "public, max-age=86400",
+      "Accept-Ranges": "bytes",
+    });
+
+    const stream = file.createReadStream();
+    stream.on("error", (err) => {
+      console.error("Stream error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Error streaming audio" });
+      }
+    });
+    stream.pipe(res);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function generateId(): string {
@@ -464,8 +541,15 @@ async function generateScriptAndAudio(params: {
   const combinedAudio = await concatenateWavBuffers(audioBuffers);
   const id = generateId();
   const filename = `${id}.wav`;
-  const filepath = path.join(AUDIO_DIR, filename);
-  fs.writeFileSync(filepath, combinedAudio);
+
+  await uploadAudioToStorage(filename, combinedAudio);
+
+  try {
+    const localPath = path.join(AUDIO_DIR, filename);
+    fs.writeFileSync(localPath, combinedAudio);
+  } catch (e) {
+    console.log("Local cache write skipped (non-critical)");
+  }
 
   let durationSeconds = 0;
   if (combinedAudio.length >= 44) {
@@ -485,6 +569,23 @@ async function generateScriptAndAudio(params: {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/podcast/audio", express.static(AUDIO_DIR));
+
+  app.get("/api/podcast/audio-stream/:filename", async (req: Request, res: Response) => {
+    const filename = req.params.filename;
+    if (!filename) {
+      return res.status(400).json({ error: "Missing filename" });
+    }
+
+    const localPath = path.join(AUDIO_DIR, filename);
+    if (fs.existsSync(localPath)) {
+      return res.sendFile(localPath);
+    }
+
+    const streamed = await streamAudioFromStorage(filename, res);
+    if (!streamed) {
+      return res.status(404).json({ error: "Audio not found" });
+    }
+  });
 
   app.get("/api/podcast/job/:jobId", requireAuth, (req: Request, res: Response) => {
     const jobId = req.params.jobId as string;
@@ -528,7 +629,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (cached) {
           const audioPath = path.join(AUDIO_DIR, cached.audioFilename);
-          if (fs.existsSync(audioPath)) {
+          const localExists = fs.existsSync(audioPath);
+          const storageExists = !localExists ? await audioExistsInStorage(cached.audioFilename) : false;
+          if (localExists || storageExists) {
             console.log(`Cache hit for "${topicName}" [${cacheAngle || "no angle"}/${voice}/${language}/${cacheLength}]`);
 
             if (userId) {
@@ -551,7 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               result: {
                 id: cached.id,
                 script: cached.script,
-                audioUrl: `/api/podcast/audio/${cached.audioFilename}`,
+                audioUrl: `/api/podcast/audio-stream/${cached.audioFilename}`,
                 durationSeconds: cached.durationSeconds,
                 cached: true,
               },
@@ -625,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           job.result = {
             id: cachedId,
             script,
-            audioUrl: `/api/podcast/audio/${filename}`,
+            audioUrl: `/api/podcast/audio-stream/${filename}`,
             durationSeconds,
             cached: false,
           };
@@ -748,10 +851,30 @@ To sound natural, follow these rules:
         jobId,
         googleVoiceType: customGoogleVoiceType,
       }).then(async ({ script, filename, durationSeconds }) => {
-        const customFilename = `custom_${filename}`;
-        const oldPath = path.join(AUDIO_DIR, filename);
-        const newPath = path.join(AUDIO_DIR, customFilename);
-        fs.renameSync(oldPath, newPath);
+        let finalFilename = filename;
+
+        try {
+          const customFilename = `custom_${filename}`;
+          const bucketName = getAudioBucketName();
+          const bucket = objectStorageClient.bucket(bucketName);
+          const oldFile = bucket.file(`podcast-audio/${filename}`);
+          const [exists] = await oldFile.exists();
+          if (exists) {
+            const [content] = await oldFile.download();
+            const newFile = bucket.file(`podcast-audio/${customFilename}`);
+            await newFile.save(content, { contentType: "audio/wav", resumable: false });
+            await oldFile.delete();
+            finalFilename = customFilename;
+          }
+
+          const oldPath = path.join(AUDIO_DIR, filename);
+          const newPath = path.join(AUDIO_DIR, customFilename);
+          if (fs.existsSync(oldPath)) {
+            fs.renameSync(oldPath, newPath);
+          }
+        } catch (renameErr) {
+          console.error("Failed to rename audio, using original filename:", renameErr);
+        }
 
         const id = generateId();
         const [saved] = await db.insert(customPodcasts).values({
@@ -763,7 +886,7 @@ To sound natural, follow these rules:
           language,
           length: lengthId || "short",
           script,
-          audioFilename: customFilename,
+          audioFilename: finalFilename,
           durationSeconds,
         }).returning();
 
@@ -776,7 +899,7 @@ To sound natural, follow these rules:
             id: saved.id,
             subject: saved.subject,
             script: saved.script,
-            audioUrl: `/api/podcast/audio/${saved.audioFilename}`,
+            audioUrl: `/api/podcast/audio-stream/${saved.audioFilename}`,
             durationSeconds: saved.durationSeconds,
             angle: saved.angle,
             voice: saved.voice,
@@ -814,7 +937,7 @@ To sound natural, follow these rules:
         id: p.id,
         subject: p.subject,
         script: p.script,
-        audioUrl: `/api/podcast/audio/${p.audioFilename}`,
+        audioUrl: `/api/podcast/audio-stream/${p.audioFilename}`,
         durationSeconds: p.durationSeconds,
         angle: p.angle,
         voice: p.voice,
@@ -845,10 +968,6 @@ To sound natural, follow these rules:
         .orderBy(desc(userPodcasts.createdAt));
 
       const genericPodcasts = genericResults
-        .filter((r) => {
-          const audioPath = path.join(AUDIO_DIR, r.cached.audioFilename);
-          return fs.existsSync(audioPath);
-        })
         .map((r) => ({
           id: r.cached.id,
           title: r.userPodcast.topicName,
@@ -856,7 +975,7 @@ To sound natural, follow these rules:
           theme: r.userPodcast.themeName,
           themeNl: r.userPodcast.themeNameNl,
           script: r.cached.script,
-          audioUrl: `/api/podcast/audio/${r.cached.audioFilename}`,
+          audioUrl: `/api/podcast/audio-stream/${r.cached.audioFilename}`,
           durationSeconds: r.cached.durationSeconds,
           voice: r.cached.voice,
           language: r.cached.language,
@@ -873,10 +992,6 @@ To sound natural, follow these rules:
         .orderBy(desc(customPodcasts.createdAt));
 
       const customPodcastsList = customResults
-        .filter((p) => {
-          const audioPath = path.join(AUDIO_DIR, p.audioFilename);
-          return fs.existsSync(audioPath);
-        })
         .map((p) => ({
           id: p.id,
           title: p.subject,
@@ -884,7 +999,7 @@ To sound natural, follow these rules:
           theme: "Custom",
           themeNl: "Eigen",
           script: p.script,
-          audioUrl: `/api/podcast/audio/${p.audioFilename}`,
+          audioUrl: `/api/podcast/audio-stream/${p.audioFilename}`,
           durationSeconds: p.durationSeconds,
           voice: p.voice,
           language: p.language,
@@ -924,6 +1039,7 @@ To sound natural, follow these rules:
       if (fs.existsSync(audioPath)) {
         fs.unlinkSync(audioPath);
       }
+      await deleteAudioFromStorage(podcast.audioFilename);
 
       await db.delete(customPodcasts).where(eq(customPodcasts.id, podcastId));
       res.json({ success: true });

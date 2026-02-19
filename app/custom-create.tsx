@@ -186,6 +186,9 @@ export default function CustomCreateScreen() {
 
       if (data.status === "ready" && data.result) {
         await updatePodcast(podcastId, {
+          title: data.result.title || trimmedSubject,
+          titleNl: data.result.title || trimmedSubject,
+          subject: trimmedSubject,
           script: data.result.script,
           audioUrl: data.result.audioUrl,
           durationSeconds: data.result.durationSeconds || 0,
@@ -210,6 +213,9 @@ export default function CustomCreateScreen() {
 
               if (pollData.status === "ready" && pollData.result) {
                 await updatePodcast(podcastId, {
+                  title: pollData.result.title || trimmedSubject,
+                  titleNl: pollData.result.title || trimmedSubject,
+                  subject: trimmedSubject,
                   script: pollData.result.script,
                   audioUrl: pollData.result.audioUrl,
                   durationSeconds: pollData.result.durationSeconds || 0,

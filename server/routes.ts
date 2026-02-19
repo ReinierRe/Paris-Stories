@@ -108,6 +108,7 @@ interface GenerationJob {
   progress?: string;
   result?: {
     id: string;
+    title?: string;
     script: string;
     audioUrl: string;
     durationSeconds: number;
@@ -876,11 +877,32 @@ To sound natural, follow these rules:
           console.error("Failed to rename audio, using original filename:", renameErr);
         }
 
+        let generatedTitle = subject;
+        try {
+          const titlePrompt = language === "nl"
+            ? `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`
+            : `Generate a short, catchy podcast title (maximum 6 words) for a podcast about: "${subject}". Return ONLY the title, no quotes, no explanation.`;
+
+          const titleResponse = await anthropic.messages.create({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 50,
+            messages: [{ role: "user", content: titlePrompt }],
+          });
+
+          const titleText = (titleResponse.content[0] as any)?.text?.trim();
+          if (titleText && titleText.length > 0 && titleText.length <= 80) {
+            generatedTitle = titleText;
+          }
+        } catch (titleErr) {
+          console.error("Failed to generate title, using subject:", titleErr);
+        }
+
         const id = generateId();
         const [saved] = await db.insert(customPodcasts).values({
           id,
           userId,
           subject,
+          title: generatedTitle,
           angle,
           voice,
           language,
@@ -890,13 +912,14 @@ To sound natural, follow these rules:
           durationSeconds,
         }).returning();
 
-        console.log(`Custom podcast "${subject}" ready for user ${userId} (${durationSeconds}s)`);
+        console.log(`Custom podcast "${generatedTitle}" ready for user ${userId} (${durationSeconds}s)`);
 
         const job = generationJobs.get(jobId);
         if (job) {
           job.status = "ready";
           job.result = {
             id: saved.id,
+            title: saved.title,
             subject: saved.subject,
             script: saved.script,
             audioUrl: `/api/podcast/audio-stream/${saved.audioFilename}`,
@@ -935,6 +958,7 @@ To sound natural, follow these rules:
 
       const podcasts = results.map((p) => ({
         id: p.id,
+        title: p.title || p.subject,
         subject: p.subject,
         script: p.script,
         audioUrl: `/api/podcast/audio-stream/${p.audioFilename}`,
@@ -994,8 +1018,9 @@ To sound natural, follow these rules:
       const customPodcastsList = customResults
         .map((p) => ({
           id: p.id,
-          title: p.subject,
-          titleNl: p.subject,
+          title: p.title || p.subject,
+          titleNl: p.title || p.subject,
+          subject: p.subject,
           theme: "Custom",
           themeNl: "Eigen",
           script: p.script,

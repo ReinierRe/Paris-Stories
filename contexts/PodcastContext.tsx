@@ -20,6 +20,7 @@ export interface Podcast {
   id: string;
   title: string;
   titleNl: string;
+  subject?: string;
   theme: string;
   themeNl: string;
   script: string;
@@ -74,6 +75,7 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
           id: p.id,
           title: p.title || "",
           titleNl: p.titleNl || p.title || "",
+          subject: p.subject || undefined,
           theme: p.theme || "",
           themeNl: p.themeNl || p.theme || "",
           script: p.script || "",

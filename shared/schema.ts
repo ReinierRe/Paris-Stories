@@ -54,6 +54,7 @@ export const customPodcasts = pgTable("custom_podcasts", {
     .default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull(),
   subject: text("subject").notNull(),
+  title: text("title").notNull().default(""),
   angle: text("angle").notNull(),
   voice: text("voice").notNull(),
   language: text("language").notNull(),

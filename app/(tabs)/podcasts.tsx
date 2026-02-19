@@ -168,6 +168,11 @@ function SwipeablePodcastCard({
               <Text style={styles.podcastTitle} numberOfLines={2}>
                 {podcast.title}
               </Text>
+              {podcast.isCustom && podcast.subject && podcast.subject !== podcast.title && (
+                <Text style={styles.podcastSubject} numberOfLines={2}>
+                  {podcast.subject}
+                </Text>
+              )}
               <View style={styles.podcastMeta}>
                 <View style={styles.metaBadge}>
                   <Text style={styles.metaBadgeText}>{languageFlag}</Text>
@@ -364,6 +369,13 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans_600SemiBold",
     color: Colors.light.text,
     lineHeight: 22,
+  },
+  podcastSubject: {
+    fontSize: 13,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    lineHeight: 18,
+    marginTop: 2,
   },
   podcastMeta: {
     flexDirection: "row",

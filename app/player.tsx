@@ -189,6 +189,11 @@ export default function PlayerScreen() {
             <Text style={styles.podcastTitleLabel} numberOfLines={2}>
               {podcast.language === "nl" ? podcast.titleNl || podcast.title : podcast.title}
             </Text>
+            {podcast.isCustom && podcast.subject && podcast.subject !== podcast.title && (
+              <Text style={styles.podcastSubjectLabel} numberOfLines={2}>
+                {podcast.subject}
+              </Text>
+            )}
             <View style={styles.metaRow}>
               <Text style={styles.metaText}>
                 {podcast.language === "nl" ? "Nederlands" : "English"}
@@ -372,6 +377,14 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     textAlign: "center",
     lineHeight: 28,
+  },
+  podcastSubjectLabel: {
+    fontSize: 14,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    textAlign: "center",
+    lineHeight: 20,
+    marginTop: 4,
   },
   metaRow: {
     flexDirection: "row",

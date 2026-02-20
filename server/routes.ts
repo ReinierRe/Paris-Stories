@@ -901,9 +901,13 @@ To sound natural, follow these rules:
 
         let generatedTitle = subject;
         try {
-          const titlePrompt = language === "nl"
-            ? `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`
-            : `Generate a short, catchy podcast title (maximum 6 words) for a podcast about: "${subject}". Return ONLY the title, no quotes, no explanation.`;
+          const titlePrompts: Record<string, string> = {
+            nl: `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`,
+            en: `Generate a short, catchy podcast title (maximum 6 words) for a podcast about: "${subject}". Return ONLY the title, no quotes, no explanation.`,
+            fr: `Génère un titre de podcast court et accrocheur (maximum 6 mots) pour un podcast sur : "${subject}". Retourne UNIQUEMENT le titre, sans guillemets, sans explication.`,
+            de: `Erstelle einen kurzen, einprägsamen Podcast-Titel (maximal 6 Wörter) für einen Podcast über: "${subject}". Gib NUR den Titel zurück, ohne Anführungszeichen, ohne Erklärung.`,
+          };
+          const titlePrompt = titlePrompts[language] || titlePrompts.en;
 
           const titleResponse = await anthropic.messages.create({
             model: "claude-sonnet-4-20250514",
@@ -911,7 +915,7 @@ To sound natural, follow these rules:
             messages: [{ role: "user", content: titlePrompt }],
           });
 
-          const titleText = (titleResponse.content[0] as any)?.text?.trim();
+          const titleText = (titleResponse.content[0] as any)?.text?.trim().replace(/^["'""]|["'""]$/g, "");
           if (titleText && titleText.length > 0 && titleText.length <= 80) {
             generatedTitle = titleText;
           }
@@ -977,6 +981,36 @@ To sound natural, follow these rules:
         .from(customPodcasts)
         .where(eq(customPodcasts.userId, userId))
         .orderBy(desc(customPodcasts.createdAt));
+
+      const needsTitle = results.filter((p) => !p.title || p.title === p.subject);
+      const toRegenerate = needsTitle.slice(0, 3);
+
+      for (const p of toRegenerate) {
+        try {
+          const titlePrompts: Record<string, string> = {
+            nl: `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${p.subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`,
+            en: `Generate a short, catchy podcast title (maximum 6 words) for a podcast about: "${p.subject}". Return ONLY the title, no quotes, no explanation.`,
+            fr: `Génère un titre de podcast court et accrocheur (maximum 6 mots) pour un podcast sur : "${p.subject}". Retourne UNIQUEMENT le titre, sans guillemets, sans explication.`,
+            de: `Erstelle einen kurzen, einprägsamen Podcast-Titel (maximal 6 Wörter) für einen Podcast über: "${p.subject}". Gib NUR den Titel zurück, ohne Anführungszeichen, ohne Erklärung.`,
+          };
+          const titlePrompt = titlePrompts[p.language] || titlePrompts.en;
+          const titleResponse = await anthropic.messages.create({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 50,
+            messages: [{ role: "user", content: titlePrompt }],
+          });
+          const titleText = (titleResponse.content[0] as any)?.text?.trim().replace(/^["'""]|["'""]$/g, "");
+          if (titleText && titleText.length > 0 && titleText.length <= 80) {
+            p.title = titleText;
+          } else {
+            p.title = p.subject.length > 60 ? p.subject.substring(0, 57) + "..." : p.subject;
+          }
+          await db.update(customPodcasts).set({ title: p.title }).where(eq(customPodcasts.id, p.id));
+        } catch {
+          p.title = p.subject.length > 60 ? p.subject.substring(0, 57) + "..." : p.subject;
+          await db.update(customPodcasts).set({ title: p.title }).where(eq(customPodcasts.id, p.id)).catch(() => {});
+        }
+      }
 
       const podcasts = results.map((p) => ({
         id: p.id,

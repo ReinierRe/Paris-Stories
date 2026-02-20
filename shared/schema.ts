@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   password: text("password"),
   firstName: text("first_name"),
   firebaseUid: text("firebase_uid").unique(),
+  preferredLanguage: text("preferred_language").notNull().default("nl"),
+  preferredVoice: text("preferred_voice").notNull().default("female"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

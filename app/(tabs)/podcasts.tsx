@@ -142,7 +142,7 @@ function SwipeablePodcastCard({
     }
   };
 
-  const languageFlag = podcast.language === "nl" ? "NL" : "EN";
+  const languageFlag = podcast.language.toUpperCase();
   const voiceLabel = podcast.voice === "male" ? "Male" : "Female";
   const duration = formatDuration(podcast.durationSeconds);
 
@@ -198,7 +198,11 @@ function SwipeablePodcastCard({
                       ? "Failed"
                       : podcast.language === "nl"
                         ? "Nederlands"
-                        : "English"}
+                        : podcast.language === "fr"
+                          ? "Français"
+                          : podcast.language === "de"
+                            ? "Deutsch"
+                            : "English"}
                 </Text>
               </View>
             </View>

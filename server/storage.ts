@@ -38,6 +38,18 @@ export async function getUserCustomPodcastAudioFiles(userId: string): Promise<st
   return podcasts.map(p => p.audioFilename);
 }
 
+export async function updateUserPreferences(
+  userId: string,
+  preferences: { preferredLanguage?: string; preferredVoice?: string },
+): Promise<User | undefined> {
+  const updates: Record<string, string> = {};
+  if (preferences.preferredLanguage) updates.preferredLanguage = preferences.preferredLanguage;
+  if (preferences.preferredVoice) updates.preferredVoice = preferences.preferredVoice;
+  if (Object.keys(updates).length === 0) return getUser(userId);
+  const [user] = await db.update(users).set(updates).where(eq(users.id, userId)).returning();
+  return user;
+}
+
 export async function deleteUserAndData(userId: string): Promise<void> {
   await db.delete(customPodcasts).where(eq(customPodcasts.userId, userId));
   await db.delete(userPodcasts).where(eq(userPodcasts.userId, userId));

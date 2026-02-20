@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
-import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser, deleteUserAndData, getUserCustomPodcastAudioFiles } from "./storage";
+import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser, deleteUserAndData, getUserCustomPodcastAudioFiles, updateUserPreferences } from "./storage";
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is required. Add your Firebase service account JSON to secrets.");
@@ -44,7 +44,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ error: "User not found" });
     }
 
-    (req as any).user = { id: user.id, email: user.email, firstName: user.firstName };
+    (req as any).user = { id: user.id, email: user.email, firstName: user.firstName, preferredLanguage: user.preferredLanguage, preferredVoice: user.preferredVoice };
     return next();
   } catch (err) {
     console.error("Auth verification error:", err);
@@ -82,7 +82,7 @@ export async function setupAuth(app: Express): Promise<void> {
       }
 
       return res.json({
-        user: { id: user.id, email: user.email, firstName: user.firstName },
+        user: { id: user.id, email: user.email, firstName: user.firstName, preferredLanguage: user.preferredLanguage, preferredVoice: user.preferredVoice },
       });
     } catch (err) {
       console.error("Verify error:", err);
@@ -96,6 +96,31 @@ export async function setupAuth(app: Express): Promise<void> {
 
   app.post("/api/auth/logout", (_req: Request, res: Response) => {
     return res.json({ success: true });
+  });
+
+  app.patch("/api/auth/preferences", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const { preferredLanguage, preferredVoice } = req.body;
+
+      const validLanguages = ["nl", "en", "fr", "de"];
+      const validVoices = ["male", "female"];
+
+      if (preferredLanguage && !validLanguages.includes(preferredLanguage)) {
+        return res.status(400).json({ error: "Invalid language" });
+      }
+      if (preferredVoice && !validVoices.includes(preferredVoice)) {
+        return res.status(400).json({ error: "Invalid voice" });
+      }
+
+      const updated = await updateUserPreferences(user.id, { preferredLanguage, preferredVoice });
+      return res.json({
+        user: { id: updated!.id, email: updated!.email, firstName: updated!.firstName, preferredLanguage: updated!.preferredLanguage, preferredVoice: updated!.preferredVoice },
+      });
+    } catch (err) {
+      console.error("Update preferences error:", err);
+      return res.status(500).json({ error: "Failed to update preferences" });
+    }
   });
 
   app.delete("/api/auth/account", requireAuth, async (req: Request, res: Response) => {

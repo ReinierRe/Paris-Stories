@@ -14,6 +14,8 @@ interface AuthUser {
   id: string;
   email?: string;
   firstName?: string;
+  preferredLanguage: string;
+  preferredVoice: string;
 }
 
 interface AuthContextValue {
@@ -26,6 +28,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePreferences: (prefs: { preferredLanguage?: string; preferredVoice?: string }) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -160,6 +163,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+  const updatePreferences = useCallback(async (prefs: { preferredLanguage?: string; preferredVoice?: string }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (!token) return { success: false, error: "Not authenticated" };
+      const baseUrl = getApiUrl();
+      const url = new URL("/api/auth/preferences", baseUrl);
+      const res = await fetch(url.toString(), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(prefs),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { success: false, error: data.error || "Failed to update preferences" };
+      }
+      const data = await res.json();
+      if (data.user) {
+        setUser(data.user);
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Failed to update preferences" };
+    }
+  }, [token]);
+
   const resetPassword = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -193,8 +220,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       deleteAccount,
       resetPassword,
+      updatePreferences,
     }),
-    [user, token, isLoading, login, register, logout, deleteAccount, resetPassword],
+    [user, token, isLoading, login, register, logout, deleteAccount, resetPassword, updatePreferences],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

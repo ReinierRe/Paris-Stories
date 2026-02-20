@@ -17,9 +17,17 @@ import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { podcastLengths } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/query-client";
 
-type Step = "subject" | "angle" | "voice" | "language" | "length" | "confirm";
+const LANGUAGE_LABELS: Record<string, string> = {
+  nl: "Nederlands",
+  en: "English",
+  fr: "Fran\u00e7ais",
+  de: "Deutsch",
+};
+
+type Step = "subject" | "angle" | "length" | "confirm";
 
 const CUSTOM_ANGLES = [
   {
@@ -81,17 +89,19 @@ function ChoiceCard({
 
 export default function CustomCreateScreen() {
   const { addPodcast, updatePodcast } = usePodcasts();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const inputRef = useRef<TextInput>(null);
 
-  const steps: Step[] = ["subject", "angle", "voice", "language", "length", "confirm"];
+  const voice = (user?.preferredVoice || "female") as "male" | "female";
+  const language = (user?.preferredLanguage || "nl") as "nl" | "en" | "fr" | "de";
+
+  const steps: Step[] = ["subject", "angle", "length", "confirm"];
 
   const [currentStep, setCurrentStep] = useState(0);
   const [subject, setSubject] = useState("");
   const [angle, setAngle] = useState("");
-  const [voice, setVoice] = useState<"male" | "female">("female");
-  const [language, setLanguage] = useState<"nl" | "en">("nl");
   const [length, setLength] = useState("short");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -107,8 +117,6 @@ export default function CustomCreateScreen() {
     switch (step) {
       case "subject": return "Your subject";
       case "angle": return "Choose your angle";
-      case "voice": return "Select a voice";
-      case "language": return "Pick a language";
       case "length": return "Podcast length";
       case "confirm": return "Ready to create";
     }
@@ -118,8 +126,6 @@ export default function CustomCreateScreen() {
     switch (step) {
       case "subject": return "What Paris story would you like to hear?";
       case "angle": return "How should we tell this story?";
-      case "voice": return "Who narrates your podcast?";
-      case "language": return "Which language do you prefer?";
       case "length": return "How long should the podcast be?";
       case "confirm": return `Your podcast about "${trimmedSubject}" is ready to be created`;
     }
@@ -294,46 +300,6 @@ export default function CustomCreateScreen() {
           </View>
         );
 
-      case "voice":
-        return (
-          <View style={styles.choicesContainer}>
-            <ChoiceCard
-              selected={voice === "female"}
-              onPress={() => setVoice("female")}
-              icon={<Ionicons name="woman" size={22} color={voice === "female" ? Colors.light.accent : Colors.light.textSecondary} />}
-              title="Female Voice"
-              subtitle="Warm and engaging narration"
-            />
-            <ChoiceCard
-              selected={voice === "male"}
-              onPress={() => setVoice("male")}
-              icon={<Ionicons name="man" size={22} color={voice === "male" ? Colors.light.accent : Colors.light.textSecondary} />}
-              title="Male Voice"
-              subtitle="Deep and authoritative narration"
-            />
-          </View>
-        );
-
-      case "language":
-        return (
-          <View style={styles.choicesContainer}>
-            <ChoiceCard
-              selected={language === "nl"}
-              onPress={() => setLanguage("nl")}
-              icon={<Text style={[styles.flagText, language === "nl" && styles.flagTextSelected]}>NL</Text>}
-              title="Nederlands"
-              subtitle="Podcast in het Nederlands"
-            />
-            <ChoiceCard
-              selected={language === "en"}
-              onPress={() => setLanguage("en")}
-              icon={<Text style={[styles.flagText, language === "en" && styles.flagTextSelected]}>EN</Text>}
-              title="English"
-              subtitle="Podcast in English"
-            />
-          </View>
-        );
-
       case "length":
         return (
           <View style={styles.choicesContainer}>
@@ -365,23 +331,23 @@ export default function CustomCreateScreen() {
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Voice</Text>
-                <Text style={styles.summaryValue}>{voice === "female" ? "Female" : "Male"}</Text>
+                <Text style={styles.summaryLabel}>Length</Text>
+                <Text style={styles.summaryValue}>{selectedLength?.name} ({selectedLength?.duration})</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Language</Text>
-                <Text style={styles.summaryValue}>{language === "nl" ? "Nederlands" : "English"}</Text>
+                <Text style={styles.summaryValue}>{LANGUAGE_LABELS[language] || language}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Length</Text>
-                <Text style={styles.summaryValue}>{selectedLength?.name} ({selectedLength?.duration})</Text>
+                <Text style={styles.summaryLabel}>Voice</Text>
+                <Text style={styles.summaryValue}>{voice === "female" ? "Female" : "Male"}</Text>
               </View>
             </View>
 
             <Text style={styles.confirmNote}>
-              The script will be written by AI and then converted to natural-sounding speech. This takes about 30-60 seconds.
+              Language and voice can be changed in your profile settings.
             </Text>
           </View>
         );
@@ -606,14 +572,6 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
     marginTop: 2,
     lineHeight: 18,
-  },
-  flagText: {
-    fontSize: 15,
-    fontFamily: "DMSans_700Bold",
-    color: Colors.light.textSecondary,
-  },
-  flagTextSelected: {
-    color: Colors.light.accent,
   },
   confirmContainer: {
     gap: 20,

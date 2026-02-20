@@ -13,10 +13,23 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePodcasts } from "@/contexts/PodcastContext";
 import { getApiUrl } from "@/lib/query-client";
+
+const LANGUAGES = [
+  { id: "nl", label: "Nederlands", flag: "NL" },
+  { id: "en", label: "English", flag: "EN" },
+  { id: "fr", label: "Fran\u00e7ais", flag: "FR" },
+  { id: "de", label: "Deutsch", flag: "DE" },
+];
+
+const VOICES = [
+  { id: "female", label: "Female", icon: "woman" as const },
+  { id: "male", label: "Male", icon: "man" as const },
+];
 
 function ProfileHeader({ user, onLogout }: { user: { id: string; email?: string; firstName?: string }; onLogout: () => void }) {
   const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : "?");
@@ -62,12 +75,30 @@ function MenuItem({ icon, label, onPress, destructive }: { icon: string; label: 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
-  const { user, logout, deleteAccount } = useAuth();
+  const { user, logout, deleteAccount, updatePreferences } = useAuth();
   const { podcasts } = usePodcasts();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const totalPodcasts = podcasts.length;
   const readyPodcasts = podcasts.filter((p) => p.status === "ready").length;
+
+  const handleLanguageChange = async (langId: string) => {
+    if (langId === user?.preferredLanguage) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await updatePreferences({ preferredLanguage: langId });
+    if (!result.success) {
+      Alert.alert("Error", result.error || "Could not update language preference");
+    }
+  };
+
+  const handleVoiceChange = async (voiceId: string) => {
+    if (voiceId === user?.preferredVoice) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await updatePreferences({ preferredVoice: voiceId });
+    if (!result.success) {
+      Alert.alert("Error", result.error || "Could not update voice preference");
+    }
+  };
 
   const handleLogout = () => {
     if (Platform.OS === "web") {
@@ -131,6 +162,81 @@ export default function ProfileScreen() {
         <View style={styles.statsRow}>
           <StatCard icon="headset" value={totalPodcasts} label="Total" />
           <StatCard icon="checkmark-circle" value={readyPodcasts} label="Ready" />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Podcast Preferences</Text>
+          <View style={styles.menuCard}>
+            <View style={styles.prefSection}>
+              <View style={styles.prefLabelRow}>
+                <Ionicons name="language-outline" size={18} color={Colors.light.textSecondary} />
+                <Text style={styles.prefLabel}>Language</Text>
+              </View>
+              <View style={styles.prefOptions}>
+                {LANGUAGES.map((lang) => (
+                  <Pressable
+                    key={lang.id}
+                    style={[
+                      styles.prefChip,
+                      user?.preferredLanguage === lang.id && styles.prefChipSelected,
+                    ]}
+                    onPress={() => handleLanguageChange(lang.id)}
+                  >
+                    <Text
+                      style={[
+                        styles.prefChipText,
+                        user?.preferredLanguage === lang.id && styles.prefChipTextSelected,
+                      ]}
+                    >
+                      {lang.flag}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.prefChipLabel,
+                        user?.preferredLanguage === lang.id && styles.prefChipLabelSelected,
+                      ]}
+                    >
+                      {lang.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+            <View style={styles.menuDivider} />
+            <View style={styles.prefSection}>
+              <View style={styles.prefLabelRow}>
+                <Ionicons name="mic-outline" size={18} color={Colors.light.textSecondary} />
+                <Text style={styles.prefLabel}>Voice</Text>
+              </View>
+              <View style={styles.prefOptions}>
+                {VOICES.map((v) => (
+                  <Pressable
+                    key={v.id}
+                    style={[
+                      styles.prefChip,
+                      styles.prefChipWide,
+                      user?.preferredVoice === v.id && styles.prefChipSelected,
+                    ]}
+                    onPress={() => handleVoiceChange(v.id)}
+                  >
+                    <Ionicons
+                      name={v.icon}
+                      size={16}
+                      color={user?.preferredVoice === v.id ? Colors.light.accent : Colors.light.textSecondary}
+                    />
+                    <Text
+                      style={[
+                        styles.prefChipLabel,
+                        user?.preferredVoice === v.id && styles.prefChipLabelSelected,
+                      ]}
+                    >
+                      {v.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -315,6 +421,60 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.light.cardBorder,
     marginHorizontal: 16,
+  },
+  prefSection: {
+    padding: 16,
+  },
+  prefLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  prefLabel: {
+    fontSize: 14,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.textSecondary,
+  },
+  prefOptions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  prefChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.light.cardBorder,
+    backgroundColor: Colors.light.background,
+  },
+  prefChipWide: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  prefChipSelected: {
+    borderColor: Colors.light.accent,
+    backgroundColor: "#FFFCF5",
+  },
+  prefChipText: {
+    fontSize: 13,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.textSecondary,
+  },
+  prefChipTextSelected: {
+    color: Colors.light.accent,
+  },
+  prefChipLabel: {
+    fontSize: 13,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.text,
+  },
+  prefChipLabelSelected: {
+    color: Colors.light.accent,
   },
   deletingOverlay: {
     ...StyleSheet.absoluteFillObject,

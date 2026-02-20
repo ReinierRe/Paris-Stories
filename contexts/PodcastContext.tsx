@@ -25,7 +25,7 @@ export interface Podcast {
   themeNl: string;
   script: string;
   audioUrl: string;
-  language: "en" | "nl";
+  language: "en" | "nl" | "fr" | "de";
   voice: "male" | "female";
   perspective: string;
   length: string;

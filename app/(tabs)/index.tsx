@@ -8,8 +8,8 @@ import {
   Platform,
   LayoutAnimation,
   UIManager,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
@@ -60,7 +60,7 @@ function ThemeCard({ theme }: { theme: Theme }) {
 
   const renderIcon = () => {
     if (theme.iconImage) {
-      return <Image source={theme.iconImage} style={{ width: 44, height: 44, borderRadius: 12 }} />;
+      return <Image source={theme.iconImage} style={{ width: 44, height: 44, borderRadius: 12 }} cachePolicy="memory-disk" />;
     }
     const iconProps = { size: 22, color: "#FFFFFF" };
     if (theme.iconFamily === "MaterialIcons") {

@@ -9,13 +9,13 @@ import {
   TextInput,
   KeyboardAvoidingView,
   ScrollView,
-  Image,
   Dimensions,
   FlatList,
   ViewToken,
   Keyboard,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
@@ -119,7 +119,7 @@ function SlideContent({ slide, index }: { slide: Slide; index: number }) {
         <View style={slideStyles.iconGrid}>
           {categoryIcons.slice(0, 6).map((cat, i) => (
             <View key={i} style={slideStyles.iconGridItem}>
-              <Image source={cat.image} style={slideStyles.categoryIcon} />
+              <Image source={cat.image} style={slideStyles.categoryIcon} cachePolicy="memory-disk" />
               <Text style={slideStyles.iconLabel}>{cat.name}</Text>
             </View>
           ))}
@@ -152,7 +152,7 @@ function SlideContent({ slide, index }: { slide: Slide; index: number }) {
           <View style={mockupStyles.categoryList}>
             {categoryIcons.slice(0, 5).map((cat, i) => (
               <View key={i} style={mockupStyles.categoryRow}>
-                <Image source={cat.image} style={mockupStyles.categoryRowIcon} />
+                <Image source={cat.image} style={mockupStyles.categoryRowIcon} cachePolicy="memory-disk" />
                 <View style={mockupStyles.categoryRowText}>
                   <Text style={mockupStyles.categoryRowName}>{cat.name}</Text>
                   <Text style={mockupStyles.categoryRowCount}>{[8, 6, 10, 8, 7][i]} topics</Text>

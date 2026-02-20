@@ -8,7 +8,7 @@ Alle secties zijn klaar om in te vullen.
 ## 1. App Information (General)
 
 **App Name**: Paris Stories
-**Subtitle** (max 30 tekens): AI-Powered Paris Podcasts
+**Subtitle** (max 30 tekens): Personalized Paris Podcasts
 **Bundle ID**: com.greenhome.parisstories
 **Primary Language**: English (U.S.)
 **Category**: Education

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { users, type User } from "@shared/schema";
+import { users, customPodcasts, userPodcasts, type User } from "@shared/schema";
 
 export const db = drizzle(process.env.DATABASE_URL!);
 
@@ -29,4 +29,17 @@ export async function createFirebaseUser(
     .values({ email, firebaseUid, firstName: firstName || null })
     .returning();
   return user;
+}
+
+export async function getUserCustomPodcastAudioFiles(userId: string): Promise<string[]> {
+  const podcasts = await db.select({ audioFilename: customPodcasts.audioFilename })
+    .from(customPodcasts)
+    .where(eq(customPodcasts.userId, userId));
+  return podcasts.map(p => p.audioFilename);
+}
+
+export async function deleteUserAndData(userId: string): Promise<void> {
+  await db.delete(customPodcasts).where(eq(customPodcasts.userId, userId));
+  await db.delete(userPodcasts).where(eq(userPodcasts.userId, userId));
+  await db.delete(users).where(eq(users.id, userId));
 }

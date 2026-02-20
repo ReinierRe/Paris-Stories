@@ -18,6 +18,24 @@ const anthropic = new Anthropic({
   baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL!,
 });
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const RATE_LIMIT_MAX = 10;
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  entry.count++;
+  return true;
+}
+
 const AUDIO_DIR = path.resolve(process.cwd(), "podcast-audio");
 if (!fs.existsSync(AUDIO_DIR)) {
   fs.mkdirSync(AUDIO_DIR, { recursive: true });
@@ -611,6 +629,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      if (userId && !checkRateLimit(userId)) {
+        return res.status(429).json({ error: "Je hebt het maximum aantal podcasts per uur bereikt. Probeer het later opnieuw." });
+      }
+
       const cacheAngle = perspective || "";
       const cacheLength = lengthId || "medium";
 
@@ -1072,6 +1094,77 @@ To sound natural, follow these rules:
       console.error("Error deleting custom podcast:", error);
       res.status(500).json({ error: "Failed to delete custom podcast" });
     }
+  });
+
+  app.get("/privacy-policy", (_req: Request, res: Response) => {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache");
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy - Paris Stories</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F6F1; color: #1A1A2E; line-height: 1.7; padding: 20px; }
+  .container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
+  h1 { font-size: 28px; margin-bottom: 8px; color: #1A1A2E; }
+  .date { color: #888; font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 20px; margin-top: 28px; margin-bottom: 12px; color: #1A1A2E; }
+  p, li { font-size: 15px; margin-bottom: 12px; }
+  ul { padding-left: 20px; }
+  a { color: #C4A265; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Privacy Policy</h1>
+<p class="date">Last updated: February 20, 2026</p>
+
+<p>Paris Stories ("we", "our", or "the app") is committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
+
+<h2>1. Data We Collect</h2>
+<ul>
+<li><strong>Account information:</strong> When you create an account, we collect your email address and first name.</li>
+<li><strong>Podcast data:</strong> We store the podcasts you create and listen to, including custom topics you enter.</li>
+<li><strong>Usage data:</strong> Basic usage information such as which features you use, to improve the app.</li>
+</ul>
+
+<h2>2. How We Use Your Data</h2>
+<ul>
+<li>To provide and improve our podcast generation service.</li>
+<li>To save your podcast library across devices.</li>
+<li>To authenticate your account securely via Firebase Authentication.</li>
+</ul>
+
+<h2>3. Third-Party Services</h2>
+<p>We use the following third-party services:</p>
+<ul>
+<li><strong>Firebase Authentication</strong> (Google) for secure account management.</li>
+<li><strong>Anthropic Claude</strong> for AI-powered script generation.</li>
+<li><strong>Google Cloud Text-to-Speech</strong> for audio generation.</li>
+</ul>
+<p>These services have their own privacy policies. We do not sell your data to third parties.</p>
+
+<h2>4. Data Storage</h2>
+<p>Your data is stored securely on our servers. Audio files are stored in cloud object storage. We retain your data as long as your account is active.</p>
+
+<h2>5. Your Rights</h2>
+<ul>
+<li><strong>Delete your account:</strong> You can delete your account and all associated data at any time from the Profile screen in the app.</li>
+<li><strong>Access your data:</strong> You can view all your podcasts and account information within the app.</li>
+<li><strong>Contact us:</strong> For any privacy-related questions, contact us at privacy@parisstories.app.</li>
+</ul>
+
+<h2>6. Children's Privacy</h2>
+<p>Paris Stories is not intended for children under 13. We do not knowingly collect data from children.</p>
+
+<h2>7. Changes to This Policy</h2>
+<p>We may update this policy from time to time. We will notify users of significant changes through the app.</p>
+</div>
+</body>
+</html>`);
   });
 
   const httpServer = createServer(app);

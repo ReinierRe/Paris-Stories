@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,12 +8,15 @@ import {
   Platform,
   Alert,
   Image,
+  Linking,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePodcasts } from "@/contexts/PodcastContext";
+import { getApiUrl } from "@/lib/query-client";
 
 function ProfileHeader({ user, onLogout }: { user: { id: string; email?: string; firstName?: string }; onLogout: () => void }) {
   const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : "?");
@@ -59,8 +62,9 @@ function MenuItem({ icon, label, onPress, destructive }: { icon: string; label: 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const { podcasts } = usePodcasts();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const totalPodcasts = podcasts.length;
   const readyPodcasts = podcasts.filter((p) => p.status === "ready").length;
@@ -76,10 +80,43 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete account",
+      "This will permanently delete your account and all your podcasts. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setIsDeleting(true);
+            const result = await deleteAccount();
+            setIsDeleting(false);
+            if (!result.success) {
+              Alert.alert("Error", result.error || "Failed to delete account");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const openPrivacyPolicy = () => {
+    const baseUrl = getApiUrl();
+    Linking.openURL(`${baseUrl}/privacy-policy`);
+  };
+
   if (!user) return null;
 
   return (
     <View style={styles.container}>
+      {isDeleting && (
+        <View style={styles.deletingOverlay}>
+          <ActivityIndicator size="large" color={Colors.light.accent} />
+          <Text style={styles.deletingText}>Deleting account...</Text>
+        </View>
+      )}
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -116,9 +153,18 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal</Text>
+          <View style={styles.menuCard}>
+            <MenuItem icon="shield-checkmark-outline" label="Privacy Policy" onPress={openPrivacyPolicy} />
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.menuCard}>
             <MenuItem icon="log-out-outline" label="Sign out" onPress={handleLogout} destructive />
+            <View style={styles.menuDivider} />
+            <MenuItem icon="trash-outline" label="Delete account" onPress={handleDeleteAccount} destructive />
           </View>
         </View>
       </ScrollView>
@@ -264,5 +310,23 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     paddingHorizontal: 16,
     paddingBottom: 16,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: Colors.light.cardBorder,
+    marginHorizontal: 16,
+  },
+  deletingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    zIndex: 100,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+  },
+  deletingText: {
+    fontSize: 16,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.text,
   },
 });

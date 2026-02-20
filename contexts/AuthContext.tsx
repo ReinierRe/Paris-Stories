@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { getApiUrl, setOnUnauthorized } from "@/lib/query-client";
 
@@ -23,6 +24,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, firstName: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -135,6 +138,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
+  const deleteAccount = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (!token) return { success: false, error: "Not authenticated" };
+      const baseUrl = getApiUrl();
+      const url = new URL("/api/auth/account", baseUrl);
+      const res = await fetch(url.toString(), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { success: false, error: data.error || "Failed to delete account" };
+      }
+      await signOut(auth);
+      setUser(null);
+      setToken(null);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Failed to delete account" };
+    }
+  }, [token]);
+
+  const resetPassword = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (err: any) {
+      const code = err?.code;
+      if (code === "auth/user-not-found") {
+        return { success: false, error: "No account found with this email" };
+      }
+      return { success: false, error: err?.message || "Failed to send reset email" };
+    }
+  }, []);
+
   const logoutRef = useRef(logout);
   logoutRef.current = logout;
 
@@ -153,8 +191,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      deleteAccount,
+      resetPassword,
     }),
-    [user, token, isLoading, login, register, logout],
+    [user, token, isLoading, login, register, logout, deleteAccount, resetPassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,6 +7,8 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
+  GestureResponderEvent,
+  LayoutChangeEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -38,6 +40,9 @@ export default function PlayerScreen() {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showScript, setShowScript] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [seekPosition, setSeekPosition] = useState(0);
+  const progressBarWidth = useRef(0);
 
   useEffect(() => {
     if (podcast?.audioUrl) {
@@ -128,7 +133,38 @@ export default function PlayerScreen() {
     );
   }
 
-  const progress = duration > 0 ? position / duration : 0;
+  const displayPosition = isSeeking ? seekPosition : position;
+  const progress = duration > 0 ? displayPosition / duration : 0;
+
+  const onProgressBarLayout = (e: LayoutChangeEvent) => {
+    progressBarWidth.current = e.nativeEvent.layout.width;
+  };
+
+  const seekToPosition = async (pageX: number, barRef: View | null) => {
+    if (!soundRef.current || duration <= 0 || !barRef) return;
+    barRef.measure((_x, _y, width, _height, pageXOffset) => {
+      const relativeX = Math.max(0, Math.min(pageX - pageXOffset, width));
+      const ratio = relativeX / width;
+      const newPos = Math.floor(ratio * duration);
+      setSeekPosition(newPos);
+      soundRef.current?.setPositionAsync(newPos);
+    });
+  };
+
+  const progressBarRef = useRef<View>(null);
+
+  const handleProgressTouchStart = (e: GestureResponderEvent) => {
+    setIsSeeking(true);
+    seekToPosition(e.nativeEvent.pageX, progressBarRef.current);
+  };
+
+  const handleProgressTouchMove = (e: GestureResponderEvent) => {
+    seekToPosition(e.nativeEvent.pageX, progressBarRef.current);
+  };
+
+  const handleProgressTouchEnd = () => {
+    setIsSeeking(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -209,11 +245,24 @@ export default function PlayerScreen() {
 
       <View style={[styles.controlsContainer, { paddingBottom: insets.bottom + 24 + (Platform.OS === "web" ? 34 : 0) }]}>
         <View style={styles.progressSection}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+          <View
+            ref={progressBarRef}
+            style={styles.progressTouchArea}
+            onLayout={onProgressBarLayout}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderGrant={handleProgressTouchStart}
+            onResponderMove={handleProgressTouchMove}
+            onResponderRelease={handleProgressTouchEnd}
+            onResponderTerminate={handleProgressTouchEnd}
+          >
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+              <View style={[styles.progressThumb, { left: `${progress * 100}%` }]} />
+            </View>
           </View>
           <View style={styles.timeRow}>
-            <Text style={styles.timeText}>{formatTime(position)}</Text>
+            <Text style={styles.timeText}>{formatTime(displayPosition)}</Text>
             <Text style={styles.timeText}>{formatTime(duration)}</Text>
           </View>
         </View>
@@ -424,16 +473,29 @@ const styles = StyleSheet.create({
   progressSection: {
     marginBottom: 20,
   },
+  progressTouchArea: {
+    paddingVertical: 12,
+    justifyContent: "center",
+  },
   progressBar: {
     height: 4,
     backgroundColor: Colors.light.divider,
     borderRadius: 2,
-    overflow: "hidden",
+    position: "relative",
   },
   progressFill: {
     height: "100%",
     backgroundColor: Colors.light.accent,
     borderRadius: 2,
+  },
+  progressThumb: {
+    position: "absolute",
+    top: -5,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: Colors.light.accent,
+    marginLeft: -7,
   },
   timeRow: {
     flexDirection: "row",

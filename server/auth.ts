@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
-import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser } from "./storage";
+import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser, deleteUserAndData, getUserCustomPodcastAudioFiles } from "./storage";
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is required. Add your Firebase service account JSON to secrets.");
@@ -96,5 +96,31 @@ export async function setupAuth(app: Express): Promise<void> {
 
   app.post("/api/auth/logout", (_req: Request, res: Response) => {
     return res.json({ success: true });
+  });
+
+  app.delete("/api/auth/account", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+
+      const audioFiles = await getUserCustomPodcastAudioFiles(user.id);
+      if (audioFiles.length > 0) {
+        const { deleteAudioFiles } = await import("./audio-cleanup");
+        await deleteAudioFiles(audioFiles);
+      }
+
+      await deleteUserAndData(user.id);
+
+      try {
+        const firebaseUser = await admin.auth().getUserByEmail(user.email);
+        await admin.auth().deleteUser(firebaseUser.uid);
+      } catch (fbErr) {
+        console.warn("Could not delete Firebase user:", fbErr);
+      }
+
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Delete account error:", err);
+      return res.status(500).json({ error: "Failed to delete account" });
+    }
   });
 }

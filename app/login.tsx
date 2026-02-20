@@ -13,6 +13,7 @@ import {
   FlatList,
   ViewToken,
   Keyboard,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -20,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { getApiUrl } from "@/lib/query-client";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -212,7 +214,7 @@ function SlideContent({ slide, index }: { slide: Slide; index: number }) {
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { login, register, isLoading } = useAuth();
+  const { login, register, isLoading, resetPassword } = useAuth();
   const flatListRef = useRef<FlatList>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -223,6 +225,7 @@ export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const topPadding = Platform.OS === "web" ? 20 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
@@ -266,9 +269,26 @@ export default function LoginScreen() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError("Enter your email address first");
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    const result = await resetPassword(email.trim());
+    setIsSubmitting(false);
+    if (result.success) {
+      setResetSent(true);
+    } else {
+      setError(result.error || "Failed to send reset email");
+    }
+  };
+
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
     setError(null);
+    setResetSent(false);
   };
 
   const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
@@ -369,6 +389,13 @@ export default function LoginScreen() {
                   </View>
                 )}
 
+                {resetSent && (
+                  <View style={formStyles.successContainer}>
+                    <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                    <Text style={formStyles.successText}>Password reset email sent. Check your inbox.</Text>
+                  </View>
+                )}
+
                 <Pressable
                   style={({ pressed }) => [
                     formStyles.submitButton,
@@ -387,6 +414,12 @@ export default function LoginScreen() {
                   )}
                 </Pressable>
 
+                {mode === "login" && (
+                  <Pressable onPress={handleForgotPassword} style={formStyles.forgotContainer} disabled={isSubmitting}>
+                    <Text style={formStyles.forgotText}>Forgot password?</Text>
+                  </Pressable>
+                )}
+
                 <Pressable onPress={toggleMode} style={formStyles.toggleContainer}>
                   <Text style={formStyles.toggleText}>
                     {mode === "login"
@@ -397,6 +430,18 @@ export default function LoginScreen() {
                     </Text>
                   </Text>
                 </Pressable>
+
+                {mode === "register" && (
+                  <Pressable
+                    onPress={() => Linking.openURL(`${getApiUrl()}/privacy-policy`)}
+                    style={formStyles.privacyContainer}
+                  >
+                    <Text style={formStyles.privacyText}>
+                      By creating an account, you agree to our{" "}
+                      <Text style={formStyles.privacyLink}>Privacy Policy</Text>
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             )}
 
@@ -855,5 +900,44 @@ const formStyles = StyleSheet.create({
     borderRadius: 14,
     gap: 8,
     marginTop: 8,
+  },
+  forgotContainer: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  forgotText: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.5)",
+  },
+  successContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  successText: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 13,
+    color: "#4CAF50",
+    flex: 1,
+  },
+  privacyContainer: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  privacyText: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.35)",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  privacyLink: {
+    color: "rgba(255, 255, 255, 0.55)",
+    textDecorationLine: "underline" as const,
   },
 });

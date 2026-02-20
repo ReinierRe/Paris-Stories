@@ -62,13 +62,15 @@ patches/          - npm patch files
 - Landing page served by Express for browser requests (no expo-platform header)
 - In production, static-build/ files are served instead of Metro proxy
 
-## App Store Submission Notes
-Before submitting to App Store Connect, prepare the following:
-1. **Demo Account**: Create a test account (e.g. reviewer@parisstories.app / TestReview2026!) and provide credentials in App Review Notes
-2. **App Review Notes**: "Paris Stories generates AI-powered podcast stories about Paris. Log in with the provided demo account. Go to the Library tab, pick a topic, and generate a podcast. You can also create a custom podcast about any Paris-related topic. The app uses AI (Anthropic Claude) to generate scripts and Google Cloud Text-to-Speech for audio."
-3. **App Privacy Labels**: Declare: Email (account creation), Usage Data (app functionality), User Content (podcast topics sent to AI)
-4. **Content Moderation**: Custom podcast topics are moderated via AI before generation — inappropriate content is rejected
-5. **Age Rating**: Suggested: 4+ (no objectionable content, AI-moderated)
+## App Store Submission
+See `APP_STORE_METADATA.md` for complete App Store Connect metadata including:
+- App description, subtitle, keywords, promotional text
+- Age rating questionnaire answers (result: 4+)
+- Privacy labels configuration (Email, User Content, User ID, Usage Data)
+- App Review Notes with detailed testing instructions
+- Demo account setup instructions
+- Screenshot requirements and checklist
+- Build & submission checklist
 
 ## Recent Changes
 - 2026-02-20: App Store compliance — added AI content moderation for custom podcast topics (rejects inappropriate content via Anthropic), AI transparency disclosures in both podcast flows and privacy policy, documented App Review submission notes.

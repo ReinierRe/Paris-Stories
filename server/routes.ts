@@ -779,6 +779,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      try {
+        const moderationResponse = await anthropic.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 20,
+          messages: [{
+            role: "user",
+            content: `You are a content moderator. Determine if the following podcast topic is appropriate for a general audience. The topic should be related to Paris, France, travel, culture, history, food, or similar subjects. Reject topics that are: sexually explicit, promoting violence or hate, about illegal activities, about weapons or drugs, or completely unrelated to Paris/France.\n\nTopic: "${subject}"\n\nRespond with ONLY "ALLOW" or "REJECT".`,
+          }],
+        });
+        const moderationResult = (moderationResponse.content[0] as any)?.text?.trim().toUpperCase();
+        if (moderationResult !== "ALLOW") {
+          return res.status(400).json({ error: "This topic is not suitable for Paris Stories. Please choose a topic related to Paris, its culture, history, or daily life." });
+        }
+      } catch (modErr) {
+        console.error("Content moderation check failed:", modErr);
+        return res.status(500).json({ error: "Unable to verify your topic right now. Please try again in a moment." });
+      }
+
       const customAngleMap: Record<string, { en: string; nl: string }> = {
         historical: {
           en: "Use a factual, chronological storytelling approach. Include specific dates, names, and historical context. Weave the facts into a compelling narrative rather than a dry summary.",
@@ -1172,29 +1190,33 @@ To sound natural, follow these rules:
 <li>To authenticate your account securely via Firebase Authentication.</li>
 </ul>
 
-<h2>3. Third-Party Services</h2>
+<h2>3. AI-Generated Content</h2>
+<p>Paris Stories uses artificial intelligence to create podcast scripts. When you request a podcast, your chosen topic is sent to <strong>Anthropic Claude</strong>, a third-party AI service, which generates the script. The generated script is then converted to audio using <strong>Google Cloud Text-to-Speech</strong>.</p>
+<p>Your topic input is processed by these AI services solely for the purpose of generating your podcast. We do not use your input to train AI models. Anthropic and Google process this data according to their own privacy policies.</p>
+
+<h2>4. Third-Party Services</h2>
 <p>We use the following third-party services:</p>
 <ul>
 <li><strong>Firebase Authentication</strong> (Google) for secure account management.</li>
-<li><strong>Anthropic Claude</strong> for AI-powered script generation.</li>
-<li><strong>Google Cloud Text-to-Speech</strong> for audio generation.</li>
+<li><strong>Anthropic Claude</strong> (Anthropic) for AI-powered script generation. Your podcast topic is sent to this service.</li>
+<li><strong>Google Cloud Text-to-Speech</strong> (Google) for converting scripts to spoken audio.</li>
 </ul>
 <p>These services have their own privacy policies. We do not sell your data to third parties.</p>
 
-<h2>4. Data Storage</h2>
+<h2>5. Data Storage</h2>
 <p>Your data is stored securely on our servers. Audio files are stored in cloud object storage. We retain your data as long as your account is active.</p>
 
-<h2>5. Your Rights</h2>
+<h2>6. Your Rights</h2>
 <ul>
 <li><strong>Delete your account:</strong> You can delete your account and all associated data at any time from the Profile screen in the app.</li>
 <li><strong>Access your data:</strong> You can view all your podcasts and account information within the app.</li>
 <li><strong>Contact us:</strong> For any privacy-related questions, contact us at privacy@parisstories.app.</li>
 </ul>
 
-<h2>6. Children's Privacy</h2>
+<h2>7. Children's Privacy</h2>
 <p>Paris Stories is not intended for children under 13. We do not knowingly collect data from children.</p>
 
-<h2>7. Changes to This Policy</h2>
+<h2>8. Changes to This Policy</h2>
 <p>We may update this policy from time to time. We will notify users of significant changes through the app.</p>
 </div>
 </body>

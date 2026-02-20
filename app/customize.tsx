@@ -307,6 +307,9 @@ export default function CustomizeScreen() {
             <Text style={styles.confirmNote}>
               Language and voice can be changed in your profile settings.
             </Text>
+            <Text style={styles.aiDisclosure}>
+              Your podcast will be generated using AI (Anthropic Claude) for the script and Google Cloud for audio. See our Privacy Policy for details.
+            </Text>
           </View>
         );
     }
@@ -527,6 +530,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 19,
     paddingHorizontal: 20,
+  },
+  aiDisclosure: {
+    fontSize: 11,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textTertiary,
+    textAlign: "center",
+    lineHeight: 16,
+    paddingHorizontal: 20,
+    marginTop: 8,
+    opacity: 0.7,
   },
   bottomBar: {
     position: "absolute",

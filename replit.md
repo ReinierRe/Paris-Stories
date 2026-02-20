@@ -62,7 +62,16 @@ patches/          - npm patch files
 - Landing page served by Express for browser requests (no expo-platform header)
 - In production, static-build/ files are served instead of Metro proxy
 
+## App Store Submission Notes
+Before submitting to App Store Connect, prepare the following:
+1. **Demo Account**: Create a test account (e.g. reviewer@parisstories.app / TestReview2026!) and provide credentials in App Review Notes
+2. **App Review Notes**: "Paris Stories generates AI-powered podcast stories about Paris. Log in with the provided demo account. Go to the Library tab, pick a topic, and generate a podcast. You can also create a custom podcast about any Paris-related topic. The app uses AI (Anthropic Claude) to generate scripts and Google Cloud Text-to-Speech for audio."
+3. **App Privacy Labels**: Declare: Email (account creation), Usage Data (app functionality), User Content (podcast topics sent to AI)
+4. **Content Moderation**: Custom podcast topics are moderated via AI before generation — inappropriate content is rejected
+5. **Age Rating**: Suggested: 4+ (no objectionable content, AI-moderated)
+
 ## Recent Changes
+- 2026-02-20: App Store compliance — added AI content moderation for custom podcast topics (rejects inappropriate content via Anthropic), AI transparency disclosures in both podcast flows and privacy policy, documented App Review submission notes.
 - 2026-02-20: Moved language & voice preferences from podcast creation flow to user profile. Added NL/EN/FR/DE language options and male/female voice selection in Profile screen. Preferences stored in users table (preferredLanguage, preferredVoice) with PATCH /api/auth/preferences endpoint. Podcast creation flows (curated + custom) now use profile settings, shown in confirm overview.
 - 2026-02-20: App Store readiness improvements — added Delete Account (Apple requirement) with full data cleanup (DB + Object Storage + Firebase), Privacy Policy page (/privacy-policy) linked from Profile and Login, Forgot Password via Firebase, rate limiting on podcast generation (10/hour per user), interactive seekable progress bar in player.
 - 2026-02-19: Migrated audio storage to Replit Object Storage for persistence across deployments. Audio files uploaded to Object Storage bucket, with local filesystem as fast cache. New /api/podcast/audio-stream/:filename endpoint serves from local cache first, falls back to Object Storage. Player has graceful error handling with retry for unreachable audio.

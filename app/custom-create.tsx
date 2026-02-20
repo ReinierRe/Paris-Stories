@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -88,7 +89,7 @@ function ChoiceCard({
 }
 
 export default function CustomCreateScreen() {
-  const { addPodcast, updatePodcast } = usePodcasts();
+  const { addPodcast, updatePodcast, removePodcast } = usePodcasts();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
@@ -190,6 +191,13 @@ export default function CustomCreateScreen() {
 
       const data = await res.json();
 
+      if (!res.ok && data.error) {
+        await removePodcast(podcastId);
+        Alert.alert("Topic Not Allowed", data.error);
+        setIsGenerating(false);
+        return;
+      }
+
       if (data.status === "ready" && data.result) {
         await updatePodcast(podcastId, {
           title: data.result.title || trimmedSubject,
@@ -281,6 +289,9 @@ export default function CustomCreateScreen() {
             <Text style={styles.inputHint}>
               Enter any Paris-related subject. The AI will craft a unique podcast story about it.
             </Text>
+            <Text style={styles.aiDisclosure}>
+              Your topic will be processed by AI (Anthropic Claude) to generate a script, and by Google Cloud to create audio. See our Privacy Policy for details.
+            </Text>
           </View>
         );
 
@@ -348,6 +359,9 @@ export default function CustomCreateScreen() {
 
             <Text style={styles.confirmNote}>
               Language and voice can be changed in your profile settings.
+            </Text>
+            <Text style={styles.aiDisclosure}>
+              Your podcast will be generated using AI (Anthropic Claude) for the script and Google Cloud for audio. See our Privacy Policy for details.
             </Text>
           </View>
         );
@@ -526,6 +540,15 @@ const styles = StyleSheet.create({
     color: Colors.light.textTertiary,
     lineHeight: 19,
     paddingHorizontal: 4,
+  },
+  aiDisclosure: {
+    fontSize: 11,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textTertiary,
+    lineHeight: 16,
+    paddingHorizontal: 4,
+    marginTop: 12,
+    opacity: 0.7,
   },
   choicesContainer: {
     gap: 12,

@@ -65,6 +65,34 @@ export const themes: Theme[] = [
         description: "How Baron Haussmann demolished medieval Paris and created the city of grand boulevards",
         descriptionNl: "Hoe Baron Haussmann het middeleeuwse Parijs sloopte en de stad van grote boulevards creëerde",
       },
+      {
+        id: "paris-catacombs",
+        name: "The Paris Catacombs",
+        nameNl: "De Catacomben van Parijs",
+        description: "The underground realm of the dead beneath the streets of Paris",
+        descriptionNl: "Het ondergrondse dodenrijk onder de straten van Parijs",
+      },
+      {
+        id: "knights-templar",
+        name: "The Knights Templar in Paris",
+        nameNl: "De Tempeliers in Parijs",
+        description: "The mysterious order and their powerful Parisian stronghold in the Marais",
+        descriptionNl: "De mysterieuze orde en hun machtige Parijse burcht in de Marais",
+      },
+      {
+        id: "plague-years",
+        name: "The Plague Years",
+        nameNl: "De Pestjaren",
+        description: "How the Black Death ravaged medieval Paris and changed the city forever",
+        descriptionNl: "Hoe de Zwarte Dood het middeleeuwse Parijs teisterde en de stad voorgoed veranderde",
+      },
+      {
+        id: "joan-of-arc",
+        name: "Joan of Arc and Paris",
+        nameNl: "Jeanne d'Arc en Parijs",
+        description: "The warrior saint's failed siege of Paris and the battle for the city",
+        descriptionNl: "De mislukte belegering van Parijs door de heilige strijdster en de strijd om de stad",
+      },
     ],
   },
   {
@@ -85,11 +113,11 @@ export const themes: Theme[] = [
         icon: "book-open",
       },
       {
-        id: "iconic-figures",
-        name: "Iconic Figures",
-        nameNl: "Iconische Figuren",
-        description: "The key personalities who shaped the revolution",
-        descriptionNl: "De belangrijkste persoonlijkheden die de revolutie vormden",
+        id: "personal-stories",
+        name: "Personal Stories",
+        nameNl: "Persoonlijke Verhalen",
+        description: "The story told from the iconic figures involved",
+        descriptionNl: "Het verhaal verteld vanuit de iconische figuren die erbij betrokken waren",
         icon: "users",
       },
     ],
@@ -230,18 +258,18 @@ export const themes: Theme[] = [
         descriptionNl: "Het herenhuis van de beeldhouwer en het verhaal van De Denker",
       },
       {
-        id: "louvre-walk",
-        name: "Walking Tour: Louvre to Tuileries",
-        nameNl: "Wandeltour: Louvre naar Tuilerieën",
-        description: "Stroll from the pyramid through the royal gardens following centuries of art history",
-        descriptionNl: "Wandel van de piramide door de koninklijke tuinen langs eeuwen kunstgeschiedenis",
+        id: "fondation-lv",
+        name: "Fondation Louis Vuitton",
+        nameNl: "Fondation Louis Vuitton",
+        description: "Frank Gehry's spectacular glass sails housing world-class contemporary art in the Bois de Boulogne",
+        descriptionNl: "Frank Gehry's spectaculaire glazen zeilen met hedendaagse topkunst in het Bois de Boulogne",
       },
       {
-        id: "monet-paris",
-        name: "Monet's Paris",
-        nameNl: "Het Parijs van Monet",
-        description: "Follow the painter's footsteps through the city that inspired his greatest works",
-        descriptionNl: "Volg de voetsporen van de schilder door de stad die zijn grootste werken inspireerde",
+        id: "musee-carnavalet",
+        name: "Musée Carnavalet",
+        nameNl: "Musée Carnavalet",
+        description: "The oldest museum of Paris telling the city's story from prehistory to present day",
+        descriptionNl: "Het oudste museum van Parijs dat het verhaal van de stad vertelt van prehistorie tot heden",
       },
     ],
   },
@@ -553,3 +581,79 @@ export const podcastLengths = [
   { id: "short", name: "Short", nameNl: "Kort", duration: "~3 min", words: 400 },
   { id: "long", name: "Long", nameNl: "Lang", duration: "~8 min", words: 1100 },
 ];
+
+export interface UserLevel {
+  id: string;
+  name: string;
+  nameNl: string;
+  icon: string;
+  minPodcasts: number;
+  description: string;
+  descriptionNl: string;
+}
+
+export const userLevels: UserLevel[] = [
+  {
+    id: "traveler",
+    name: "Traveler",
+    nameNl: "Reiziger",
+    icon: "airplane-outline",
+    minPodcasts: 0,
+    description: "Just getting started on your Paris journey",
+    descriptionNl: "Net begonnen aan je Parijse reis",
+  },
+  {
+    id: "explorer",
+    name: "Explorer",
+    nameNl: "Ontdekker",
+    icon: "compass-outline",
+    minPodcasts: 5,
+    description: "Discovering the hidden stories of Paris",
+    descriptionNl: "De verborgen verhalen van Parijs ontdekken",
+  },
+  {
+    id: "connoisseur",
+    name: "Connoisseur",
+    nameNl: "Kenner",
+    icon: "wine-outline",
+    minPodcasts: 15,
+    description: "A true connoisseur of Parisian culture",
+    descriptionNl: "Een echte kenner van de Parijse cultuur",
+  },
+  {
+    id: "parisien",
+    name: "Parisien",
+    nameNl: "Parisien",
+    icon: "star-outline",
+    minPodcasts: 30,
+    description: "You know Paris like a true local",
+    descriptionNl: "Je kent Parijs als een echte local",
+  },
+];
+
+export function getUserLevel(podcastCount: number): UserLevel {
+  for (let i = userLevels.length - 1; i >= 0; i--) {
+    if (podcastCount >= userLevels[i].minPodcasts) {
+      return userLevels[i];
+    }
+  }
+  return userLevels[0];
+}
+
+export function getNextLevel(podcastCount: number): UserLevel | null {
+  const currentLevel = getUserLevel(podcastCount);
+  const currentIndex = userLevels.indexOf(currentLevel);
+  if (currentIndex < userLevels.length - 1) {
+    return userLevels[currentIndex + 1];
+  }
+  return null;
+}
+
+export function checkLevelUp(oldCount: number, newCount: number): UserLevel | null {
+  const oldLevel = getUserLevel(oldCount);
+  const newLevel = getUserLevel(newCount);
+  if (newLevel.id !== oldLevel.id) {
+    return newLevel;
+  }
+  return null;
+}

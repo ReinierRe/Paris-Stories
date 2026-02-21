@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
+import { getUserLevel, getNextLevel, userLevels } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePodcasts } from "@/contexts/PodcastContext";
 import { getApiUrl } from "@/lib/query-client";
@@ -31,8 +32,12 @@ const VOICES = [
   { id: "male", label: "Male", icon: "man" as const },
 ];
 
-function ProfileHeader({ user, onLogout }: { user: { id: string; email?: string; firstName?: string }; onLogout: () => void }) {
+function ProfileHeader({ user, level, podcastCount }: { user: { id: string; email?: string; firstName?: string }; level: ReturnType<typeof getUserLevel>; podcastCount: number }) {
   const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : "?");
+  const nextLevel = getNextLevel(podcastCount);
+  const progress = nextLevel
+    ? (podcastCount - level.minPodcasts) / (nextLevel.minPodcasts - level.minPodcasts)
+    : 1;
 
   return (
     <View style={styles.profileHeader}>
@@ -41,6 +46,20 @@ function ProfileHeader({ user, onLogout }: { user: { id: string; email?: string;
       </View>
       <Text style={styles.profileName}>{user.firstName || "Traveler"}</Text>
       {user.email && <Text style={styles.profileEmail}>{user.email}</Text>}
+      <View style={styles.levelBadge}>
+        <Ionicons name={level.icon as any} size={16} color={Colors.light.accent} />
+        <Text style={styles.levelBadgeText}>{level.name}</Text>
+      </View>
+      {nextLevel && (
+        <View style={styles.levelProgressContainer}>
+          <View style={styles.levelProgressBar}>
+            <View style={[styles.levelProgressFill, { width: `${Math.min(progress * 100, 100)}%` }]} />
+          </View>
+          <Text style={styles.levelProgressText}>
+            {nextLevel.minPodcasts - podcastCount} more to {nextLevel.name}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -79,8 +98,10 @@ export default function ProfileScreen() {
   const { podcasts } = usePodcasts();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const totalPodcasts = podcasts.length;
-  const readyPodcasts = podcasts.filter((p) => p.status === "ready").length;
+  const totalPodcasts = podcasts.filter((p) => p.status === "ready").length;
+  const standardPodcasts = podcasts.filter((p) => p.status === "ready" && !p.isCustom).length;
+  const customPodcasts = podcasts.filter((p) => p.status === "ready" && p.isCustom).length;
+  const level = getUserLevel(totalPodcasts);
 
   const handleLanguageChange = async (langId: string) => {
     if (langId === user?.preferredLanguage) return;
@@ -157,11 +178,11 @@ export default function ProfileScreen() {
       >
         <Text style={styles.screenTitle}>My Profile</Text>
 
-        <ProfileHeader user={user} onLogout={handleLogout} />
+        <ProfileHeader user={user} level={level} podcastCount={totalPodcasts} />
 
         <View style={styles.statsRow}>
-          <StatCard icon="headset" value={totalPodcasts} label="Total" />
-          <StatCard icon="checkmark-circle" value={readyPodcasts} label="Ready" />
+          <StatCard icon="headset" value={standardPodcasts} label="Standard" />
+          <StatCard icon="create-outline" value={customPodcasts} label="Custom" />
         </View>
 
         <View style={styles.section}>
@@ -488,5 +509,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "DMSans_500Medium",
     color: Colors.light.text,
+  },
+  levelBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "#FFFCF5",
+    borderWidth: 1,
+    borderColor: Colors.light.accent,
+  },
+  levelBadgeText: {
+    fontSize: 13,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.accent,
+  },
+  levelProgressContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 12,
+    paddingHorizontal: 32,
+  },
+  levelProgressBar: {
+    width: "100%",
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.light.cardBorder,
+    overflow: "hidden",
+  },
+  levelProgressFill: {
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: Colors.light.accent,
+  },
+  levelProgressText: {
+    fontSize: 12,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textTertiary,
+    marginTop: 6,
   },
 });

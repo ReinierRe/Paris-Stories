@@ -73,6 +73,8 @@ See `APP_STORE_METADATA.md` for complete App Store Connect metadata including:
 - Build & submission checklist
 
 ## Recent Changes
+- 2026-02-21: Gamification — user levels (Traveler/Explorer/Connoisseur/Parisien) based on ready podcast count, level badge + progress bar on Profile, level-up celebration alert after podcast creation. Profile stats changed from Total/Ready to Standard/Custom.
+- 2026-02-21: Curated content updates — History expanded to 8 topics (added Catacombs, Knights Templar, Plague Years, Joan of Arc), Museums replaced Walking Tour + Monet's Paris with Fondation LV + Musée Carnavalet, French Revolution "Iconic Figures" angle renamed to "Personal Stories".
 - 2026-02-20: App Store compliance — added AI content moderation for custom podcast topics (rejects inappropriate content via Anthropic), AI transparency disclosures in both podcast flows and privacy policy, documented App Review submission notes.
 - 2026-02-20: Moved language & voice preferences from podcast creation flow to user profile. Added NL/EN/FR/DE language options and male/female voice selection in Profile screen. Preferences stored in users table (preferredLanguage, preferredVoice) with PATCH /api/auth/preferences endpoint. Podcast creation flows (curated + custom) now use profile settings, shown in confirm overview.
 - 2026-02-20: App Store readiness improvements — added Delete Account (Apple requirement) with full data cleanup (DB + Object Storage + Firebase), Privacy Policy page (/privacy-policy) linked from Profile and Login, Forgot Password via Firebase, rate limiting on podcast generation (10/hour per user), interactive seekable progress bar in player.

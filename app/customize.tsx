@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,13 +7,14 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { themes, podcastLengths } from "@/constants/themes";
+import { themes, podcastLengths, checkLevelUp } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/query-client";
@@ -74,7 +75,7 @@ export default function CustomizeScreen() {
     themeNameNl: string;
   }>();
 
-  const { addPodcast, updatePodcast } = usePodcasts();
+  const { addPodcast, updatePodcast, podcasts } = usePodcasts();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
@@ -127,6 +128,27 @@ export default function CustomizeScreen() {
       setCurrentStep(currentStep - 1);
     } else {
       router.back();
+    }
+  };
+
+  const readyCountRef = useRef(podcasts.filter((p) => p.status === "ready").length);
+  readyCountRef.current = podcasts.filter((p) => p.status === "ready").length;
+  const levelUpShownRef = useRef(false);
+
+  const showLevelUpIfNeeded = () => {
+    if (levelUpShownRef.current) return;
+    const currentReady = readyCountRef.current;
+    const newLevel = checkLevelUp(currentReady - 1, currentReady);
+    if (newLevel) {
+      levelUpShownRef.current = true;
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => {
+        Alert.alert(
+          `Level Up: ${newLevel.name}!`,
+          newLevel.description,
+          [{ text: "Merci!", style: "default" }]
+        );
+      }, 1500);
     }
   };
 
@@ -183,6 +205,7 @@ export default function CustomizeScreen() {
           durationSeconds: data.result.durationSeconds || 0,
           status: "ready",
         });
+        showLevelUpIfNeeded();
       } else if (data.jobId) {
         const pollForResult = async () => {
           const maxAttempts = 120;
@@ -206,6 +229,7 @@ export default function CustomizeScreen() {
                   durationSeconds: pollData.result.durationSeconds || 0,
                   status: "ready",
                 });
+                showLevelUpIfNeeded();
                 return;
               } else if (pollData.status === "error") {
                 await updatePodcast(podcastId, {

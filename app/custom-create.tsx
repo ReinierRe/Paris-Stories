@@ -16,7 +16,7 @@ import { router } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { podcastLengths } from "@/constants/themes";
+import { podcastLengths, checkLevelUp } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/query-client";
@@ -89,7 +89,7 @@ function ChoiceCard({
 }
 
 export default function CustomCreateScreen() {
-  const { addPodcast, updatePodcast, removePodcast } = usePodcasts();
+  const { addPodcast, updatePodcast, removePodcast, podcasts } = usePodcasts();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
@@ -163,6 +163,27 @@ export default function CustomCreateScreen() {
     }
   };
 
+  const readyCountRef = useRef(podcasts.filter((p) => p.status === "ready").length);
+  readyCountRef.current = podcasts.filter((p) => p.status === "ready").length;
+  const levelUpShownRef = useRef(false);
+
+  const showLevelUpIfNeeded = () => {
+    if (levelUpShownRef.current) return;
+    const currentReady = readyCountRef.current;
+    const newLevel = checkLevelUp(currentReady - 1, currentReady);
+    if (newLevel) {
+      levelUpShownRef.current = true;
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => {
+        Alert.alert(
+          `Level Up: ${newLevel.name}!`,
+          newLevel.description,
+          [{ text: "Merci!", style: "default" }]
+        );
+      }, 1500);
+    }
+  };
+
   const handleGenerate = async () => {
     setIsGenerating(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -230,6 +251,7 @@ export default function CustomCreateScreen() {
           status: "ready",
           customDbId: data.result.customDbId || data.result.id,
         });
+        showLevelUpIfNeeded();
       } else if (data.jobId) {
         const pollForResult = async () => {
           const maxAttempts = 120;
@@ -257,6 +279,7 @@ export default function CustomCreateScreen() {
                   status: "ready",
                   customDbId: pollData.result.customDbId || pollData.result.id,
                 });
+                showLevelUpIfNeeded();
                 return;
               } else if (pollData.status === "error") {
                 await updatePodcast(podcastId, {

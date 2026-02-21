@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -105,6 +105,22 @@ export default function CustomCreateScreen() {
   const [angle, setAngle] = useState("");
   const [length, setLength] = useState("short");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [customRemaining, setCustomRemaining] = useState<number | null>(null);
+  const [limitLoading, setLimitLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest("GET", "/api/podcast/custom-limit");
+        const data = await res.json();
+        setCustomRemaining(data.remaining ?? null);
+      } catch {
+        setCustomRemaining(null);
+      } finally {
+        setLimitLoading(false);
+      }
+    })();
+  }, []);
 
   const step = steps[currentStep];
   const trimmedSubject = subject.trim();
@@ -193,7 +209,12 @@ export default function CustomCreateScreen() {
 
       if (!res.ok && data.error) {
         await removePodcast(podcastId);
-        Alert.alert("Topic Not Allowed", data.error);
+        if (data.code === "CUSTOM_LIMIT_REACHED") {
+          Alert.alert("Limit Reached", "You have used all 5 free custom podcasts. You can still create unlimited podcasts from the curated library.");
+          setCustomRemaining(0);
+        } else {
+          Alert.alert("Topic Not Allowed", data.error);
+        }
         setIsGenerating(false);
         return;
       }
@@ -368,6 +389,44 @@ export default function CustomCreateScreen() {
     }
   };
 
+  if (limitLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={Colors.light.accent} />
+      </View>
+    );
+  }
+
+  if (customRemaining !== null && customRemaining <= 0) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.topBar, { paddingTop: insets.top + 12 + webTopInset }]}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="close" size={24} color={Colors.light.text} />
+          </Pressable>
+          <View style={{ flex: 1 }} />
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 }}>
+          <Ionicons name="lock-closed-outline" size={48} color={Colors.light.textTertiary} />
+          <Text style={{ fontSize: 22, fontFamily: "DMSans_700Bold", color: Colors.light.text, textAlign: "center", marginTop: 20 }}>
+            Custom podcast limit reached
+          </Text>
+          <Text style={{ fontSize: 15, fontFamily: "DMSans_400Regular", color: Colors.light.textSecondary, textAlign: "center", marginTop: 12, lineHeight: 22 }}>
+            You have used all 5 free custom podcasts. You can still create unlimited podcasts from our curated library.
+          </Text>
+          <Pressable
+            style={({ pressed }) => [styles.nextButton, pressed && styles.buttonPressed, { marginTop: 32, width: "100%" }]}
+            onPress={() => { router.back(); }}
+          >
+            <Text style={styles.nextButtonText}>Browse Library</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -407,6 +466,11 @@ export default function CustomCreateScreen() {
           </View>
           <Text style={styles.stepTitle}>{stepTitle()}</Text>
           <Text style={styles.stepSubtitle}>{stepSubtitle()}</Text>
+          {customRemaining !== null && step === "subject" && (
+            <Text style={{ fontSize: 13, fontFamily: "DMSans_400Regular", color: Colors.light.textTertiary, marginTop: 4 }}>
+              {customRemaining} of 5 free custom podcasts remaining
+            </Text>
+          )}
         </View>
 
         {renderStepContent()}

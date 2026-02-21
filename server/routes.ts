@@ -7,7 +7,7 @@ import { requireAuth } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
 import express from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { db } from "./storage";
 import { cachedPodcasts, customPodcasts, userPodcasts } from "@shared/schema";
 import { desc } from "drizzle-orm";
@@ -779,6 +779,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      const MAX_FREE_CUSTOM_PODCASTS = 5;
+      const [{ value: customCount }] = await db.select({ value: count() })
+        .from(customPodcasts)
+        .where(eq(customPodcasts.userId, userId));
+      if (customCount >= MAX_FREE_CUSTOM_PODCASTS) {
+        return res.status(403).json({
+          error: "You have reached the maximum of 5 free custom podcasts.",
+          code: "CUSTOM_LIMIT_REACHED",
+          customCount,
+          customLimit: MAX_FREE_CUSTOM_PODCASTS,
+        });
+      }
+
       try {
         const moderationResponse = await anthropic.messages.create({
           model: "claude-sonnet-4-20250514",
@@ -988,6 +1001,27 @@ To sound natural, follow these rules:
     } catch (error) {
       console.error("Error starting custom podcast generation:", error);
       res.status(500).json({ error: "Failed to start custom podcast generation" });
+    }
+  });
+
+  app.get("/api/podcast/custom-limit", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const MAX_FREE_CUSTOM_PODCASTS = 5;
+      const [{ value: customCount }] = await db.select({ value: count() })
+        .from(customPodcasts)
+        .where(eq(customPodcasts.userId, userId));
+
+      res.json({
+        customCount,
+        customLimit: MAX_FREE_CUSTOM_PODCASTS,
+        remaining: Math.max(0, MAX_FREE_CUSTOM_PODCASTS - customCount),
+      });
+    } catch (error) {
+      console.error("Error fetching custom limit:", error);
+      res.status(500).json({ error: "Failed to fetch custom podcast limit" });
     }
   });
 

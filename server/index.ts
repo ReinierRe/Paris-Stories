@@ -265,7 +265,7 @@ function setupMetroProxy(app: express.Application) {
   });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith("/api") || req.path === "/healthz") {
+    if (req.path.startsWith("/api") || req.path === "/healthz" || req.path === "/privacy-policy") {
       return next();
     }
 

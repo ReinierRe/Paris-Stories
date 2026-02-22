@@ -1472,7 +1472,7 @@ To sound natural, follow these rules:
 <ul>
 <li><strong>Delete your account:</strong> You can delete your account and all associated data at any time from the Profile screen in the app.</li>
 <li><strong>Access your data:</strong> You can view all your podcasts and account information within the app.</li>
-<li><strong>Contact us:</strong> For any privacy-related questions, contact us at privacy@parisstories.app.</li>
+<li><strong>Contact us:</strong> For any privacy-related questions, contact us at vragen@greenhome.nl.</li>
 </ul>
 
 <h2>7. Children's Privacy</h2>

@@ -21,10 +21,11 @@ import { usePodcasts } from "@/contexts/PodcastContext";
 import { getApiUrl } from "@/lib/query-client";
 
 const LANGUAGES = [
-  { id: "nl", label: "Nederlands", flag: "NL" },
   { id: "en", label: "English", flag: "EN" },
+  { id: "nl", label: "Nederlands", flag: "NL" },
   { id: "fr", label: "Fran\u00e7ais", flag: "FR" },
   { id: "de", label: "Deutsch", flag: "DE" },
+  { id: "es", label: "Espa\u00f1ol", flag: "ES" },
 ];
 
 const VOICES = [

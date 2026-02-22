@@ -20,10 +20,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/query-client";
 
 const LANGUAGE_LABELS: Record<string, string> = {
-  nl: "Nederlands",
   en: "English",
+  nl: "Nederlands",
   fr: "Fran\u00e7ais",
   de: "Deutsch",
+  es: "Espa\u00f1ol",
 };
 
 type Step = "angle" | "length" | "confirm";

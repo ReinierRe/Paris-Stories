@@ -210,13 +210,6 @@ export default function CustomCreateScreen() {
       isCustom: true,
     };
 
-    await addPodcast(newPodcast);
-
-    router.dismissAll();
-    setTimeout(() => {
-      router.push("/(tabs)/podcasts");
-    }, 100);
-
     try {
       const res = await apiRequest("POST", "/api/podcast/generate-custom", {
         subject: trimmedSubject,
@@ -230,16 +223,22 @@ export default function CustomCreateScreen() {
       const data = await res.json();
 
       if (!res.ok && data.error) {
-        await removePodcast(podcastId);
         if (data.code === "CUSTOM_LIMIT_REACHED") {
           Alert.alert("Limit Reached", "You have used all 5 free custom podcasts. You can still create unlimited podcasts from the curated library.");
           setCustomRemaining(0);
         } else {
-          Alert.alert("Topic Not Allowed", data.error);
+          Alert.alert("Topic Not Suitable", "This topic is not suitable for Paris Stories. Please choose a topic related to Paris, its culture, history, or daily life.");
         }
         setIsGenerating(false);
         return;
       }
+
+      await addPodcast(newPodcast);
+
+      router.dismissAll();
+      setTimeout(() => {
+        router.push("/(tabs)/podcasts");
+      }, 100);
 
       if (data.status === "ready" && data.result) {
         await updatePodcast(podcastId, {

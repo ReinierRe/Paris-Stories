@@ -1022,7 +1022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         const moderationResponse = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-5",
           max_tokens: 20,
           messages: [{
             role: "user",
@@ -1169,7 +1169,7 @@ To sound natural, follow these rules:
           const titlePrompt = titlePrompts[language] || titlePrompts.en;
 
           const titleResponse = await anthropic.messages.create({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-sonnet-4-5",
             max_tokens: 50,
             messages: [{ role: "user", content: titlePrompt }],
           });
@@ -1275,7 +1275,7 @@ To sound natural, follow these rules:
           };
           const titlePrompt = titlePrompts[p.language] || titlePrompts.en;
           const titleResponse = await anthropic.messages.create({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-sonnet-4-5",
             max_tokens: 50,
             messages: [{ role: "user", content: titlePrompt }],
           });

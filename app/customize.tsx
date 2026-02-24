@@ -333,7 +333,7 @@ export default function CustomizeScreen() {
               Language and voice can be changed in your profile settings.
             </Text>
             <Text style={styles.aiDisclosure}>
-              Your podcast will be generated using AI (Anthropic Claude) for the script and Google Cloud for audio. See our Privacy Policy for details.
+              Your podcast will be generated using AI. See our Privacy Policy for details.
             </Text>
           </View>
         );

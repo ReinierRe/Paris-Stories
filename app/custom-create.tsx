@@ -335,7 +335,7 @@ export default function CustomCreateScreen() {
               Enter any Paris-related subject. The AI will craft a unique podcast story about it.
             </Text>
             <Text style={styles.aiDisclosure}>
-              Your topic will be processed by AI (Anthropic Claude) to generate a script, and by Google Cloud to create audio. See our Privacy Policy for details.
+              Your podcast will be generated using AI. See our Privacy Policy for details.
             </Text>
           </View>
         );
@@ -406,7 +406,7 @@ export default function CustomCreateScreen() {
               Language and voice can be changed in your profile settings.
             </Text>
             <Text style={styles.aiDisclosure}>
-              Your podcast will be generated using AI (Anthropic Claude) for the script and Google Cloud for audio. See our Privacy Policy for details.
+              Your podcast will be generated using AI. See our Privacy Policy for details.
             </Text>
           </View>
         );

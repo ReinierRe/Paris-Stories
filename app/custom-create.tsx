@@ -211,19 +211,30 @@ export default function CustomCreateScreen() {
     };
 
     try {
-      const res = await apiRequest("POST", "/api/podcast/generate-custom", {
-        subject: trimmedSubject,
-        angle,
-        voice,
-        language,
-        wordCount: selectedLength?.words || 400,
-        lengthId: length,
+      const { getApiUrl } = await import("@/lib/query-client");
+      const { auth: firebaseAuth } = await import("@/lib/firebase");
+      const baseUrl = getApiUrl();
+      const token = firebaseAuth.currentUser ? await firebaseAuth.currentUser.getIdToken() : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`${baseUrl}/api/podcast/generate-custom`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          subject: trimmedSubject,
+          angle,
+          voice,
+          language,
+          wordCount: selectedLength?.words || 400,
+          lengthId: length,
+        }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok && data.error) {
-        if (data.code === "CUSTOM_LIMIT_REACHED") {
+      if (!res.ok) {
+        let errorData: any = {};
+        try { errorData = await res.json(); } catch {}
+        if (errorData.code === "CUSTOM_LIMIT_REACHED") {
           Alert.alert("Limit Reached", "You have used all 5 free custom podcasts. You can still create unlimited podcasts from the curated library.");
           setCustomRemaining(0);
         } else {
@@ -232,6 +243,8 @@ export default function CustomCreateScreen() {
         setIsGenerating(false);
         return;
       }
+
+      const data = await res.json();
 
       await addPodcast(newPodcast);
 
@@ -300,10 +313,8 @@ export default function CustomCreateScreen() {
       }
     } catch (error) {
       console.error("Custom generation failed:", error);
-      await updatePodcast(podcastId, {
-        status: "error",
-        errorMessage: "Failed to generate podcast. Please try again.",
-      });
+      Alert.alert("Error", "Something went wrong. Please try again.");
+      setIsGenerating(false);
     }
   };
 

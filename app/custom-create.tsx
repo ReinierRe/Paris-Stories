@@ -19,7 +19,8 @@ import Colors from "@/constants/colors";
 import { podcastLengths, checkLevelUp } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiRequest } from "@/lib/query-client";
+import { apiRequest, getApiUrl } from "@/lib/query-client";
+import { auth as firebaseAuth } from "@/lib/firebase";
 
 const LANGUAGE_LABELS: Record<string, string> = {
   en: "English",
@@ -211,8 +212,6 @@ export default function CustomCreateScreen() {
     };
 
     try {
-      const { getApiUrl } = await import("@/lib/query-client");
-      const { auth: firebaseAuth } = await import("@/lib/firebase");
       const baseUrl = getApiUrl();
       const token = firebaseAuth.currentUser ? await firebaseAuth.currentUser.getIdToken() : null;
       const headers: Record<string, string> = { "Content-Type": "application/json" };

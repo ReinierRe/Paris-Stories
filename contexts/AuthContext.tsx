@@ -166,6 +166,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updatePreferences = useCallback(async (prefs: { preferredLanguage?: string; preferredVoice?: string }): Promise<{ success: boolean; error?: string }> => {
     try {
       if (!token) return { success: false, error: "Not authenticated" };
+
+      const previousUser = user;
+      setUser((prev) => prev ? { ...prev, ...prefs } : prev);
+
       const baseUrl = getApiUrl();
       const url = new URL("/api/auth/preferences", baseUrl);
       const res = await fetch(url.toString(), {
@@ -174,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(prefs),
       });
       if (!res.ok) {
+        setUser(previousUser);
         const data = await res.json().catch(() => ({}));
         return { success: false, error: data.error || "Failed to update preferences" };
       }
@@ -183,9 +188,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return { success: true };
     } catch (err: any) {
+      setUser((prev) => prev ? { ...prev, preferredLanguage: user?.preferredLanguage, preferredVoice: user?.preferredVoice } : prev);
       return { success: false, error: err?.message || "Failed to update preferences" };
     }
-  }, [token]);
+  }, [token, user]);
 
   const resetPassword = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {

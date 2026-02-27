@@ -103,7 +103,7 @@ export async function setupAuth(app: Express): Promise<void> {
       const user = (req as any).user;
       const { preferredLanguage, preferredVoice } = req.body;
 
-      const validLanguages = ["nl", "en", "fr", "de"];
+      const validLanguages = ["nl", "en", "fr", "de", "es"];
       const validVoices = ["male", "female"];
 
       if (preferredLanguage && !validLanguages.includes(preferredLanguage)) {

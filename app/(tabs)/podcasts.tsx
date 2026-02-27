@@ -202,7 +202,9 @@ function SwipeablePodcastCard({
                           ? "Français"
                           : podcast.language === "de"
                             ? "Deutsch"
-                            : "English"}
+                            : podcast.language === "es"
+                              ? "Español"
+                              : "English"}
                 </Text>
               </View>
             </View>

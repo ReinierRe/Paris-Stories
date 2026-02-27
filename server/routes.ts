@@ -718,20 +718,24 @@ async function generateScriptAndAudio(params: {
     system: params.systemPrompt,
   });
 
-  const rawScript = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
+  let rawScript = scriptResponse.content[0].type === "text" ? scriptResponse.content[0].text : "";
+
+  rawScript = rawScript.replace(/^```(?:xml|ssml|html)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+
   console.log(`Script generated (${rawScript.length} chars). Generating audio...`);
 
   if (job) job.progress = "Generating audio...";
 
   const isChirp3 = params.googleVoiceType === "chirp3";
-  const isSsml = !isChirp3 && rawScript.trim().startsWith("<speak>");
-  console.log(`Using Google TTS${isChirp3 ? " (Chirp 3: HD)" : isSsml ? " (SSML)" : ""}`);
+  const usesSsml = !isChirp3 && (params.googleVoiceType === "neural2" || params.googleVoiceType === "wavenet");
+  const hasSsmlTags = rawScript.includes("<speak>") || rawScript.includes("<break") || rawScript.includes("<prosody");
+  console.log(`Using Google TTS${isChirp3 ? " (Chirp 3: HD)" : usesSsml ? " (SSML)" : ""}`);
 
   const displayScript = isChirp3
     ? rawScript.replace(/\[pause short\]|\[pause long\]|\[pause\]/g, "").replace(/\[(fluisterend|enthousiast|verbaasd|peinzend|whispering|excited|surprised|thoughtful)\]/gi, "").replace(/ {2,}/g, " ").trim()
-    : isSsml ? stripSsmlTags(rawScript) : rawScript;
+    : (usesSsml || hasSsmlTags) ? stripSsmlTags(rawScript) : rawScript;
 
-  const scriptForAudio = isSsml
+  const scriptForAudio = (usesSsml || hasSsmlTags)
     ? rawScript.replace(/^<speak>\s*/i, "").replace(/\s*<\/speak>\s*$/i, "")
     : rawScript;
 
@@ -751,7 +755,7 @@ async function generateScriptAndAudio(params: {
     chunks.push(currentChunk.trim());
   }
 
-  const ttsChunks = isSsml
+  const ttsChunks = (usesSsml || hasSsmlTags)
     ? chunks.map((chunk) => `<speak>${chunk}</speak>`)
     : chunks;
 
@@ -766,7 +770,7 @@ async function generateScriptAndAudio(params: {
       }
     } catch (err) {
       console.error(`  TTS chunk ${i + 1} failed:`, err);
-      if (isSsml) {
+      if (usesSsml || hasSsmlTags) {
         console.log(`  Retrying chunk ${i + 1} as plain text (SSML fallback)...`);
         try {
           const plainChunk = stripSsmlTags(ttsChunks[i]);

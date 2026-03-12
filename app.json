@@ -19,7 +19,6 @@
       "bundleIdentifier": "app.replit.parisstories",
       "infoPlist": {
         "UIBackgroundModes": [
-          "audio",
           "audio"
         ],
         "ITSAppUsesNonExemptEncryption": false
@@ -57,7 +56,11 @@
       },
       "eas": {
         "projectId": "68998269-2bf6-4afa-8d80-56df617ea768"
-      }
+      },
+      "apiDomain": "paris-stories.replit.app",
+      "firebaseApiKey": "AIzaSyDjq7lvBKqtIeHBrDCCqiHna-pHPRqUIxw",
+      "firebaseProjectId": "city-stories-f966e",
+      "firebaseAppId": "1:1009953387031:web:6b51f25474f799583a2252"
     }
   }
 }

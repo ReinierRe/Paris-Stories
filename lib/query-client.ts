@@ -1,6 +1,7 @@
 import { fetch } from "expo/fetch";
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { auth } from "@/lib/firebase";
+import Constants from "expo-constants";
 
 let onUnauthorizedCallback: (() => void) | null = null;
 
@@ -9,7 +10,8 @@ export function setOnUnauthorized(callback: () => void) {
 }
 
 export function getApiUrl(): string {
-  let host = process.env.EXPO_PUBLIC_DOMAIN;
+  const extra = Constants.expoConfig?.extra ?? {};
+  let host = process.env.EXPO_PUBLIC_DOMAIN || extra.apiDomain;
 
   if (!host) {
     throw new Error("EXPO_PUBLIC_DOMAIN is not set");

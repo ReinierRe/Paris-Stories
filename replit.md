@@ -72,7 +72,19 @@ See `APP_STORE_METADATA.md` for complete App Store Connect metadata including:
 - Screenshot requirements and checklist
 - Build & submission checklist
 
+## EAS Build (iOS App Store)
+- `eas.json` configured with development, preview, and production profiles
+- Production build: `eas build --platform ios --profile production`
+- Submit to App Store: `eas submit --platform ios --profile production`
+- Requires EAS CLI: `npm install -g eas-cli` and `eas login`
+- Apple Developer Team ID, App Store Connect App ID, and Apple ID must be filled in `eas.json` submit section
+
 ## Recent Changes
+- 2026-03-12: App Store launch prep — EAS build configuration (eas.json), deployment configured (autoscale), metadata updated with Spanish language, AI model references removed from descriptions, privacy policy email updated to vragen@greenhome.nl.
+- 2026-02-27: Fixed SSML tags showing in French/German/Spanish transcripts — added markdown code fence stripping, improved SSML detection based on voice type instead of content parsing.
+- 2026-02-27: Fixed custom podcast error handling — moderation rejections now show friendly in-app alerts instead of console errors, fixed split bundle error from dynamic imports.
+- 2026-02-27: Added Spanish (ES) as 5th language — full system prompts, perspective translations, Chirp3/SSML instructions, frontend language lists, backend validation.
+- 2026-02-24: Fixed AI model references — updated content moderation and title generation to use supported model, simplified AI disclosure text in app.
 - 2026-02-21: Gamification — user levels (Traveler/Explorer/Connoisseur/Parisien) based on ready podcast count, level badge + progress bar on Profile, level-up celebration alert after podcast creation. Profile stats changed from Total/Ready to Standard/Custom.
 - 2026-02-21: Curated content updates — History expanded to 8 topics (added Catacombs, Knights Templar, Plague Years, Joan of Arc), Museums replaced Walking Tour + Monet's Paris with Fondation LV + Musée Carnavalet, French Revolution "Iconic Figures" angle renamed to "Personal Stories".
 - 2026-02-20: App Store compliance — added AI content moderation for custom podcast topics (rejects inappropriate content via Anthropic), AI transparency disclosures in both podcast flows and privacy policy, documented App Review submission notes.

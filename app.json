@@ -18,7 +18,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.replit.parisstories",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -46,6 +48,14 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://replit.com/"
+      },
+      "eas": {
+        "projectId": "68998269-2bf6-4afa-8d80-56df617ea768"
+      }
     }
   }
 }

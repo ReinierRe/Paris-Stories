@@ -19,8 +19,10 @@
       "bundleIdentifier": "app.replit.parisstories",
       "infoPlist": {
         "UIBackgroundModes": [
+          "audio",
           "audio"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

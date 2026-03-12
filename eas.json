@@ -21,9 +21,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "",
-        "ascAppId": "",
-        "appleTeamId": ""
+        "appleId": "reinier@greenhome.nl",
+        "ascAppId": "6760458412",
+        "appleTeamId": "L9BR52LZ5P"
       }
     }
   }

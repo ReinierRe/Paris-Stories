@@ -16,7 +16,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.greenhome.parisstories",
+      "bundleIdentifier": "app.replit.parisstories",
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
       }

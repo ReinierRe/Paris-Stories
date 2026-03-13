@@ -98,12 +98,12 @@ export default function PlayerScreen() {
 
         AsyncStorage.getItem("hasRequestedReview").then(async (value) => {
           if (value) return;
+          await AsyncStorage.setItem("hasRequestedReview", "true");
           const isAvailable = await StoreReview.isAvailableAsync();
           if (isAvailable) {
             await StoreReview.requestReview();
-            await AsyncStorage.setItem("hasRequestedReview", "true");
           }
-        });
+        }).catch(() => {});
       }
     } else if (status.error) {
       console.error("Playback error:", status.error);

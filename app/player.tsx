@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
+import * as StoreReview from "expo-store-review";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { usePodcasts, resolveAudioUrl } from "@/contexts/PodcastContext";
@@ -93,6 +95,15 @@ export default function PlayerScreen() {
       if (status.didJustFinish) {
         setIsPlaying(false);
         soundRef.current?.setPositionAsync(0);
+
+        AsyncStorage.getItem("hasRequestedReview").then(async (value) => {
+          if (value) return;
+          const isAvailable = await StoreReview.isAvailableAsync();
+          if (isAvailable) {
+            await StoreReview.requestReview();
+            await AsyncStorage.setItem("hasRequestedReview", "true");
+          }
+        });
       }
     } else if (status.error) {
       console.error("Playback error:", status.error);

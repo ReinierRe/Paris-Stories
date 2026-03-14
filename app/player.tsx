@@ -245,7 +245,7 @@ export default function PlayerScreen() {
             )}
             <View style={styles.metaRow}>
               <Text style={styles.metaText}>
-                {podcast.language === "nl" ? "Nederlands" : podcast.language === "fr" ? "Fran\u00e7ais" : podcast.language === "de" ? "Deutsch" : "English"}
+                {podcast.language === "nl" ? "Nederlands" : podcast.language === "fr" ? "Français" : podcast.language === "de" ? "Deutsch" : podcast.language === "es" ? "Español" : "English"}
               </Text>
               <View style={styles.metaDot} />
               <Text style={styles.metaText}>

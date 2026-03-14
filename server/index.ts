@@ -265,7 +265,7 @@ function setupMetroProxy(app: express.Application) {
   });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith("/api") || req.path === "/healthz" || req.path === "/privacy-policy") {
+    if (req.path.startsWith("/api") || req.path === "/healthz" || req.path === "/privacy-policy" || req.path.startsWith("/.well-known")) {
       return next();
     }
 
@@ -293,6 +293,15 @@ function configureStaticAndLanding(app: express.Application) {
     log("Landing page template not found, / will return simple response");
   }
   const appName = getAppName();
+
+  app.get("/.well-known/apple-app-site-association", (_req: Request, res: Response) => {
+    res.setHeader("Content-Type", "application/json");
+    res.json({
+      webcredentials: {
+        apps: ["L9BR52LZ5P.app.replit.parisstories"]
+      }
+    });
+  });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path === "/" && !req.header("expo-platform")) {

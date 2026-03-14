@@ -17,6 +17,9 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.replit.parisstories",
+      "associatedDomains": [
+        "webcredentials:paris-stories.replit.app"
+      ],
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"

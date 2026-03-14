@@ -4,7 +4,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged,
+  onIdTokenChanged,
   updateProfile,
   sendPasswordResetEmail,
 } from "firebase/auth";
@@ -33,6 +33,16 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+async function getFreshToken(): Promise<string | null> {
+  try {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      return await currentUser.getIdToken();
+    }
+  } catch {}
+  return null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -59,18 +69,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let initialLoad = true;
+    const unsubscribe = onIdTokenChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const idToken = await firebaseUser.getIdToken();
-          const result = await verifyWithBackend(idToken);
-          if (result.user) {
-            setUser(result.user);
-            setToken(idToken);
-          } else {
-            console.warn("Auth state verify failed:", result.error);
-            setUser(null);
-            setToken(null);
+          setToken(idToken);
+          if (initialLoad) {
+            const result = await verifyWithBackend(idToken);
+            if (result.user) {
+              setUser(result.user);
+            } else {
+              console.warn("Auth state verify failed:", result.error);
+              setUser(null);
+              setToken(null);
+            }
           }
         } catch {
           setUser(null);
@@ -80,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setToken(null);
       }
+      initialLoad = false;
       setIsLoading(false);
     });
 
@@ -143,12 +157,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const deleteAccount = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      if (!token) return { success: false, error: "Not authenticated" };
+      const freshToken = await getFreshToken();
+      if (!freshToken) return { success: false, error: "Not authenticated" };
       const baseUrl = getApiUrl();
       const url = new URL("/api/auth/account", baseUrl);
       const res = await fetch(url.toString(), {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${freshToken}` },
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -161,11 +176,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       return { success: false, error: err?.message || "Failed to delete account" };
     }
-  }, [token]);
+  }, []);
 
   const updatePreferences = useCallback(async (prefs: { preferredLanguage?: string; preferredVoice?: string }): Promise<{ success: boolean; error?: string }> => {
     try {
-      if (!token) return { success: false, error: "Not authenticated" };
+      const freshToken = await getFreshToken();
+      if (!freshToken) return { success: false, error: "Not authenticated" };
 
       const previousUser = user;
       setUser((prev) => prev ? { ...prev, ...prefs } : prev);
@@ -174,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const url = new URL("/api/auth/preferences", baseUrl);
       const res = await fetch(url.toString(), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
         body: JSON.stringify(prefs),
       });
       if (!res.ok) {
@@ -191,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser((prev) => prev ? { ...prev, preferredLanguage: user?.preferredLanguage, preferredVoice: user?.preferredVoice } : prev);
       return { success: false, error: err?.message || "Failed to update preferences" };
     }
-  }, [token, user]);
+  }, [user]);
 
   const resetPassword = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {

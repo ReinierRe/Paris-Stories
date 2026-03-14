@@ -22,11 +22,11 @@ export function getApiUrl(): string {
   return url.href.replace(/\/$/, "");
 }
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
+async function getAuthHeaders(forceRefresh = false): Promise<Record<string, string>> {
   try {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      const token = await currentUser.getIdToken();
+      const token = await currentUser.getIdToken(forceRefresh);
       return { Authorization: `Bearer ${token}` };
     }
   } catch {}
@@ -64,6 +64,23 @@ export async function apiRequest(
     credentials: "include",
   });
 
+  if (res.status === 401) {
+    const refreshedHeaders = await getAuthHeaders(true);
+    if (refreshedHeaders.Authorization) {
+      const retryRes = await fetch(url.toString(), {
+        method,
+        headers: { ...refreshedHeaders, ...(data ? { "Content-Type": "application/json" } : {}) },
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+      });
+      if (!retryRes.ok) {
+        await throwIfResNotOk(retryRes);
+      }
+      return retryRes;
+    }
+    await throwIfResNotOk(res);
+  }
+
   await throwIfResNotOk(res);
   return res;
 }
@@ -82,6 +99,26 @@ export const getQueryFn: <T>(options: {
       credentials: "include",
       headers: authHeaders,
     });
+
+    if (res.status === 401) {
+      const refreshedHeaders = await getAuthHeaders(true);
+      if (refreshedHeaders.Authorization) {
+        const retryRes = await fetch(url.toString(), {
+          credentials: "include",
+          headers: refreshedHeaders,
+        });
+        if (retryRes.status === 401) {
+          if (unauthorizedBehavior === "returnNull") return null;
+          await throwIfResNotOk(retryRes);
+        }
+        if (!retryRes.ok) {
+          await throwIfResNotOk(retryRes);
+        }
+        return await retryRes.json();
+      }
+      if (unauthorizedBehavior === "returnNull") return null;
+      await throwIfResNotOk(res);
+    }
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

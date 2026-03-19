@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as StoreReview from "expo-store-review";
 import Colors from "@/constants/colors";
 import { getUserLevel, getNextLevel, userLevels } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -277,6 +278,12 @@ export default function ProfileScreen() {
             <Text style={styles.aboutDescription}>
               Discover the hidden stories of Paris through AI-powered audio tours. From the French Revolution to hidden neighborhoods, every story is crafted with care.
             </Text>
+            <MenuItem icon="star-outline" label="Rate this App" onPress={async () => {
+              const isAvailable = await StoreReview.isAvailableAsync();
+              if (isAvailable) {
+                await StoreReview.requestReview();
+              }
+            }} />
           </View>
         </View>
 

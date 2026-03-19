@@ -96,14 +96,20 @@ export default function PlayerScreen() {
         setIsPlaying(false);
         soundRef.current?.setPositionAsync(0);
 
-        AsyncStorage.getItem("hasRequestedReview").then(async (value) => {
-          if (value) return;
-          await AsyncStorage.setItem("hasRequestedReview", "true");
-          const isAvailable = await StoreReview.isAvailableAsync();
-          if (isAvailable) {
-            await StoreReview.requestReview();
-          }
-        }).catch(() => {});
+        (async () => {
+          try {
+            const countStr = await AsyncStorage.getItem("completedPodcastCount");
+            const count = (parseInt(countStr || "0", 10) || 0) + 1;
+            await AsyncStorage.setItem("completedPodcastCount", String(count));
+
+            if (count === 1 || count === 10) {
+              const isAvailable = await StoreReview.isAvailableAsync();
+              if (isAvailable) {
+                await StoreReview.requestReview();
+              }
+            }
+          } catch {}
+        })();
       }
     } else if (status.error) {
       console.error("Playback error:", status.error);

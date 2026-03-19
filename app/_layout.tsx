@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -9,6 +9,7 @@ import { queryClient } from "@/lib/query-client";
 import { PodcastProvider } from "@/contexts/PodcastContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import LoginScreen from "@/app/login";
+import { Asset } from "expo-asset";
 import {
   useFonts,
   DMSans_400Regular,
@@ -17,6 +18,16 @@ import {
   DMSans_700Bold,
 } from "@expo-google-fonts/dm-sans";
 import { Platform, ActivityIndicator, View } from "react-native";
+
+const loginImages = [
+  require("@/assets/images/category-history.png"),
+  require("@/assets/images/category-french-revolution.png"),
+  require("@/assets/images/category-museums.png"),
+  require("@/assets/images/category-epic-buildings.png"),
+  require("@/assets/images/category-modern-history.png"),
+  require("@/assets/images/category-culinary.png"),
+  require("@/assets/images/category-neighborhoods.png"),
+];
 
 SplashScreen.preventAutoHideAsync();
 
@@ -79,14 +90,21 @@ export default function RootLayout() {
     DMSans_600SemiBold,
     DMSans_700Bold,
   });
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    Asset.loadAsync(loginImages).then(() => setImagesLoaded(true)).catch(() => setImagesLoaded(true));
+  }, []);
+
+  const assetsReady = (fontsLoaded || fontError) && imagesLoaded;
+
+  useEffect(() => {
+    if (assetsReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [assetsReady]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!assetsReady) return null;
 
   return (
     <ErrorBoundary>

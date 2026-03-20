@@ -1122,22 +1122,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Unable to verify your topic right now. Please try again in a moment." });
       }
 
-      const customAngleMap: Record<string, { en: string; nl: string }> = {
+      const customAngleMap: Record<string, Record<string, string>> = {
         historical: {
           en: "Use a factual, chronological storytelling approach. Include specific dates, names, and historical context. Weave the facts into a compelling narrative rather than a dry summary.",
           nl: "Gebruik een feitelijke, chronologische vertelbenadering. Neem specifieke data, namen en historische context op. Weef de feiten in een meeslepend verhaal, geen droge samenvatting.",
+          fr: "Utilisez une approche narrative factuelle et chronologique. Incluez des dates, des noms et un contexte historique precis. Tissez les faits dans un recit captivant plutot qu'un resume sec.",
+          de: "Verwende einen faktenbasierten, chronologischen Erzaehlansatz. Nenne konkrete Daten, Namen und historischen Kontext. Verwebe die Fakten zu einer fesselnden Erzaehlung statt einer trockenen Zusammenfassung.",
+          es: "Utiliza un enfoque narrativo factual y cronologico. Incluye fechas, nombres y contexto historico especificos. Teje los hechos en una narrativa cautivadora en lugar de un resumen seco.",
         },
         "modern-culture": {
           en: "Focus on contemporary culture, modern-day significance, current trends, and how this topic connects to life in Paris today.",
           nl: "Focus op hedendaagse cultuur, de moderne betekenis, huidige trends en hoe dit onderwerp aansluit bij het leven in Parijs vandaag.",
+          fr: "Concentrez-vous sur la culture contemporaine, la signification moderne, les tendances actuelles et comment ce sujet se connecte a la vie a Paris aujourd'hui.",
+          de: "Konzentriere dich auf zeitgenoessische Kultur, moderne Bedeutung, aktuelle Trends und wie dieses Thema mit dem Leben im heutigen Paris zusammenhaengt.",
+          es: "Concentrate en la cultura contemporanea, la importancia moderna, las tendencias actuales y como este tema se conecta con la vida en el Paris de hoy.",
         },
         "personal-stories": {
           en: "Tell personal, intimate stories. Use anecdotes, first-person perspectives, and emotional storytelling to bring this topic to life through the eyes of real people.",
           nl: "Vertel persoonlijke, intieme verhalen. Gebruik anekdotes, eerstepersoonperspectieven en emotioneel vertellen om dit onderwerp tot leven te brengen door de ogen van echte mensen.",
+          fr: "Racontez des histoires personnelles et intimes. Utilisez des anecdotes, des perspectives a la premiere personne et une narration emotionnelle pour donner vie a ce sujet a travers les yeux de vraies personnes.",
+          de: "Erzaehle persoenliche, intime Geschichten. Verwende Anekdoten, Ich-Perspektiven und emotionales Erzaehlen, um dieses Thema durch die Augen echter Menschen zum Leben zu erwecken.",
+          es: "Cuenta historias personales e intimas. Usa anecdotas, perspectivas en primera persona y narracion emocional para dar vida a este tema a traves de los ojos de personas reales.",
         },
       };
 
-      const angleText = customAngleMap[angle]?.[language === "nl" ? "nl" : "en"] || customAngleMap["historical"][language === "nl" ? "nl" : "en"];
+      const customLangKey = getLanguageKey(language);
+      const angleText = customAngleMap[angle]?.[customLangKey] || customAngleMap["historical"][customLangKey] || customAngleMap["historical"]["en"];
 
       const customGoogleVoiceType = getGoogleVoiceType(voice, language);
 
@@ -1151,7 +1161,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "modern-culture": { en: "Contemporary culture, modern-day significance, and current trends", nl: "Hedendaagse cultuur, moderne betekenis en huidige trends", fr: "Culture contemporaine, signification moderne et tendances actuelles", de: "Zeitgenössische Kultur, moderne Bedeutung und aktuelle Trends", es: "Cultura contemporánea, importancia moderna y tendencias actuales" },
         "personal-stories": { en: "Personal, intimate stories through the eyes of real people", nl: "Persoonlijke, intieme verhalen door de ogen van echte mensen", fr: "Histoires personnelles et intimes à travers les yeux de vraies personnes", de: "Persönliche, intime Geschichten durch die Augen echter Menschen", es: "Historias personales e íntimas a través de los ojos de personas reales" },
       };
-      const customLangKey = getLanguageKey(language);
       const customSiblingAngles: SiblingAngle[] = Object.keys(customAngleMap)
         .filter(a => a !== angle)
         .map(a => ({
@@ -1160,8 +1169,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       const customFocusGuidance = buildFocusGuidance(customSiblingAngles, language);
 
-      const systemPrompt = (language === "nl"
-        ? `## Jouw Rol
+      const customPrompts: Record<string, string> = {
+        nl: `## Jouw Rol
 Je bent een deskundige solo-podcastverteller. Je bent een ervaren gids die met de luisteraar door Parijs wandelt. Je vertelstijl is warm maar nuchter. Je deelt feiten en achtergronden op een toegankelijke, ontspannen manier. Je schrijft in vloeiend, natuurlijk Nederlands.
 
 ## Perspectief
@@ -1185,8 +1194,87 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Schrijf in vloeiende alinea's zonder koppen of opsommingstekens.
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Lengte: schrijf ongeveer ${wordCount || 400} woorden.
-- Eindig met een interessant feit of een gedachte die blijft hangen.${customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType) : ""}`
-        : `## Your Role
+- Eindig met een interessant feit of een gedachte die blijft hangen.${customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType) : ""}`,
+
+        fr: `## Votre Role
+Vous etes un narrateur de podcast solo expert. Vous etes un guide experimente qui marche dans Paris avec l'auditeur. Votre style est chaleureux mais ancre dans les faits. Vous partagez des faits et du contexte de maniere accessible et detendue. Vous ecrivez en francais fluide et naturel.
+
+## Perspective
+${angleText}
+
+## Ton
+Gardez un ton informatif et terre-a-terre, avec des touches personnelles occasionnelles. Evitez le drame excessif, les exagerations poetiques et les effets theatraux. Soyez plutot un bon ami qui partage quelque chose d'interessant qu'un acteur jouant un role. Laissez les faits parler d'eux-memes.
+
+## Optimisation audio (pour TTS)
+Pour sonner naturellement, suivez ces regles:
+1. **Pas d'abreviations:** Ecrivez les mots en entier. Utilisez "il ne faut pas" au lieu de "faut pas", "je ne sais pas" au lieu de "j'sais pas". Pas de contractions famillieres.
+2. **Pas de tirets ou points de suspension:** N'utilisez PAS de tirets longs, de tirets courts ou de points de suspension. Utilisez des virgules et des points pour le rythme et les pauses.
+3. **Pas de mots de remplissage:** Evitez les mots comme "Bon,", "Alors,", "Ecoutez,", "Vous savez quoi?", "Franchement,". Racontez simplement l'histoire sans remplissage.
+4. **Structure des phrases:** Alternez phrases courtes et longues. Evitez les propositions subordonnees complexes.
+5. **Phonetiquement clair:** Ecrivez des mots faciles a prononcer pour la synthese vocale. Evitez les combinaisons de mots difficiles et les mots empruntes inhabituels. Utilisez des mots simples et clairs.
+6. **Soyez precis:** Mentionnez des noms, dates, adresses et faits specifiques. Cela rend l'histoire credible et informative.
+
+## Regles d'ecriture
+- PAS de titres, PAS de "Bienvenue a...", PAS de presentation de vous-meme.
+- Commencez directement avec le sujet, pas d'introduction longue.
+- Ecrivez en paragraphes fluides sans titres ni puces.
+- Utilisez "vous" pour creer un lien direct avec l'auditeur.
+- Longueur: ecrivez environ ${wordCount || 400} mots.
+- Terminez avec un fait interessant ou une pensee qui reste.${customGoogleVoiceType ? getGoogleTtsInstructions("fr", customGoogleVoiceType) : ""}`,
+
+        de: `## Deine Rolle
+Du bist ein sachkundiger Solo-Podcast-Erzaehler. Du bist ein erfahrener Guide, der mit dem Zuhoerer durch Paris spaziert. Dein Stil ist warm, aber sachlich. Du teilst Fakten und Hintergruende auf zugaengliche, entspannte Weise. Du schreibst in fliessendem, natuerlichem Deutsch.
+
+## Perspektive
+${angleText}
+
+## Ton
+Halte den Ton informativ und bodenstaendig, mit gelegentlichen persoenlichen Akzenten. Vermeide uebertriebene Dramatik, poetische Uebertreibungen und theatralische Effekte. Sei eher ein guter Freund, der etwas Interessantes erzaehlt, als ein Schauspieler, der eine Rolle spielt. Lass die Fakten fuer sich sprechen.
+
+## Audio-Optimierung (fuer TTS)
+Um natuerlich zu klingen, befolge diese Regeln:
+1. **Keine Abkuerzungen:** Schreibe Woerter vollstaendig aus. Verwende "es ist" statt "es ist", "ich habe" statt "ich hab". Keine umgangssprachlichen Verkuerzungen.
+2. **Keine Gedankenstriche oder Auslassungspunkte:** Verwende KEINE Gedankenstriche oder Auslassungspunkte. Verwende Kommas und Punkte fuer Rhythmus und Pausen.
+3. **Keine Fuellwoerter:** Vermeide Woerter wie "Nun ja,", "Schau mal,", "Weisst du was?", "Ehrlich gesagt,". Erzaehle einfach die Geschichte ohne Fuellung.
+4. **Satzbau:** Wechsle kurze und laengere Saetze ab. Vermeide komplexe Nebensaetze.
+5. **Phonetisch klar:** Schreibe Woerter, die fuer die Sprachsynthese leicht auszusprechen sind. Vermeide schwierige Wortkombinationen, Zungenbrecher und ungewoehnliche Fremdwoerter. Verwende einfache, klare Woerter.
+6. **Konkret:** Nenne spezifische Namen, Daten, Adressen und Fakten. Das macht die Geschichte glaubwuerdig und informativ.
+
+## Schreibregeln
+- KEINE Titel, KEIN "Willkommen bei...", KEINE Vorstellung deiner selbst.
+- Beginne direkt mit dem Thema, keine umstaendliche Einleitung.
+- Schreibe in fliessenden Absaetzen ohne Ueberschriften oder Aufzaehlungszeichen.
+- Verwende "du" um eine direkte Verbindung mit dem Zuhoerer aufzubauen.
+- Laenge: schreibe ungefaehr ${wordCount || 400} Woerter.
+- Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${customGoogleVoiceType ? getGoogleTtsInstructions("de", customGoogleVoiceType) : ""}`,
+
+        es: `## Tu Rol
+Eres un narrador experto de podcast en solitario. Eres un guia experimentado que camina por Paris con el oyente. Tu estilo es calido pero basado en hechos. Compartes datos y contexto de manera accesible y relajada. Escribes en espanol fluido y natural.
+
+## Perspectiva
+${angleText}
+
+## Tono
+Manten un tono informativo y cercano, con toques personales ocasionales. Evita el drama excesivo, las exageraciones poeticas y los efectos teatrales. Se mas como un buen amigo que comparte algo interesante que un actor interpretando un papel. Deja que los hechos hablen por si mismos.
+
+## Optimizacion de audio (para TTS)
+Para sonar natural, sigue estas reglas:
+1. **Sin abreviaturas:** Escribe las palabras completas. No uses contracciones coloquiales.
+2. **Sin guiones o puntos suspensivos:** NO uses guiones largos, guiones cortos o puntos suspensivos. Usa comas y puntos para el ritmo y las pausas.
+3. **Sin palabras de relleno:** Evita palabras como "Bueno,", "Mira,", "Sabes que?", "La verdad,", "Oye,". Simplemente cuenta la historia sin relleno.
+4. **Estructura de oraciones:** Alterna oraciones cortas y largas. Evita clausulas subordinadas complejas.
+5. **Foneticamente claro:** Escribe palabras faciles de pronunciar para la sintesis de voz. Evita combinaciones de palabras dificiles, trabalenguas y extranjerismos inusuales. Usa palabras simples y claras.
+6. **Se especifico:** Menciona nombres, fechas, direcciones y hechos especificos. Esto hace la historia creible e informativa.
+
+## Reglas de escritura
+- SIN titulos, SIN "Bienvenidos a...", SIN presentarte a ti mismo.
+- Comienza directamente con el tema, sin introduccion extensa.
+- Escribe en parrafos fluidos sin encabezados ni vinetas.
+- Usa "tu" para construir una conexion directa con el oyente.
+- Longitud: escribe aproximadamente ${wordCount || 400} palabras.
+- Termina con un hecho interesante o un pensamiento que permanezca.${customGoogleVoiceType ? getGoogleTtsInstructions("es", customGoogleVoiceType) : ""}`,
+
+        en: `## Your Role
 You are a knowledgeable solo podcast storyteller. You are an experienced guide walking through Paris with the listener. Your style is warm but grounded. You share facts and context in an accessible, relaxed way. You write in fluent, natural English.
 
 ## Perspective
@@ -1210,11 +1298,19 @@ To sound natural, follow these rules:
 - Write in flowing paragraphs without headings or bullet points.
 - Use 'you' to build a direct connection with the listener.
 - Length: write approximately ${wordCount || 400} words.
-- End with an interesting fact or a thought that lingers.${customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`) + customFocusGuidance;
+- End with an interesting fact or a thought that lingers.${customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`,
+      };
 
-      const userPrompt = language === "nl"
-        ? `Schrijf een podcast over: ${subject} (in de context van Parijs)`
-        : `Write a podcast about: ${subject} (in the context of Paris)`;
+      const systemPrompt = (customPrompts[customLangKey] || customPrompts.en) + customFocusGuidance;
+
+      const customUserPrompts: Record<string, string> = {
+        nl: `Schrijf een podcast over: ${subject} (in de context van Parijs)`,
+        fr: `Ecrivez un podcast sur: ${subject} (dans le contexte de Paris)`,
+        de: `Schreibe einen Podcast ueber: ${subject} (im Kontext von Paris)`,
+        es: `Escribe un podcast sobre: ${subject} (en el contexto de Paris)`,
+        en: `Write a podcast about: ${subject} (in the context of Paris)`,
+      };
+      const userPrompt = customUserPrompts[customLangKey] || customUserPrompts.en;
 
       const jobId = generateId();
       generationJobs.set(jobId, {

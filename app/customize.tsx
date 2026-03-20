@@ -214,7 +214,7 @@ export default function CustomizeScreen() {
               if (pollRes.status === 404) {
                 await updatePodcast(podcastId, {
                   status: "error",
-                  errorMessage: "Generation was interrupted. Please try again.",
+                  errorMessage: t("errors.generationInterrupted"),
                 });
                 return;
               }
@@ -232,7 +232,7 @@ export default function CustomizeScreen() {
               } else if (pollData.status === "error") {
                 await updatePodcast(podcastId, {
                   status: "error",
-                  errorMessage: pollData.error || "Failed to generate podcast. Please try again.",
+                  errorMessage: pollData.error || t("errors.generationFailed"),
                 });
                 return;
               }
@@ -241,7 +241,7 @@ export default function CustomizeScreen() {
           }
           await updatePodcast(podcastId, {
             status: "error",
-            errorMessage: "Generation timed out. Please try again.",
+            errorMessage: t("errors.generationTimedOut"),
           });
         };
         pollForResult();
@@ -250,7 +250,7 @@ export default function CustomizeScreen() {
       console.error("Generation failed:", error);
       await updatePodcast(podcastId, {
         status: "error",
-        errorMessage: "Failed to generate podcast. Please try again.",
+        errorMessage: t("errors.generationFailed"),
       });
     }
   };

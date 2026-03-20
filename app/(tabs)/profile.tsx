@@ -273,8 +273,8 @@ export default function ProfileScreen() {
                 style={styles.aboutIcon}
               />
               <View style={styles.aboutText}>
-                <Text style={styles.aboutAppName}>Paris Stories</Text>
-                <Text style={styles.aboutVersion}>Version 1.0.0</Text>
+                <Text style={styles.aboutAppName}>{t("profile.appName")}</Text>
+                <Text style={styles.aboutVersion}>{t("profile.appVersion")}</Text>
               </View>
             </View>
             <Text style={styles.aboutDescription}>

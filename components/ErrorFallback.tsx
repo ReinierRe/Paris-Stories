@@ -47,9 +47,9 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   };
 
   const formatErrorDetails = (): string => {
-    let details = `Error: ${error.message}\n\n`;
+    let details = `${t("errors.errorPrefix")}: ${error.message}\n\n`;
     if (error.stack) {
-      details += `Stack Trace:\n${error.stack}`;
+      details += `${t("errors.stackTrace")}:\n${error.stack}`;
     }
     return details;
   };
@@ -135,7 +135,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                 </Text>
                 <Pressable
                   onPress={() => setIsModalVisible(false)}
-                  accessibilityLabel="Close"
+                  accessibilityLabel={t("errors.close")}
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.closeButton,

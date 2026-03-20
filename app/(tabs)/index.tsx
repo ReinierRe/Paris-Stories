@@ -14,14 +14,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
-import { themes, type Theme, type Topic } from "@/constants/themes";
+import { themes, type Theme, type Topic, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/i18n/useTranslation";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-function TopicRow({ topic, theme }: { topic: Topic; theme: Theme }) {
+function TopicRow({ topic, theme, locale }: { topic: Topic; theme: Theme; locale: string }) {
   return (
     <Pressable
       style={({ pressed }) => [styles.topicRow, pressed && styles.topicRowPressed]}
@@ -40,9 +41,9 @@ function TopicRow({ topic, theme }: { topic: Topic; theme: Theme }) {
       }
     >
       <View style={styles.topicContent}>
-        <Text style={styles.topicName}>{topic.name}</Text>
+        <Text style={styles.topicName}>{getLocalizedName(topic, locale)}</Text>
         <Text style={styles.topicDescription} numberOfLines={2}>
-          {topic.description}
+          {getLocalizedDescription(topic, locale)}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={18} color={Colors.light.textTertiary} />
@@ -50,7 +51,7 @@ function TopicRow({ topic, theme }: { topic: Topic; theme: Theme }) {
   );
 }
 
-function ThemeCard({ theme }: { theme: Theme }) {
+function ThemeCard({ theme, locale, t }: { theme: Theme; locale: string; t: (key: string, options?: Record<string, any>) => string }) {
   const [expanded, setExpanded] = useState(false);
 
   const toggleExpand = () => {
@@ -86,9 +87,9 @@ function ThemeCard({ theme }: { theme: Theme }) {
           </View>
         )}
         <View style={styles.themeTextContainer}>
-          <Text style={styles.themeName}>{theme.name}</Text>
+          <Text style={styles.themeName}>{getLocalizedName(theme, locale)}</Text>
           <Text style={styles.themeTopicCount}>
-            {theme.topics.length} {theme.topics.length === 1 ? "topic" : "topics"}
+            {t("library.topicCount", { count: theme.topics.length })}
           </Text>
         </View>
         <Ionicons
@@ -103,7 +104,7 @@ function ThemeCard({ theme }: { theme: Theme }) {
           {theme.topics.map((topic, index) => (
             <React.Fragment key={topic.id}>
               {index > 0 && <View style={styles.topicDivider} />}
-              <TopicRow topic={topic} theme={theme} />
+              <TopicRow topic={topic} theme={theme} locale={locale} />
             </React.Fragment>
           ))}
           <View style={styles.topicDivider} />
@@ -114,7 +115,7 @@ function ThemeCard({ theme }: { theme: Theme }) {
             <View style={styles.addOwnIcon}>
               <Ionicons name="add" size={18} color={Colors.light.accent} />
             </View>
-            <Text style={styles.addOwnText}>Add your own subject</Text>
+            <Text style={styles.addOwnText}>{t("library.addOwnSubject")}</Text>
             <Ionicons name="chevron-forward" size={18} color={Colors.light.textTertiary} />
           </Pressable>
         </View>
@@ -127,6 +128,7 @@ export default function LibraryScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { user } = useAuth();
+  const { t, locale } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -140,16 +142,16 @@ export default function LibraryScreen() {
       >
         <View style={styles.headerSection}>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>Paris Stories</Text>
+            <Text style={styles.headerTitle}>{t("library.title")}</Text>
             <Text style={styles.headerSubtitle}>
-              {user?.firstName ? `Welcome, ${user.firstName}` : "Discover the stories of Paris"}
+              {user?.firstName ? t("library.welcome", { name: user.firstName }) : t("library.discover")}
             </Text>
           </View>
         </View>
 
         <View style={styles.themesContainer}>
           {themes.map((theme) => (
-            <ThemeCard key={theme.id} theme={theme} />
+            <ThemeCard key={theme.id} theme={theme} locale={locale} t={t} />
           ))}
         </View>
 

@@ -14,18 +14,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { themes, podcastLengths, checkLevelUp } from "@/constants/themes";
+import { themes, podcastLengths, checkLevelUp, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/query-client";
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  en: "English",
-  nl: "Nederlands",
-  fr: "Fran\u00e7ais",
-  de: "Deutsch",
-  es: "Espa\u00f1ol",
-};
+import { useTranslation } from "@/i18n/useTranslation";
 
 type Step = "angle" | "length" | "confirm";
 
@@ -80,11 +73,13 @@ export default function CustomizeScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { t, locale } = useTranslation();
 
   const voice = (user?.preferredVoice || "female") as "male" | "female";
   const language = (user?.preferredLanguage || "nl") as "nl" | "en" | "fr" | "de";
 
-  const currentTheme = themes.find((t) => t.id === params.themeId);
+  const currentTheme = themes.find((th) => th.id === params.themeId);
+  const currentTopic = currentTheme?.topics.find((tp) => tp.id === params.topicId);
   const hasAngles = !!(currentTheme?.angles && currentTheme.angles.length > 0);
   const steps: Step[] = hasAngles
     ? ["angle", "length", "confirm"]
@@ -101,19 +96,21 @@ export default function CustomizeScreen() {
     step === "length" ? true :
     step === "confirm" ? true : false;
 
+  const localizedTopicName = currentTopic ? getLocalizedName(currentTopic, locale) : params.topicName;
+
   const stepTitle = () => {
     switch (step) {
-      case "angle": return "Choose your angle";
-      case "length": return "Podcast length";
-      case "confirm": return "Ready to create";
+      case "angle": return t("customize.chooseAngle");
+      case "length": return t("customize.podcastLength");
+      case "confirm": return t("customize.readyToCreate");
     }
   };
 
   const stepSubtitle = () => {
     switch (step) {
-      case "angle": return "How should we tell this story?";
-      case "length": return "How long should the podcast be?";
-      case "confirm": return `Your podcast about "${params.topicName}" is ready to be created`;
+      case "angle": return t("customize.howToTell");
+      case "length": return t("customize.howLong");
+      case "confirm": return t("customize.yourPodcastReady", { subject: localizedTopicName });
     }
   };
 
@@ -145,9 +142,9 @@ export default function CustomizeScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setTimeout(() => {
         Alert.alert(
-          `Level Up: ${newLevel.name}!`,
-          newLevel.description,
-          [{ text: "Merci!", style: "default" }]
+          t("customize.levelUp", { level: getLocalizedName(newLevel, locale) }),
+          getLocalizedDescription(newLevel, locale),
+          [{ text: t("customize.merci"), style: "default" }]
         );
       }, 1500);
     }
@@ -272,8 +269,8 @@ export default function CustomizeScreen() {
                 selected={angle === a.id}
                 onPress={() => setAngle(a.id)}
                 icon={<Feather name={a.icon as any} size={20} color={angle === a.id ? Colors.light.accent : Colors.light.textSecondary} />}
-                title={a.name}
-                subtitle={a.description}
+                title={getLocalizedName(a, locale)}
+                subtitle={getLocalizedDescription(a, locale)}
               />
             ))}
           </View>
@@ -288,7 +285,7 @@ export default function CustomizeScreen() {
                 selected={length === l.id}
                 onPress={() => setLength(l.id)}
                 icon={<Feather name="clock" size={20} color={length === l.id ? Colors.light.accent : Colors.light.textSecondary} />}
-                title={l.name}
+                title={getLocalizedName(l, locale)}
                 subtitle={l.duration}
               />
             ))}
@@ -300,40 +297,40 @@ export default function CustomizeScreen() {
           <View style={styles.confirmContainer}>
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Topic</Text>
-                <Text style={styles.summaryValue} numberOfLines={1}>{params.topicName}</Text>
+                <Text style={styles.summaryLabel}>{t("customize.topic")}</Text>
+                <Text style={styles.summaryValue} numberOfLines={1}>{localizedTopicName}</Text>
               </View>
               {hasAngles && selectedAngle ? (
                 <>
                   <View style={styles.summaryDivider} />
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Angle</Text>
-                    <Text style={styles.summaryValue}>{selectedAngle.name}</Text>
+                    <Text style={styles.summaryLabel}>{t("customize.angle")}</Text>
+                    <Text style={styles.summaryValue}>{getLocalizedName(selectedAngle, locale)}</Text>
                   </View>
                 </>
               ) : null}
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Length</Text>
-                <Text style={styles.summaryValue}>{selectedLength?.name} ({selectedLength?.duration})</Text>
+                <Text style={styles.summaryLabel}>{t("customize.length")}</Text>
+                <Text style={styles.summaryValue}>{selectedLength ? getLocalizedName(selectedLength, locale) : ""} ({selectedLength?.duration})</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Language</Text>
-                <Text style={styles.summaryValue}>{LANGUAGE_LABELS[language] || language}</Text>
+                <Text style={styles.summaryLabel}>{t("customize.languageLabel")}</Text>
+                <Text style={styles.summaryValue}>{t(`languages.${language}`)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Voice</Text>
-                <Text style={styles.summaryValue}>{voice === "female" ? "Female" : "Male"}</Text>
+                <Text style={styles.summaryLabel}>{t("customize.voiceLabel")}</Text>
+                <Text style={styles.summaryValue}>{voice === "female" ? t("customize.female") : t("customize.male")}</Text>
               </View>
             </View>
 
             <Text style={styles.confirmNote}>
-              Language and voice can be changed in your profile settings.
+              {t("customize.languageVoiceNote")}
             </Text>
             <Text style={styles.aiDisclosure}>
-              Your podcast will be generated using AI. See our Privacy Policy for details.
+              {t("customize.aiDisclosure")}
             </Text>
           </View>
         );
@@ -369,7 +366,7 @@ export default function CustomizeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.stepHeader}>
-          <Text style={styles.topicLabel}>{params.topicName}</Text>
+          <Text style={styles.topicLabel}>{localizedTopicName}</Text>
           <Text style={styles.stepTitle}>{stepTitle()}</Text>
           <Text style={styles.stepSubtitle}>{stepSubtitle()}</Text>
         </View>
@@ -393,7 +390,7 @@ export default function CustomizeScreen() {
             ) : (
               <>
                 <Ionicons name="sparkles" size={18} color="#FFFFFF" />
-                <Text style={styles.generateButtonText}>Create Podcast</Text>
+                <Text style={styles.generateButtonText}>{t("customize.createPodcast")}</Text>
               </>
             )}
           </Pressable>
@@ -407,7 +404,7 @@ export default function CustomizeScreen() {
             onPress={handleNext}
             disabled={!canProceed}
           >
-            <Text style={styles.nextButtonText}>Continue</Text>
+            <Text style={styles.nextButtonText}>{t("customize.continue")}</Text>
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </Pressable>
         )}

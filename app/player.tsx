@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { usePodcasts, resolveAudioUrl } from "@/contexts/PodcastContext";
+import { useTranslation } from "@/i18n/useTranslation";
 
 function formatTime(millis: number): string {
   const totalSeconds = Math.floor(millis / 1000);
@@ -32,6 +33,7 @@ export default function PlayerScreen() {
   const { podcasts } = usePodcasts();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { t } = useTranslation();
 
   const podcast = podcasts.find((p) => p.id === podcastId);
 
@@ -144,9 +146,9 @@ export default function PlayerScreen() {
   if (!podcast) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.errorText}>Podcast not found</Text>
+        <Text style={styles.errorText}>{t("player.podcastNotFound")}</Text>
         <Pressable onPress={() => router.back()}>
-          <Text style={styles.backLinkText}>Go back</Text>
+          <Text style={styles.backLinkText}>{t("player.goBack")}</Text>
         </Pressable>
       </View>
     );
@@ -185,13 +187,15 @@ export default function PlayerScreen() {
     setIsSeeking(false);
   };
 
+  const langKey = `languages.${podcast.language}` as const;
+
   return (
     <View style={styles.container}>
       <View style={[styles.topBar, { paddingTop: insets.top + 12 + webTopInset }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-down" size={28} color={Colors.light.text} />
         </Pressable>
-        <Text style={styles.topBarTitle} numberOfLines={1}>Now Playing</Text>
+        <Text style={styles.topBarTitle} numberOfLines={1}>{t("player.nowPlaying")}</Text>
         <Pressable
           onPress={() => setShowScript(!showScript)}
           hitSlop={12}
@@ -219,16 +223,16 @@ export default function PlayerScreen() {
               <View style={styles.errorIconCircle}>
                 <Ionicons name="cloud-offline-outline" size={40} color={Colors.light.accent} />
               </View>
-              <Text style={styles.errorTitle}>Audio unavailable</Text>
+              <Text style={styles.errorTitle}>{t("player.audioUnavailable")}</Text>
               <Text style={styles.errorDescription}>
-                The audio file for this podcast could not be loaded. You can still read the script using the button above.
+                {t("player.audioErrorMessage")}
               </Text>
               <Pressable
                 style={({ pressed }) => [styles.retryButton, pressed && { opacity: 0.8 }]}
                 onPress={loadAudio}
               >
                 <Ionicons name="refresh" size={16} color="#FFFFFF" />
-                <Text style={styles.retryButtonText}>Try again</Text>
+                <Text style={styles.retryButtonText}>{t("player.tryAgain")}</Text>
               </Pressable>
             </View>
           ) : (
@@ -251,11 +255,11 @@ export default function PlayerScreen() {
             )}
             <View style={styles.metaRow}>
               <Text style={styles.metaText}>
-                {podcast.language === "nl" ? "Nederlands" : podcast.language === "fr" ? "Français" : podcast.language === "de" ? "Deutsch" : podcast.language === "es" ? "Español" : "English"}
+                {t(langKey)}
               </Text>
               <View style={styles.metaDot} />
               <Text style={styles.metaText}>
-                {podcast.voice === "female" ? "Female" : "Male"} voice
+                {podcast.voice === "female" ? t("player.femaleVoice") : t("player.maleVoice")}
               </Text>
             </View>
           </View>

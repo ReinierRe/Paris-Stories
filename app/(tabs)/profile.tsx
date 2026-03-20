@@ -16,25 +16,26 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as StoreReview from "expo-store-review";
 import Colors from "@/constants/colors";
-import { getUserLevel, getNextLevel, userLevels } from "@/constants/themes";
+import { getUserLevel, getNextLevel, getLocalizedName } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePodcasts } from "@/contexts/PodcastContext";
 import { getApiUrl } from "@/lib/query-client";
+import { useTranslation } from "@/i18n/useTranslation";
 
 const LANGUAGES = [
-  { id: "en", label: "English", flag: "EN" },
-  { id: "nl", label: "Nederlands", flag: "NL" },
-  { id: "fr", label: "Fran\u00e7ais", flag: "FR" },
-  { id: "de", label: "Deutsch", flag: "DE" },
-  { id: "es", label: "Espa\u00f1ol", flag: "ES" },
+  { id: "en", flag: "EN" },
+  { id: "nl", flag: "NL" },
+  { id: "fr", flag: "FR" },
+  { id: "de", flag: "DE" },
+  { id: "es", flag: "ES" },
 ];
 
 const VOICES = [
-  { id: "female", label: "Female", icon: "woman" as const },
-  { id: "male", label: "Male", icon: "man" as const },
+  { id: "female", icon: "woman" as const },
+  { id: "male", icon: "man" as const },
 ];
 
-function ProfileHeader({ user, level, podcastCount }: { user: { id: string; email?: string; firstName?: string }; level: ReturnType<typeof getUserLevel>; podcastCount: number }) {
+function ProfileHeader({ user, level, podcastCount, t, locale }: { user: { id: string; email?: string; firstName?: string }; level: ReturnType<typeof getUserLevel>; podcastCount: number; t: (key: string, options?: Record<string, any>) => string; locale: string }) {
   const initial = user.firstName ? user.firstName.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : "?");
   const nextLevel = getNextLevel(podcastCount);
   const progress = nextLevel
@@ -46,11 +47,11 @@ function ProfileHeader({ user, level, podcastCount }: { user: { id: string; emai
       <View style={styles.avatarContainer}>
         <Text style={styles.avatarText}>{initial}</Text>
       </View>
-      <Text style={styles.profileName}>{user.firstName || "Traveler"}</Text>
+      <Text style={styles.profileName}>{user.firstName || getLocalizedName(level, locale)}</Text>
       {user.email && <Text style={styles.profileEmail}>{user.email}</Text>}
       <View style={styles.levelBadge}>
         <Ionicons name={level.icon as any} size={16} color={Colors.light.accent} />
-        <Text style={styles.levelBadgeText}>{level.name}</Text>
+        <Text style={styles.levelBadgeText}>{getLocalizedName(level, locale)}</Text>
       </View>
       {nextLevel && (
         <View style={styles.levelProgressContainer}>
@@ -58,7 +59,7 @@ function ProfileHeader({ user, level, podcastCount }: { user: { id: string; emai
             <View style={[styles.levelProgressFill, { width: `${Math.min(progress * 100, 100)}%` }]} />
           </View>
           <Text style={styles.levelProgressText}>
-            {nextLevel.minPodcasts - podcastCount} more to {nextLevel.name}
+            {t("profile.moreTo", { count: nextLevel.minPodcasts - podcastCount, level: getLocalizedName(nextLevel, locale) })}
           </Text>
         </View>
       )}
@@ -99,6 +100,7 @@ export default function ProfileScreen() {
   const { user, logout, deleteAccount, updatePreferences } = useAuth();
   const { podcasts } = usePodcasts();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { t, locale } = useTranslation();
 
   const totalPodcasts = podcasts.filter((p) => p.status === "ready").length;
   const standardPodcasts = podcasts.filter((p) => p.status === "ready" && !p.isCustom).length;
@@ -110,7 +112,7 @@ export default function ProfileScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await updatePreferences({ preferredLanguage: langId });
     if (!result.success) {
-      Alert.alert("Error", result.error || "Could not update language preference");
+      Alert.alert(t("profile.errorTitle"), result.error || t("profile.errorUpdatePreferences"));
     }
   };
 
@@ -119,7 +121,7 @@ export default function ProfileScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await updatePreferences({ preferredVoice: voiceId });
     if (!result.success) {
-      Alert.alert("Error", result.error || "Could not update voice preference");
+      Alert.alert(t("profile.errorTitle"), result.error || t("profile.errorUpdatePreferences"));
     }
   };
 
@@ -128,27 +130,27 @@ export default function ProfileScreen() {
       logout();
       return;
     }
-    Alert.alert("Sign out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Sign out", style: "destructive", onPress: logout },
+    Alert.alert(t("profile.signOutConfirmTitle"), t("profile.signOutConfirmMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      { text: t("profile.signOut"), style: "destructive", onPress: logout },
     ]);
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Delete account",
-      "This will permanently delete your account and all your podcasts. This action cannot be undone.",
+      t("profile.deleteConfirmTitle"),
+      t("profile.deleteConfirmMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: async () => {
             setIsDeleting(true);
             const result = await deleteAccount();
             setIsDeleting(false);
             if (!result.success) {
-              Alert.alert("Error", result.error || "Failed to delete account");
+              Alert.alert(t("profile.errorTitle"), result.error || t("errors.somethingWentWrong"));
             }
           },
         },
@@ -168,7 +170,7 @@ export default function ProfileScreen() {
       {isDeleting && (
         <View style={styles.deletingOverlay}>
           <ActivityIndicator size="large" color={Colors.light.accent} />
-          <Text style={styles.deletingText}>Deleting account...</Text>
+          <Text style={styles.deletingText}>{t("profile.deletingAccount")}</Text>
         </View>
       )}
       <ScrollView
@@ -178,22 +180,22 @@ export default function ProfileScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.screenTitle}>My Profile</Text>
+        <Text style={styles.screenTitle}>{t("profile.title")}</Text>
 
-        <ProfileHeader user={user} level={level} podcastCount={totalPodcasts} />
+        <ProfileHeader user={user} level={level} podcastCount={totalPodcasts} t={t} locale={locale} />
 
         <View style={styles.statsRow}>
-          <StatCard icon="headset" value={standardPodcasts} label="Standard" />
-          <StatCard icon="create-outline" value={customPodcasts} label="Custom" />
+          <StatCard icon="headset" value={standardPodcasts} label={t("profile.standard")} />
+          <StatCard icon="create-outline" value={customPodcasts} label={t("profile.custom")} />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Podcast Preferences</Text>
+          <Text style={styles.sectionTitle}>{t("profile.podcastPreferences")}</Text>
           <View style={styles.menuCard}>
             <View style={styles.prefSection}>
               <View style={styles.prefLabelRow}>
                 <Ionicons name="language-outline" size={18} color={Colors.light.textSecondary} />
-                <Text style={styles.prefLabel}>Language</Text>
+                <Text style={styles.prefLabel}>{t("profile.language")}</Text>
               </View>
               <View style={styles.prefOptions}>
                 {LANGUAGES.map((lang) => (
@@ -219,7 +221,7 @@ export default function ProfileScreen() {
                         user?.preferredLanguage === lang.id && styles.prefChipLabelSelected,
                       ]}
                     >
-                      {lang.label}
+                      {t(`languages.${lang.id}`)}
                     </Text>
                   </Pressable>
                 ))}
@@ -229,7 +231,7 @@ export default function ProfileScreen() {
             <View style={styles.prefSection}>
               <View style={styles.prefLabelRow}>
                 <Ionicons name="mic-outline" size={18} color={Colors.light.textSecondary} />
-                <Text style={styles.prefLabel}>Voice</Text>
+                <Text style={styles.prefLabel}>{t("profile.voice")}</Text>
               </View>
               <View style={styles.prefOptions}>
                 {VOICES.map((v) => (
@@ -253,7 +255,7 @@ export default function ProfileScreen() {
                         user?.preferredVoice === v.id && styles.prefChipLabelSelected,
                       ]}
                     >
-                      {v.label}
+                      {t(`profile.${v.id}`)}
                     </Text>
                   </Pressable>
                 ))}
@@ -263,7 +265,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.sectionTitle}>{t("profile.about")}</Text>
           <View style={styles.menuCard}>
             <View style={styles.aboutRow}>
               <Image
@@ -276,9 +278,9 @@ export default function ProfileScreen() {
               </View>
             </View>
             <Text style={styles.aboutDescription}>
-              Discover the hidden stories of Paris through AI-powered audio tours. From the French Revolution to hidden neighborhoods, every story is crafted with care.
+              {t("profile.appDescription")}
             </Text>
-            <MenuItem icon="star-outline" label="Rate this App" onPress={async () => {
+            <MenuItem icon="star-outline" label={t("profile.rateApp")} onPress={async () => {
               const isAvailable = await StoreReview.isAvailableAsync();
               if (isAvailable) {
                 await StoreReview.requestReview();
@@ -288,18 +290,18 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Legal</Text>
+          <Text style={styles.sectionTitle}>{t("profile.legal")}</Text>
           <View style={styles.menuCard}>
-            <MenuItem icon="shield-checkmark-outline" label="Privacy Policy" onPress={openPrivacyPolicy} />
+            <MenuItem icon="shield-checkmark-outline" label={t("profile.privacyPolicy")} onPress={openPrivacyPolicy} />
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>{t("profile.account")}</Text>
           <View style={styles.menuCard}>
-            <MenuItem icon="log-out-outline" label="Sign out" onPress={handleLogout} destructive />
+            <MenuItem icon="log-out-outline" label={t("profile.signOut")} onPress={handleLogout} destructive />
             <View style={styles.menuDivider} />
-            <MenuItem icon="trash-outline" label="Delete account" onPress={handleDeleteAccount} destructive />
+            <MenuItem icon="trash-outline" label={t("profile.deleteAccount")} onPress={handleDeleteAccount} destructive />
           </View>
         </View>
       </ScrollView>

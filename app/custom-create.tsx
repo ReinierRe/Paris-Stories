@@ -16,42 +16,14 @@ import { router } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { podcastLengths, checkLevelUp } from "@/constants/themes";
+import { podcastLengths, checkLevelUp, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 import { auth as firebaseAuth } from "@/lib/firebase";
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  en: "English",
-  nl: "Nederlands",
-  fr: "Fran\u00e7ais",
-  de: "Deutsch",
-  es: "Espa\u00f1ol",
-};
+import { useTranslation } from "@/i18n/useTranslation";
 
 type Step = "subject" | "angle" | "length" | "confirm";
-
-const CUSTOM_ANGLES = [
-  {
-    id: "historical",
-    name: "Historical",
-    description: "Facts, dates, and chronological storytelling",
-    icon: "book-open",
-  },
-  {
-    id: "modern-culture",
-    name: "Modern Culture",
-    description: "Contemporary trends and modern-day significance",
-    icon: "trending-up",
-  },
-  {
-    id: "personal-stories",
-    name: "Personal Stories",
-    description: "Intimate anecdotes and first-person perspectives",
-    icon: "heart",
-  },
-];
 
 function ChoiceCard({
   selected,
@@ -96,6 +68,7 @@ export default function CustomCreateScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const inputRef = useRef<TextInput>(null);
+  const { t, locale } = useTranslation();
 
   const voice = (user?.preferredVoice || "female") as "male" | "female";
   const language = (user?.preferredLanguage || "nl") as "nl" | "en" | "fr" | "de";
@@ -134,19 +107,19 @@ export default function CustomCreateScreen() {
 
   const stepTitle = () => {
     switch (step) {
-      case "subject": return "Your subject";
-      case "angle": return "Choose your angle";
-      case "length": return "Podcast length";
-      case "confirm": return "Ready to create";
+      case "subject": return t("customCreate.yourSubject");
+      case "angle": return t("customCreate.chooseAngle");
+      case "length": return t("customCreate.podcastLength");
+      case "confirm": return t("customCreate.readyToCreate");
     }
   };
 
   const stepSubtitle = () => {
     switch (step) {
-      case "subject": return "What Paris story would you like to hear?";
-      case "angle": return "How should we tell this story?";
-      case "length": return "How long should the podcast be?";
-      case "confirm": return `Your podcast about "${trimmedSubject}" is ready to be created`;
+      case "subject": return t("customCreate.whatStory");
+      case "angle": return t("customCreate.howToTell");
+      case "length": return t("customCreate.howLong");
+      case "confirm": return t("customCreate.yourPodcastReady");
     }
   };
 
@@ -178,9 +151,9 @@ export default function CustomCreateScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setTimeout(() => {
         Alert.alert(
-          `Level Up: ${newLevel.name}!`,
-          newLevel.description,
-          [{ text: "Merci!", style: "default" }]
+          t("customize.levelUp", { level: getLocalizedName(newLevel, locale) }),
+          getLocalizedDescription(newLevel, locale),
+          [{ text: t("customize.merci"), style: "default" }]
         );
       }, 1500);
     }
@@ -192,7 +165,6 @@ export default function CustomCreateScreen() {
 
     const podcastId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     const selectedLength = podcastLengths.find((l) => l.id === length);
-    const selectedAngle = CUSTOM_ANGLES.find((a) => a.id === angle);
 
     const newPodcast: Podcast = {
       id: podcastId,
@@ -234,10 +206,10 @@ export default function CustomCreateScreen() {
         let errorData: any = {};
         try { errorData = await res.json(); } catch {}
         if (errorData.code === "CUSTOM_LIMIT_REACHED") {
-          Alert.alert("Limit Reached", "You have used all 5 free custom podcasts. You can still create unlimited podcasts from the curated library.");
+          Alert.alert(t("customCreate.limitReachedTitle"), t("customCreate.limitReachedMessage"));
           setCustomRemaining(0);
         } else {
-          Alert.alert("Topic Not Suitable", "This topic is not suitable for Paris Stories. Please choose a topic related to Paris, its culture, history, or daily life.");
+          Alert.alert(t("customCreate.topicNotSuitable"), t("customCreate.limitReachedMessage"));
         }
         setIsGenerating(false);
         return;
@@ -312,13 +284,13 @@ export default function CustomCreateScreen() {
       }
     } catch (error) {
       console.error("Custom generation failed:", error);
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      Alert.alert(t("common.error"), t("errors.somethingWentWrong"));
       setIsGenerating(false);
     }
   };
 
   const selectedLength = podcastLengths.find((l) => l.id === length);
-  const selectedAngle = CUSTOM_ANGLES.find((a) => a.id === angle);
+  const selectedAngleName = angle === "historical" ? t("customCreate.angleHistorical") : angle === "modern-culture" ? t("customCreate.angleModernCulture") : angle === "personal-stories" ? t("customCreate.anglePersonalStories") : angle;
 
   const renderStepContent = () => {
     switch (step) {
@@ -329,7 +301,7 @@ export default function CustomCreateScreen() {
               <TextInput
                 ref={inputRef}
                 style={styles.subjectInput}
-                placeholder="e.g., The hidden passages of Paris, Hemingway's favorite bars..."
+                placeholder={t("customCreate.placeholder")}
                 placeholderTextColor={Colors.light.textTertiary}
                 value={subject}
                 onChangeText={setSubject}
@@ -341,10 +313,10 @@ export default function CustomCreateScreen() {
               <Text style={styles.charCount}>{subject.length}/200</Text>
             </View>
             <Text style={styles.inputHint}>
-              Enter any Paris-related subject. The AI will craft a unique podcast story about it.
+              {t("customCreate.inputHint")}
             </Text>
             <Text style={styles.aiDisclosure}>
-              Your podcast will be generated using AI. See our Privacy Policy for details.
+              {t("customize.aiDisclosure")}
             </Text>
           </View>
         );
@@ -352,16 +324,27 @@ export default function CustomCreateScreen() {
       case "angle":
         return (
           <View style={styles.choicesContainer}>
-            {CUSTOM_ANGLES.map((a) => (
-              <ChoiceCard
-                key={a.id}
-                selected={angle === a.id}
-                onPress={() => setAngle(a.id)}
-                icon={<Feather name={a.icon as any} size={20} color={angle === a.id ? Colors.light.accent : Colors.light.textSecondary} />}
-                title={a.name}
-                subtitle={a.description}
-              />
-            ))}
+            <ChoiceCard
+              selected={angle === "historical"}
+              onPress={() => setAngle("historical")}
+              icon={<Feather name="book-open" size={20} color={angle === "historical" ? Colors.light.accent : Colors.light.textSecondary} />}
+              title={t("customCreate.angleHistorical")}
+              subtitle={t("customCreate.angleHistoricalDesc")}
+            />
+            <ChoiceCard
+              selected={angle === "modern-culture"}
+              onPress={() => setAngle("modern-culture")}
+              icon={<Feather name="trending-up" size={20} color={angle === "modern-culture" ? Colors.light.accent : Colors.light.textSecondary} />}
+              title={t("customCreate.angleModernCulture")}
+              subtitle={t("customCreate.angleModernCultureDesc")}
+            />
+            <ChoiceCard
+              selected={angle === "personal-stories"}
+              onPress={() => setAngle("personal-stories")}
+              icon={<Feather name="heart" size={20} color={angle === "personal-stories" ? Colors.light.accent : Colors.light.textSecondary} />}
+              title={t("customCreate.anglePersonalStories")}
+              subtitle={t("customCreate.anglePersonalStoriesDesc")}
+            />
           </View>
         );
 
@@ -374,7 +357,7 @@ export default function CustomCreateScreen() {
                 selected={length === l.id}
                 onPress={() => setLength(l.id)}
                 icon={<Feather name="clock" size={20} color={length === l.id ? Colors.light.accent : Colors.light.textSecondary} />}
-                title={l.name}
+                title={getLocalizedName(l, locale)}
                 subtitle={l.duration}
               />
             ))}
@@ -386,36 +369,36 @@ export default function CustomCreateScreen() {
           <View style={styles.confirmContainer}>
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subject</Text>
+                <Text style={styles.summaryLabel}>{t("customCreate.yourSubject")}</Text>
                 <Text style={styles.summaryValue} numberOfLines={2}>{trimmedSubject}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Angle</Text>
-                <Text style={styles.summaryValue}>{selectedAngle?.name}</Text>
+                <Text style={styles.summaryLabel}>{t("customize.angle")}</Text>
+                <Text style={styles.summaryValue}>{selectedAngleName}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Length</Text>
-                <Text style={styles.summaryValue}>{selectedLength?.name} ({selectedLength?.duration})</Text>
+                <Text style={styles.summaryLabel}>{t("customize.length")}</Text>
+                <Text style={styles.summaryValue}>{selectedLength ? getLocalizedName(selectedLength, locale) : ""} ({selectedLength?.duration})</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Language</Text>
-                <Text style={styles.summaryValue}>{LANGUAGE_LABELS[language] || language}</Text>
+                <Text style={styles.summaryLabel}>{t("customize.languageLabel")}</Text>
+                <Text style={styles.summaryValue}>{t(`languages.${language}`)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Voice</Text>
-                <Text style={styles.summaryValue}>{voice === "female" ? "Female" : "Male"}</Text>
+                <Text style={styles.summaryLabel}>{t("customize.voiceLabel")}</Text>
+                <Text style={styles.summaryValue}>{voice === "female" ? t("customize.female") : t("customize.male")}</Text>
               </View>
             </View>
 
             <Text style={styles.confirmNote}>
-              Language and voice can be changed in your profile settings.
+              {t("customize.languageVoiceNote")}
             </Text>
             <Text style={styles.aiDisclosure}>
-              Your podcast will be generated using AI. See our Privacy Policy for details.
+              {t("customize.aiDisclosure")}
             </Text>
           </View>
         );
@@ -443,16 +426,16 @@ export default function CustomCreateScreen() {
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 }}>
           <Ionicons name="lock-closed-outline" size={48} color={Colors.light.textTertiary} />
           <Text style={{ fontSize: 22, fontFamily: "DMSans_700Bold", color: Colors.light.text, textAlign: "center", marginTop: 20 }}>
-            Custom podcast limit reached
+            {t("customCreate.customPodcastLimitReached")}
           </Text>
           <Text style={{ fontSize: 15, fontFamily: "DMSans_400Regular", color: Colors.light.textSecondary, textAlign: "center", marginTop: 12, lineHeight: 22 }}>
-            You have used all 5 free custom podcasts. You can still create unlimited podcasts from our curated library.
+            {t("customCreate.limitReachedDescription")}
           </Text>
           <Pressable
             style={({ pressed }) => [styles.nextButton, pressed && styles.buttonPressed, { marginTop: 32, width: "100%" }]}
             onPress={() => { router.back(); }}
           >
-            <Text style={styles.nextButtonText}>Browse Library</Text>
+            <Text style={styles.nextButtonText}>{t("customCreate.browseLibrary")}</Text>
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </Pressable>
         </View>
@@ -495,13 +478,13 @@ export default function CustomCreateScreen() {
         <View style={styles.stepHeader}>
           <View style={styles.customBadge}>
             <Feather name="edit-3" size={12} color={Colors.light.accent} />
-            <Text style={styles.customBadgeText}>Custom Podcast</Text>
+            <Text style={styles.customBadgeText}>{t("podcasts.custom")}</Text>
           </View>
           <Text style={styles.stepTitle}>{stepTitle()}</Text>
           <Text style={styles.stepSubtitle}>{stepSubtitle()}</Text>
           {customRemaining !== null && step === "subject" && (
             <Text style={{ fontSize: 13, fontFamily: "DMSans_400Regular", color: Colors.light.textTertiary, marginTop: 4 }}>
-              {customRemaining} of 5 free custom podcasts remaining
+              {t("customCreate.remaining", { count: customRemaining })}
             </Text>
           )}
         </View>
@@ -525,7 +508,7 @@ export default function CustomCreateScreen() {
             ) : (
               <>
                 <Ionicons name="sparkles" size={18} color="#FFFFFF" />
-                <Text style={styles.generateButtonText}>Create Podcast</Text>
+                <Text style={styles.generateButtonText}>{t("customize.createPodcast")}</Text>
               </>
             )}
           </Pressable>
@@ -539,7 +522,7 @@ export default function CustomCreateScreen() {
             onPress={handleNext}
             disabled={!canProceed}
           >
-            <Text style={styles.nextButtonText}>Continue</Text>
+            <Text style={styles.nextButtonText}>{t("customize.continue")}</Text>
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </Pressable>
         )}

@@ -4,6 +4,7 @@ import { Platform, StyleSheet, useColorScheme, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import Colors from "@/constants/colors";
+import { useTranslation } from "@/i18n/useTranslation";
 
 let liquidGlassAvailable = false;
 if (Platform.OS !== "web") {
@@ -26,20 +27,21 @@ if (liquidGlassAvailable) {
 }
 
 function NativeTabLayout() {
+  const { t } = useTranslation();
   if (!NativeTabs || !Icon || !Label) return <ClassicTabLayout />;
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person", selected: "person.fill" }} />
-        <Label>My Profile</Label>
+        <Label>{t("tabs.myProfile")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "books.vertical", selected: "books.vertical.fill" }} />
-        <Label>Library</Label>
+        <Label>{t("tabs.library")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="podcasts">
         <Icon sf={{ default: "headphones", selected: "headphones" }} />
-        <Label>My Podcasts</Label>
+        <Label>{t("tabs.myPodcasts")}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -50,6 +52,7 @@ function ClassicTabLayout() {
   const isDark = colorScheme === "dark";
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -89,7 +92,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "My Profile",
+          title: t("tabs.myProfile"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
@@ -98,7 +101,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Library",
+          title: t("tabs.library"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="library-outline" size={size} color={color} />
           ),
@@ -107,7 +110,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="podcasts"
         options={{
-          title: "My Podcasts",
+          title: t("tabs.myPodcasts"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="headset-outline" size={size} color={color} />
           ),

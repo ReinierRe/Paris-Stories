@@ -27,6 +27,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-g
 import Colors from "@/constants/colors";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { apiRequest } from "@/lib/query-client";
+import { useTranslation } from "@/i18n/useTranslation";
 
 const DELETE_THRESHOLD = -80;
 const SNAP_OPEN = -88;
@@ -42,9 +43,11 @@ function formatDuration(seconds?: number): string {
 function SwipeablePodcastCard({
   podcast,
   onDelete,
+  t,
 }: {
   podcast: Podcast;
   onDelete: (id: string) => void;
+  t: (key: string, options?: Record<string, any>) => string;
 }) {
   const translateX = useSharedValue(0);
   const isOpen = useSharedValue(false);
@@ -59,14 +62,14 @@ function SwipeablePodcastCard({
   const triggerDelete = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     Alert.alert(
-      "Delete Podcast",
-      `Are you sure you want to delete "${podcast.title}"?`,
+      t("podcasts.deleteTitle"),
+      t("podcasts.deleteMessage", { title: podcast.title }),
       [
-        { text: "Cancel", style: "cancel", onPress: () => { translateX.value = withSpring(0, { damping: 20 }); isOpen.value = false; } },
-        { text: "Delete", style: "destructive", onPress: () => { onDelete(podcast.id); } },
+        { text: t("common.cancel"), style: "cancel", onPress: () => { translateX.value = withSpring(0, { damping: 20 }); isOpen.value = false; } },
+        { text: t("common.delete"), style: "destructive", onPress: () => { onDelete(podcast.id); } },
       ]
     );
-  }, [podcast.id, podcast.title, onDelete]);
+  }, [podcast.id, podcast.title, onDelete, t]);
 
   const panGesture = Gesture.Pan()
     .activeOffsetX([-10, 10])
@@ -143,8 +146,9 @@ function SwipeablePodcastCard({
   };
 
   const languageFlag = podcast.language.toUpperCase();
-  const voiceLabel = podcast.voice === "male" ? "Male" : "Female";
+  const voiceLabel = podcast.voice === "male" ? t("podcasts.maleVoice") : t("podcasts.femaleVoice");
   const duration = formatDuration(podcast.durationSeconds);
+  const langKey = `languages.${podcast.language}` as const;
 
   return (
     <View style={styles.swipeContainer}>
@@ -164,7 +168,7 @@ function SwipeablePodcastCard({
         <Animated.View style={[styles.podcastCard, cardStyle]}>
           <View style={styles.podcastCardContent}>
             <View style={styles.podcastInfo}>
-              <Text style={[styles.podcastTheme, podcast.isCustom && styles.podcastThemeCustom]}>{podcast.isCustom ? "Custom" : podcast.theme}</Text>
+              <Text style={[styles.podcastTheme, podcast.isCustom && styles.podcastThemeCustom]}>{podcast.isCustom ? t("podcasts.custom") : podcast.theme}</Text>
               <Text style={styles.podcastTitle} numberOfLines={2}>
                 {podcast.title}
               </Text>
@@ -193,18 +197,10 @@ function SwipeablePodcastCard({
                 ) : null}
                 <Text style={styles.podcastStatus}>
                   {podcast.status === "generating"
-                    ? "Generating..."
+                    ? t("podcasts.statusGenerating")
                     : podcast.status === "error"
-                      ? "Failed"
-                      : podcast.language === "nl"
-                        ? "Nederlands"
-                        : podcast.language === "fr"
-                          ? "Français"
-                          : podcast.language === "de"
-                            ? "Deutsch"
-                            : podcast.language === "es"
-                              ? "Español"
-                              : "English"}
+                      ? t("podcasts.statusFailed")
+                      : t(langKey)}
                 </Text>
               </View>
             </View>
@@ -216,13 +212,13 @@ function SwipeablePodcastCard({
   );
 }
 
-function EmptyState() {
+function EmptyState({ t }: { t: (key: string) => string }) {
   return (
     <View style={styles.emptyState}>
       <Ionicons name="headset-outline" size={48} color={Colors.light.textTertiary} />
-      <Text style={styles.emptyTitle}>No podcasts yet</Text>
+      <Text style={styles.emptyTitle}>{t("podcasts.emptyTitle")}</Text>
       <Text style={styles.emptyDescription}>
-        Browse the library and create your first personalized Paris podcast
+        {t("podcasts.emptyDescription")}
       </Text>
     </View>
   );
@@ -232,6 +228,7 @@ export default function PodcastsScreen() {
   const { podcasts, isLoading, removePodcast } = usePodcasts();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { t } = useTranslation();
 
   const handleDelete = useCallback(async (id: string) => {
     const podcast = podcasts.find((p) => p.id === id);
@@ -254,13 +251,16 @@ export default function PodcastsScreen() {
     );
   }
 
+  const readyCount = podcasts.filter((p) => p.status === "ready").length;
+  const generatingCount = podcasts.filter((p) => p.status === "generating").length;
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <FlatList
         data={podcasts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <SwipeablePodcastCard podcast={item} onDelete={handleDelete} />
+          <SwipeablePodcastCard podcast={item} onDelete={handleDelete} t={t} />
         )}
         contentContainerStyle={[
           styles.listContent,
@@ -271,16 +271,15 @@ export default function PodcastsScreen() {
         ListHeaderComponent={
           podcasts.length > 0 ? (
             <View style={styles.headerSection}>
-              <Text style={styles.headerTitle}>My Podcasts</Text>
+              <Text style={styles.headerTitle}>{t("podcasts.title")}</Text>
               <Text style={styles.headerSubtitle}>
-                {podcasts.filter((p) => p.status === "ready").length} ready
-                {podcasts.some((p) => p.status === "generating") &&
-                  ` | ${podcasts.filter((p) => p.status === "generating").length} generating`}
+                {t("podcasts.ready", { count: readyCount })}
+                {generatingCount > 0 && ` | ${t("podcasts.generating", { count: generatingCount })}`}
               </Text>
             </View>
           ) : null
         }
-        ListEmptyComponent={<EmptyState />}
+        ListEmptyComponent={<EmptyState t={t} />}
         scrollEnabled={podcasts.length > 0}
       />
     </GestureHandlerRootView>

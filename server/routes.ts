@@ -369,7 +369,82 @@ function getLanguageKey(language: string): "en" | "nl" | "fr" | "de" | "es" {
   return "en";
 }
 
-function getSystemPrompt(language: string, perspective: string, wordCount: number, googleVoiceType?: VoiceType): string {
+interface SiblingAngle {
+  name: string;
+  description: string;
+}
+
+const themeAngleDefinitions: Record<string, { id: string; names: Record<string, string>; descriptions: Record<string, string> }[]> = {
+  revolution: [
+    { id: "historical", names: { en: "Historical", nl: "Historisch", fr: "Historique", de: "Historisch", es: "Histórico" }, descriptions: { en: "Facts, dates, and chronological storytelling", nl: "Feiten, data en chronologisch vertellen", fr: "Faits, dates et récit chronologique", de: "Fakten, Daten und chronologisches Erzählen", es: "Hechos, fechas y narración cronológica" } },
+    { id: "personal-stories", names: { en: "Personal Stories", nl: "Persoonlijke Verhalen", fr: "Histoires personnelles", de: "Persönliche Geschichten", es: "Historias personales" }, descriptions: { en: "The story told from the iconic figures involved", nl: "Het verhaal verteld vanuit de iconische figuren", fr: "L'histoire racontée du point de vue des personnages emblématiques", de: "Die Geschichte aus der Perspektive der beteiligten ikonischen Figuren", es: "La historia contada desde las figuras icónicas involucradas" } },
+  ],
+  museums: [
+    { id: "origin", names: { en: "Origin of the Museum", nl: "Ontstaan van het Museum", fr: "Origine du Musée", de: "Ursprung des Museums", es: "Origen del Museo" }, descriptions: { en: "The founding story and how the museum came to be", nl: "Het ontstaansverhaal en hoe het museum tot stand kwam", fr: "L'histoire de sa fondation et comment le musée est né", de: "Die Gründungsgeschichte und wie das Museum entstand", es: "La historia de su fundación y cómo nació el museo" } },
+    { id: "prominent-art", names: { en: "Prominent Art Pieces", nl: "Prominente Kunstwerken", fr: "Œuvres d'art emblématiques", de: "Bedeutende Kunstwerke", es: "Obras de arte destacadas" }, descriptions: { en: "The most famous and significant works in the collection", nl: "De beroemdste en belangrijkste werken in de collectie", fr: "Les œuvres les plus célèbres et les plus importantes de la collection", de: "Die berühmtesten und bedeutendsten Werke der Sammlung", es: "Las obras más famosas e importantes de la colección" } },
+    { id: "architecture", names: { en: "Architecture & Building", nl: "Architectuur & Gebouw", fr: "Architecture & Bâtiment", de: "Architektur & Gebäude", es: "Arquitectura & Edificio" }, descriptions: { en: "The architectural story and design of the building itself", nl: "Het architectuurverhaal en het ontwerp van het gebouw zelf", fr: "L'histoire architecturale et le design du bâtiment lui-même", de: "Die architektonische Geschichte und Gestaltung des Gebäudes selbst", es: "La historia arquitectónica y el diseño del edificio en sí" } },
+  ],
+  neighborhoods: [
+    { id: "historical", names: { en: "Historical", nl: "Historisch", fr: "Historique", de: "Historisch", es: "Histórico" }, descriptions: { en: "The origins and historical evolution of this neighborhood", nl: "De oorsprong en historische ontwikkeling van deze buurt", fr: "Les origines et l'évolution historique de ce quartier", de: "Die Ursprünge und die historische Entwicklung dieses Viertels", es: "Los orígenes y la evolución histórica de este barrio" } },
+    { id: "cultural", names: { en: "Cultural", nl: "Cultureel", fr: "Culturel", de: "Kulturell", es: "Cultural" }, descriptions: { en: "Art, food, lifestyle, and cultural significance", nl: "Kunst, eten, levensstijl en culturele betekenis", fr: "Art, gastronomie, mode de vie et importance culturelle", de: "Kunst, Essen, Lebensstil und kulturelle Bedeutung", es: "Arte, gastronomía, estilo de vida e importancia cultural" } },
+    { id: "modern-times", names: { en: "Modern Times", nl: "Moderne Tijd", fr: "Époque moderne", de: "Moderne Zeit", es: "Tiempos modernos" }, descriptions: { en: "What the neighborhood looks like today and how it has evolved", nl: "Hoe de buurt er vandaag uitziet en hoe deze is geëvolueerd", fr: "À quoi ressemble le quartier aujourd'hui et comment il a évolué", de: "Wie das Viertel heute aussieht und wie es sich entwickelt hat", es: "Cómo se ve el barrio hoy y cómo ha evolucionado" } },
+    { id: "walking-tour", names: { en: "Walking Tour", nl: "Wandeltour", fr: "Visite à pied", de: "Rundgang", es: "Paseo guiado" }, descriptions: { en: "A guided walk past the best and most famous places in the area", nl: "Een begeleide wandeling langs de beste en beroemdste plekken", fr: "Une promenade guidée devant les meilleurs endroits du quartier", de: "Ein geführter Spaziergang an den besten und berühmtesten Orten", es: "Un paseo guiado por los mejores y más famosos lugares de la zona" } },
+  ],
+};
+
+const topicToThemeMap: Record<string, string> = {
+  "bastille": "revolution", "bastille-walk": "revolution", "marie-antoinette": "revolution",
+  "danton": "revolution", "reign-of-terror": "revolution", "conciergerie-walk": "revolution",
+  "napoleon": "revolution", "charlotte-corday": "revolution",
+  "louvre": "museums", "orsay": "museums", "pompidou": "museums", "orangerie": "museums",
+  "bourse-commerce": "museums", "rodin": "museums", "fondation-lv": "museums", "musee-carnavalet": "museums",
+  "montmartre": "neighborhoods", "montmartre-walk": "neighborhoods", "le-marais": "neighborhoods",
+  "pigalle": "neighborhoods", "saint-germain": "neighborhoods", "latin-quarter": "neighborhoods",
+  "belleville": "neighborhoods", "ile-de-la-cite": "neighborhoods",
+};
+
+function getSiblingAngles(topicId: string | undefined, currentPerspective: string, language: string): SiblingAngle[] {
+  if (!topicId || !currentPerspective) return [];
+  const themeId = topicToThemeMap[topicId];
+  if (!themeId) return [];
+  const angles = themeAngleDefinitions[themeId];
+  if (!angles) return [];
+  const langKey = getLanguageKey(language);
+  return angles
+    .filter(a => a.id !== currentPerspective)
+    .map(a => ({ name: a.names[langKey] || a.names.en, description: a.descriptions[langKey] || a.descriptions.en }));
+}
+
+function buildFocusGuidance(siblingAngles: SiblingAngle[], language: string): string {
+  if (siblingAngles.length === 0) return "";
+  const langKey = getLanguageKey(language);
+  const angleList = siblingAngles.map(a => `- "${a.name}": ${a.description}`).join("\n");
+  const templates: Record<string, string> = {
+    nl: `\n\n## Focusbegeleiding
+Er bestaan aparte afleveringen over dit onderwerp vanuit andere invalshoeken:
+${angleList}
+Omdat de luisteraar die apart kan beluisteren, hoef je daar niet uitgebreid over te praten. Noem deze onderwerpen alleen kort als het echt relevant is voor jouw verhaal, maar besteed er geen grote passages aan.`,
+    fr: `\n\n## Guide de focus
+Il existe des épisodes séparés sur ce sujet avec d'autres perspectives :
+${angleList}
+Comme l'auditeur peut les écouter séparément, ne vous attardez pas sur ces sujets. Mentionnez-les brièvement uniquement si c'est vraiment pertinent pour votre récit, mais n'y consacrez pas de longs passages.`,
+    de: `\n\n## Fokus-Leitfaden
+Es gibt separate Folgen zu diesem Thema aus anderen Blickwinkeln:
+${angleList}
+Da der Zuhörer diese separat anhören kann, musst du darauf nicht ausführlich eingehen. Erwähne diese Themen nur kurz, wenn es wirklich relevant für deine Geschichte ist, aber widme ihnen keine langen Abschnitte.`,
+    es: `\n\n## Guía de enfoque
+Existen episodios separados sobre este tema desde otras perspectivas:
+${angleList}
+Como el oyente puede escucharlos por separado, no necesitas hablar extensamente sobre ellos. Menciona estos temas solo brevemente si es realmente relevante para tu historia, pero no les dediques pasajes largos.`,
+    en: `\n\n## Focus Guidance
+There are separate episodes about this topic from other perspectives:
+${angleList}
+Since the listener can listen to those separately, do not spend much time on those areas. Only mention them briefly if truly relevant to your story, but do not dedicate long passages to them.`,
+  };
+  return templates[langKey] || templates.en;
+}
+
+function getSystemPrompt(language: string, perspective: string, wordCount: number, googleVoiceType?: VoiceType, siblingAngles?: SiblingAngle[]): string {
   const langKey = getLanguageKey(language);
 
   const perspectiveMap: Record<string, Record<string, string>> = {
@@ -581,7 +656,11 @@ To sound natural, follow these rules:
 - End with an interesting fact or a thought that lingers.${googleVoiceType ? getGoogleTtsInstructions("en", googleVoiceType) : ""}`,
   };
 
-  return prompts[langKey] || prompts.en;
+  const focusGuidance = siblingAngles && siblingAngles.length > 0
+    ? buildFocusGuidance(siblingAngles, language)
+    : "";
+
+  return (prompts[langKey] || prompts.en) + focusGuidance;
 }
 
 function findDataChunk(wav: Buffer): { offset: number; size: number } | null {
@@ -928,7 +1007,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ jobId, status: "generating" });
 
       const googleVoiceType = getGoogleVoiceType(voice, language);
-      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, googleVoiceType);
+      const siblingAngles = getSiblingAngles(topicId, perspective, language);
+      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, googleVoiceType, siblingAngles);
       const userPrompt = language === "nl"
         ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)`
         : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
@@ -1061,7 +1141,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const customGoogleVoiceType = getGoogleVoiceType(voice, language);
 
-      const systemPrompt = language === "nl"
+      const customAngleNames: Record<string, Record<string, string>> = {
+        historical: { en: "Historical", nl: "Historisch", fr: "Historique", de: "Historisch", es: "Histórico" },
+        "modern-culture": { en: "Modern Culture", nl: "Hedendaagse Cultuur", fr: "Culture moderne", de: "Moderne Kultur", es: "Cultura moderna" },
+        "personal-stories": { en: "Personal Stories", nl: "Persoonlijke Verhalen", fr: "Histoires personnelles", de: "Persönliche Geschichten", es: "Historias personales" },
+      };
+      const customAngleDescriptions: Record<string, Record<string, string>> = {
+        historical: { en: "Facts, dates, and chronological storytelling", nl: "Feiten, data en chronologisch vertellen", fr: "Faits, dates et récit chronologique", de: "Fakten, Daten und chronologisches Erzählen", es: "Hechos, fechas y narración cronológica" },
+        "modern-culture": { en: "Contemporary culture, modern-day significance, and current trends", nl: "Hedendaagse cultuur, moderne betekenis en huidige trends", fr: "Culture contemporaine, signification moderne et tendances actuelles", de: "Zeitgenössische Kultur, moderne Bedeutung und aktuelle Trends", es: "Cultura contemporánea, importancia moderna y tendencias actuales" },
+        "personal-stories": { en: "Personal, intimate stories through the eyes of real people", nl: "Persoonlijke, intieme verhalen door de ogen van echte mensen", fr: "Histoires personnelles et intimes à travers les yeux de vraies personnes", de: "Persönliche, intime Geschichten durch die Augen echter Menschen", es: "Historias personales e íntimas a través de los ojos de personas reales" },
+      };
+      const customLangKey = getLanguageKey(language);
+      const customSiblingAngles: SiblingAngle[] = Object.keys(customAngleMap)
+        .filter(a => a !== angle)
+        .map(a => ({
+          name: customAngleNames[a]?.[customLangKey] || customAngleNames[a]?.en || a,
+          description: customAngleDescriptions[a]?.[customLangKey] || customAngleDescriptions[a]?.en || "",
+        }));
+      const customFocusGuidance = buildFocusGuidance(customSiblingAngles, language);
+
+      const systemPrompt = (language === "nl"
         ? `## Jouw Rol
 Je bent een deskundige solo-podcastverteller. Je bent een ervaren gids die met de luisteraar door Parijs wandelt. Je vertelstijl is warm maar nuchter. Je deelt feiten en achtergronden op een toegankelijke, ontspannen manier. Je schrijft in vloeiend, natuurlijk Nederlands.
 
@@ -1111,7 +1210,7 @@ To sound natural, follow these rules:
 - Write in flowing paragraphs without headings or bullet points.
 - Use 'you' to build a direct connection with the listener.
 - Length: write approximately ${wordCount || 400} words.
-- End with an interesting fact or a thought that lingers.${customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`;
+- End with an interesting fact or a thought that lingers.${customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`) + customFocusGuidance;
 
       const userPrompt = language === "nl"
         ? `Schrijf een podcast over: ${subject} (in de context van Parijs)`

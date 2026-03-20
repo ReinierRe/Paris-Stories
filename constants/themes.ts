@@ -1087,6 +1087,30 @@ export const userLevels: UserLevel[] = [
   },
 ];
 
+type SupportedLanguage = "en" | "nl" | "fr" | "de" | "es";
+
+const langSuffixMap: Record<SupportedLanguage, string> = {
+  en: "",
+  nl: "Nl",
+  fr: "Fr",
+  de: "De",
+  es: "Es",
+};
+
+export function getLocalizedName(item: Theme | Topic | Angle | UserLevel, language: string): string {
+  const lang = (language in langSuffixMap ? language : "en") as SupportedLanguage;
+  const suffix = langSuffixMap[lang];
+  const key = suffix ? `name${suffix}` : "name";
+  return (item as Record<string, string>)[key] || item.name;
+}
+
+export function getLocalizedDescription(item: Theme | Topic | Angle | UserLevel, language: string): string {
+  const lang = (language in langSuffixMap ? language : "en") as SupportedLanguage;
+  const suffix = langSuffixMap[lang];
+  const key = suffix ? `description${suffix}` : "description";
+  return (item as Record<string, string>)[key] || item.description;
+}
+
 export function getUserLevel(podcastCount: number): UserLevel {
   for (let i = userLevels.length - 1; i >= 0; i--) {
     if (podcastCount >= userLevels[i].minPodcasts) {

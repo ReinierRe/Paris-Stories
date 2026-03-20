@@ -1098,28 +1098,40 @@ export const userLevels: UserLevel[] = [
   },
 ];
 
-type SupportedLanguage = "en" | "nl" | "fr" | "de" | "es";
-
-const langSuffixMap: Record<SupportedLanguage, string> = {
-  en: "",
-  nl: "Nl",
-  fr: "Fr",
-  de: "De",
-  es: "Es",
-};
-
-export function getLocalizedName(item: Theme | Topic | Angle | UserLevel | PodcastLength, language: string): string {
-  const lang = (language in langSuffixMap ? language : "en") as SupportedLanguage;
-  const suffix = langSuffixMap[lang];
-  const key = suffix ? `name${suffix}` : "name";
-  return (item as Record<string, string>)[key] || item.name;
+interface Localizable {
+  name: string;
+  nameNl: string;
+  nameFr: string;
+  nameDe: string;
+  nameEs: string;
 }
 
-export function getLocalizedDescription(item: Theme | Topic | Angle | UserLevel | PodcastLength, language: string): string {
-  const lang = (language in langSuffixMap ? language : "en") as SupportedLanguage;
-  const suffix = langSuffixMap[lang];
-  const key = suffix ? `description${suffix}` : "description";
-  return (item as Record<string, string>)[key] || item.description;
+interface LocalizableWithDescription extends Localizable {
+  description: string;
+  descriptionNl: string;
+  descriptionFr: string;
+  descriptionDe: string;
+  descriptionEs: string;
+}
+
+export function getLocalizedName(item: Localizable, language: string): string {
+  switch (language) {
+    case "nl": return item.nameNl;
+    case "fr": return item.nameFr;
+    case "de": return item.nameDe;
+    case "es": return item.nameEs;
+    default: return item.name;
+  }
+}
+
+export function getLocalizedDescription(item: LocalizableWithDescription, language: string): string {
+  switch (language) {
+    case "nl": return item.descriptionNl;
+    case "fr": return item.descriptionFr;
+    case "de": return item.descriptionDe;
+    case "es": return item.descriptionEs;
+    default: return item.description;
+  }
 }
 
 export function getUserLevel(podcastCount: number): UserLevel {

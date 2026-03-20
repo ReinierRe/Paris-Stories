@@ -1,4 +1,5 @@
 import { I18n } from "i18n-js";
+import { getLocales } from "expo-localization";
 import en from "./en";
 import nl from "./nl";
 import fr from "./fr";
@@ -14,7 +15,11 @@ const i18n = new I18n({
 });
 
 i18n.defaultLocale = "en";
-i18n.locale = "en";
 i18n.enableFallback = true;
+
+const supportedLocales = ["en", "nl", "fr", "de", "es"];
+const deviceLocales = getLocales();
+const deviceLang = deviceLocales?.[0]?.languageCode ?? "en";
+i18n.locale = supportedLocales.includes(deviceLang) ? deviceLang : "en";
 
 export default i18n;

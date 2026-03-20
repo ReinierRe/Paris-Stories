@@ -51,6 +51,7 @@
     "firebase-admin": "^13.6.1",
     "google-auth-library": "^10.5.0",
     "http-proxy-middleware": "^3.0.5",
+    "i18n-js": "^4.5.3",
     "p-limit": "^7.3.0",
     "p-retry": "^7.1.1",
     "pg": "^8.16.3",

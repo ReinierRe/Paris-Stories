@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import i18n from "./index";
 import type { Theme, Topic, Angle, UserLevel } from "@/constants/themes";
+import type { PodcastLength } from "@/constants/themes";
 
 type SupportedLanguage = "en" | "nl" | "fr" | "de" | "es";
 
@@ -13,19 +14,23 @@ const suffixMap: Record<SupportedLanguage, string> = {
   es: "Es",
 };
 
-type LocalizableItem = Theme | Topic | Angle | UserLevel | { name: string; nameNl?: string; nameFr?: string; nameDe?: string; nameEs?: string; description?: string; descriptionNl?: string; descriptionFr?: string; descriptionDe?: string; descriptionEs?: string };
+type LocalizableItem = Theme | Topic | Angle | UserLevel | PodcastLength;
 
 export function useTranslation() {
   const { user } = useAuth();
-  const locale = (user?.preferredLanguage || "en") as SupportedLanguage;
+  const preferredLocale = (user?.preferredLanguage || "en") as SupportedLanguage;
+
+  i18n.locale = preferredLocale;
+
+  const [, setRenderKey] = useState(0);
 
   useEffect(() => {
-    i18n.locale = locale;
-  }, [locale]);
+    setRenderKey((k) => k + 1);
+  }, [preferredLocale]);
 
   return {
     t: i18n.t.bind(i18n),
-    locale,
+    locale: preferredLocale,
   };
 }
 

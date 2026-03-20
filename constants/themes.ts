@@ -1003,7 +1003,18 @@ export const themes: Theme[] = [
   },
 ];
 
-export const podcastLengths = [
+export interface PodcastLength {
+  id: string;
+  name: string;
+  nameNl: string;
+  nameFr: string;
+  nameDe: string;
+  nameEs: string;
+  duration: string;
+  words: number;
+}
+
+export const podcastLengths: PodcastLength[] = [
   { id: "short", name: "Short", nameNl: "Kort", nameFr: "Court", nameDe: "Kurz", nameEs: "Corto", duration: "~3 min", words: 400 },
   { id: "long", name: "Long", nameNl: "Lang", nameFr: "Long", nameDe: "Lang", nameEs: "Largo", duration: "~8 min", words: 1100 },
 ];
@@ -1097,14 +1108,14 @@ const langSuffixMap: Record<SupportedLanguage, string> = {
   es: "Es",
 };
 
-export function getLocalizedName(item: Theme | Topic | Angle | UserLevel, language: string): string {
+export function getLocalizedName(item: Theme | Topic | Angle | UserLevel | PodcastLength, language: string): string {
   const lang = (language in langSuffixMap ? language : "en") as SupportedLanguage;
   const suffix = langSuffixMap[lang];
   const key = suffix ? `name${suffix}` : "name";
   return (item as Record<string, string>)[key] || item.name;
 }
 
-export function getLocalizedDescription(item: Theme | Topic | Angle | UserLevel, language: string): string {
+export function getLocalizedDescription(item: Theme | Topic | Angle | UserLevel | PodcastLength, language: string): string {
   const lang = (language in langSuffixMap ? language : "en") as SupportedLanguage;
   const suffix = langSuffixMap[lang];
   const key = suffix ? `description${suffix}` : "description";

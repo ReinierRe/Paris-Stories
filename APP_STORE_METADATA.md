@@ -9,7 +9,7 @@ Alle secties zijn klaar om in te vullen.
 
 **App Name**: Paris Stories
 **Bundle ID**: com.greenhome.parisstories
-**Primary Language**: English (U.S.)
+**Primary Language**: English (U.K.)
 **Category**: Education
 **Secondary Category**: Travel
 
@@ -21,7 +21,7 @@ Voeg in App Store Connect elke taal toe via "Localizations" en kopieer de bijbeh
 
 ---
 
-### 🇬🇧 English (U.S.) — Primary
+### 🇬🇧 English (U.K.) — Primary
 
 **Subtitle** (max 30 tekens):
 ```

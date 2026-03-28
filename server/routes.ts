@@ -23,6 +23,7 @@ import {
   getCustomAnglePerspectives,
   getWalkingTourPerspective,
   getPrivacyPolicyHtml,
+  getCityName,
 } from "./city-prompts";
 
 const anthropic = new Anthropic({

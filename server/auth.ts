@@ -46,7 +46,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ error: "User not found" });
     }
 
-    (req as any).user = { id: user.id, email: user.email, firstName: user.firstName, preferredLanguage: user.preferredLanguage, preferredVoice: user.preferredVoice };
+    (req as any).user = { id: user.id, email: user.email, firebaseUid: user.firebaseUid, firstName: user.firstName, preferredLanguage: user.preferredLanguage, preferredVoice: user.preferredVoice };
     return next();
   } catch (err) {
     console.error("Auth verification error:", err);
@@ -138,6 +138,11 @@ export async function setupAuth(app: Express): Promise<void> {
       }
 
       const firebaseUid = user.firebaseUid;
+      if (!firebaseUid) {
+        console.error("Delete account: missing firebaseUid for user", user.id);
+        return res.status(500).json({ error: "Failed to delete account" });
+      }
+
       await deleteUserAndData(user.id);
 
       const remainingAccounts = await countUserCityAccounts(firebaseUid);

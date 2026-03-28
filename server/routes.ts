@@ -12,6 +12,18 @@ import { db } from "./storage";
 import { cachedPodcasts, customPodcasts, userPodcasts } from "@shared/schema";
 import { desc } from "drizzle-orm";
 import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
+import {
+  cityPromptConfig,
+  getCityName as getCityLocalizedName,
+  getRoleDescription,
+  getCuratedUserPrompt,
+  getCustomUserPrompts,
+  getModerationPrompt,
+  getModerationRejectMessage,
+  getCustomAnglePerspectives,
+  getWalkingTourPerspective,
+  getPrivacyPolicyHtml,
+} from "./city-prompts";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
@@ -504,13 +516,7 @@ function getSystemPrompt(language: string, perspective: string, wordCount: numbe
       de: "Erzaehle die Geschichte, wie dieser Ort heute aussieht und sich anfuehlt. Was hat sich in den letzten Jahrzehnten veraendert? Wie spielt sich das moderne Leben hier ab? Fange die zeitgenoessische Atmosphaere ein.",
       es: "Cuenta la historia de como se ve y se siente este lugar hoy. Que ha cambiado en las ultimas decadas? Como se desarrolla la vida moderna aqui? Captura la atmosfera contemporanea.",
     },
-    "walking-tour": {
-      en: "Guide the listener as if walking through Paris together. Describe what they would see, hear, and smell. Take them to the best and most famous places in the area. Use directional language and vivid sensory details.",
-      nl: "Begeleid de luisteraar alsof je samen door Parijs wandelt. Beschrijf wat ze zouden zien, horen en ruiken. Neem ze mee naar de beste en beroemdste plekken in het gebied. Gebruik richtinggevende taal en levendige zintuiglijke details.",
-      fr: "Guidez l'auditeur comme si vous marchiez ensemble dans Paris. Decrivez ce qu'il verrait, entendrait et sentirait. Emmenez-le aux meilleurs endroits et aux plus celebres du quartier. Utilisez un langage directionnel et des details sensoriels vivants.",
-      de: "Fuehre den Zuhoerer, als wuerdet ihr gemeinsam durch Paris spazieren. Beschreibe, was er sehen, hoeren und riechen wuerde. Nimm ihn mit zu den besten und beruehmtesten Orten der Gegend. Verwende Richtungsangaben und lebendige sensorische Details.",
-      es: "Guia al oyente como si caminaran juntos por Paris. Describe lo que veria, escucharia y oleria. Lleva al oyente a los mejores y mas famosos lugares de la zona. Usa lenguaje direccional y detalles sensoriales vividos.",
-    },
+    "walking-tour": getWalkingTourPerspective(),
   };
 
   const defaultStyle: Record<string, string> = {
@@ -524,9 +530,11 @@ function getSystemPrompt(language: string, perspective: string, wordCount: numbe
     ? (perspectiveMap[perspective]?.[langKey] || defaultStyle[langKey])
     : defaultStyle[langKey];
 
+  const roles = getRoleDescription(langKey);
+
   const prompts: Record<string, string> = {
     nl: `## Jouw Rol
-Je bent een deskundige solo-podcastverteller. Je bent een ervaren gids die met de luisteraar door Parijs wandelt. Je vertelstijl is warm maar nuchter. Je deelt feiten en achtergronden op een toegankelijke, ontspannen manier. Je schrijft in vloeiend, natuurlijk Nederlands.
+${roles.nl}
 
 ## Perspectief
 ${perspectiveText}
@@ -552,7 +560,7 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Eindig met een interessant feit of een gedachte die blijft hangen.${googleVoiceType ? getGoogleTtsInstructions("nl", googleVoiceType) : ""}`,
 
     fr: `## Votre Role
-Vous etes un narrateur de podcast solo expert. Vous etes un guide experimente qui marche dans Paris avec l'auditeur. Votre style est chaleureux mais ancre dans les faits. Vous partagez des faits et du contexte de maniere accessible et detendue. Vous ecrivez en francais fluide et naturel.
+${roles.fr}
 
 ## Perspective
 ${perspectiveText}
@@ -578,7 +586,7 @@ Pour sonner naturellement, suivez ces regles:
 - Terminez avec un fait interessant ou une pensee qui reste.${googleVoiceType ? getGoogleTtsInstructions("fr", googleVoiceType) : ""}`,
 
     de: `## Deine Rolle
-Du bist ein sachkundiger Solo-Podcast-Erzaehler. Du bist ein erfahrener Guide, der mit dem Zuhoerer durch Paris spaziert. Dein Stil ist warm, aber sachlich. Du teilst Fakten und Hintergruende auf zugaengliche, entspannte Weise. Du schreibst in fliessendem, natuerlichem Deutsch.
+${roles.de}
 
 ## Perspektive
 ${perspectiveText}
@@ -604,7 +612,7 @@ Um natuerlich zu klingen, befolge diese Regeln:
 - Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${googleVoiceType ? getGoogleTtsInstructions("de", googleVoiceType) : ""}`,
 
     es: `## Tu Rol
-Eres un narrador experto de podcast en solitario. Eres un guia experimentado que camina por Paris con el oyente. Tu estilo es calido pero basado en hechos. Compartes datos y contexto de manera accesible y relajada. Escribes en espanol fluido y natural.
+${roles.es}
 
 ## Perspectiva
 ${perspectiveText}
@@ -630,7 +638,7 @@ Para sonar natural, sigue estas reglas:
 - Termina con un hecho interesante o un pensamiento que permanezca.${googleVoiceType ? getGoogleTtsInstructions("es", googleVoiceType) : ""}`,
 
     en: `## Your Role
-You are a knowledgeable solo podcast storyteller. You are an experienced guide walking through Paris with the listener. Your style is warm but grounded. You share facts and context in an accessible, relaxed way. You write in fluent, natural English.
+${roles.en}
 
 ## Perspective
 ${perspectiveText}
@@ -1009,9 +1017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const googleVoiceType = getGoogleVoiceType(voice, language);
       const siblingAngles = getSiblingAngles(topicId, perspective, language);
       const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, googleVoiceType, siblingAngles);
-      const userPrompt = language === "nl"
-        ? `Schrijf een podcast over: ${topicName} (thema: ${themeName} in Parijs)`
-        : `Write a podcast about: ${topicName} (theme: ${themeName} in Paris)`;
+      const userPrompt = getCuratedUserPrompt(language, topicName, themeName);
 
       generateScriptAndAudio({
         systemPrompt,
@@ -1110,12 +1116,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           max_tokens: 20,
           messages: [{
             role: "user",
-            content: `You are a content moderator. Determine if the following podcast topic is appropriate for a general audience. The topic should be related to Paris, France, travel, culture, history, food, or similar subjects. Reject topics that are: sexually explicit, promoting violence or hate, about illegal activities, about weapons or drugs, or completely unrelated to Paris/France.\n\nTopic: "${subject}"\n\nRespond with ONLY "ALLOW" or "REJECT".`,
+            content: getModerationPrompt(subject),
           }],
         });
         const moderationResult = (moderationResponse.content[0] as any)?.text?.trim().toUpperCase();
         if (moderationResult !== "ALLOW") {
-          return res.status(400).json({ error: "This topic is not suitable for Paris Stories. Please choose a topic related to Paris, its culture, history, or daily life." });
+          return res.status(400).json({ error: getModerationRejectMessage() });
         }
       } catch (modErr) {
         console.error("Content moderation check failed:", modErr);
@@ -1130,13 +1136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           de: "Verwende einen faktenbasierten, chronologischen Erzaehlansatz. Nenne konkrete Daten, Namen und historischen Kontext. Verwebe die Fakten zu einer fesselnden Erzaehlung statt einer trockenen Zusammenfassung.",
           es: "Utiliza un enfoque narrativo factual y cronologico. Incluye fechas, nombres y contexto historico especificos. Teje los hechos en una narrativa cautivadora en lugar de un resumen seco.",
         },
-        "modern-culture": {
-          en: "Focus on contemporary culture, modern-day significance, current trends, and how this topic connects to life in Paris today.",
-          nl: "Focus op hedendaagse cultuur, de moderne betekenis, huidige trends en hoe dit onderwerp aansluit bij het leven in Parijs vandaag.",
-          fr: "Concentrez-vous sur la culture contemporaine, la signification moderne, les tendances actuelles et comment ce sujet se connecte a la vie a Paris aujourd'hui.",
-          de: "Konzentriere dich auf zeitgenoessische Kultur, moderne Bedeutung, aktuelle Trends und wie dieses Thema mit dem Leben im heutigen Paris zusammenhaengt.",
-          es: "Concentrate en la cultura contemporanea, la importancia moderna, las tendencias actuales y como este tema se conecta con la vida en el Paris de hoy.",
-        },
+        "modern-culture": getCustomAnglePerspectives()["modern-culture"],
         "personal-stories": {
           en: "Tell personal, intimate stories. Use anecdotes, first-person perspectives, and emotional storytelling to bring this topic to life through the eyes of real people.",
           nl: "Vertel persoonlijke, intieme verhalen. Gebruik anekdotes, eerstepersoonperspectieven en emotioneel vertellen om dit onderwerp tot leven te brengen door de ogen van echte mensen.",
@@ -1169,9 +1169,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       const customFocusGuidance = buildFocusGuidance(customSiblingAngles, language);
 
+      const customRoles = getRoleDescription(customLangKey);
+
       const customPrompts: Record<string, string> = {
         nl: `## Jouw Rol
-Je bent een deskundige solo-podcastverteller. Je bent een ervaren gids die met de luisteraar door Parijs wandelt. Je vertelstijl is warm maar nuchter. Je deelt feiten en achtergronden op een toegankelijke, ontspannen manier. Je schrijft in vloeiend, natuurlijk Nederlands.
+${customRoles.nl}
 
 ## Perspectief
 ${angleText}
@@ -1197,7 +1199,7 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Eindig met een interessant feit of een gedachte die blijft hangen.${customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType) : ""}`,
 
         fr: `## Votre Role
-Vous etes un narrateur de podcast solo expert. Vous etes un guide experimente qui marche dans Paris avec l'auditeur. Votre style est chaleureux mais ancre dans les faits. Vous partagez des faits et du contexte de maniere accessible et detendue. Vous ecrivez en francais fluide et naturel.
+${customRoles.fr}
 
 ## Perspective
 ${angleText}
@@ -1223,7 +1225,7 @@ Pour sonner naturellement, suivez ces regles:
 - Terminez avec un fait interessant ou une pensee qui reste.${customGoogleVoiceType ? getGoogleTtsInstructions("fr", customGoogleVoiceType) : ""}`,
 
         de: `## Deine Rolle
-Du bist ein sachkundiger Solo-Podcast-Erzaehler. Du bist ein erfahrener Guide, der mit dem Zuhoerer durch Paris spaziert. Dein Stil ist warm, aber sachlich. Du teilst Fakten und Hintergruende auf zugaengliche, entspannte Weise. Du schreibst in fliessendem, natuerlichem Deutsch.
+${customRoles.de}
 
 ## Perspektive
 ${angleText}
@@ -1249,7 +1251,7 @@ Um natuerlich zu klingen, befolge diese Regeln:
 - Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${customGoogleVoiceType ? getGoogleTtsInstructions("de", customGoogleVoiceType) : ""}`,
 
         es: `## Tu Rol
-Eres un narrador experto de podcast en solitario. Eres un guia experimentado que camina por Paris con el oyente. Tu estilo es calido pero basado en hechos. Compartes datos y contexto de manera accesible y relajada. Escribes en espanol fluido y natural.
+${customRoles.es}
 
 ## Perspectiva
 ${angleText}
@@ -1275,7 +1277,7 @@ Para sonar natural, sigue estas reglas:
 - Termina con un hecho interesante o un pensamiento que permanezca.${customGoogleVoiceType ? getGoogleTtsInstructions("es", customGoogleVoiceType) : ""}`,
 
         en: `## Your Role
-You are a knowledgeable solo podcast storyteller. You are an experienced guide walking through Paris with the listener. Your style is warm but grounded. You share facts and context in an accessible, relaxed way. You write in fluent, natural English.
+${customRoles.en}
 
 ## Perspective
 ${angleText}
@@ -1303,13 +1305,7 @@ To sound natural, follow these rules:
 
       const systemPrompt = (customPrompts[customLangKey] || customPrompts.en) + customFocusGuidance;
 
-      const customUserPrompts: Record<string, string> = {
-        nl: `Schrijf een podcast over: ${subject} (in de context van Parijs)`,
-        fr: `Ecrivez un podcast sur: ${subject} (dans le contexte de Paris)`,
-        de: `Schreibe einen Podcast ueber: ${subject} (im Kontext von Paris)`,
-        es: `Escribe un podcast sobre: ${subject} (en el contexto de Paris)`,
-        en: `Write a podcast about: ${subject} (in the context of Paris)`,
-      };
+      const customUserPrompts = getCustomUserPrompts(customLangKey, subject);
       const userPrompt = customUserPrompts[customLangKey] || customUserPrompts.en;
 
       const jobId = generateId();
@@ -1612,76 +1608,7 @@ To sound natural, follow these rules:
   app.get("/privacy-policy", (_req: Request, res: Response) => {
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
-    res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy Policy - Paris Stories</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F6F1; color: #1A1A2E; line-height: 1.7; padding: 20px; }
-  .container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
-  h1 { font-size: 28px; margin-bottom: 8px; color: #1A1A2E; }
-  .date { color: #888; font-size: 14px; margin-bottom: 32px; }
-  h2 { font-size: 20px; margin-top: 28px; margin-bottom: 12px; color: #1A1A2E; }
-  p, li { font-size: 15px; margin-bottom: 12px; }
-  ul { padding-left: 20px; }
-  a { color: #C4A265; }
-</style>
-</head>
-<body>
-<div class="container">
-<h1>Privacy Policy</h1>
-<p class="date">Last updated: February 20, 2026</p>
-
-<p>Paris Stories ("we", "our", or "the app") is committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
-
-<h2>1. Data We Collect</h2>
-<ul>
-<li><strong>Account information:</strong> When you create an account, we collect your email address and first name.</li>
-<li><strong>Podcast data:</strong> We store the podcasts you create and listen to, including custom topics you enter.</li>
-<li><strong>Usage data:</strong> Basic usage information such as which features you use, to improve the app.</li>
-</ul>
-
-<h2>2. How We Use Your Data</h2>
-<ul>
-<li>To provide and improve our podcast generation service.</li>
-<li>To save your podcast library across devices.</li>
-<li>To authenticate your account securely via Firebase Authentication.</li>
-</ul>
-
-<h2>3. AI-Generated Content</h2>
-<p>Paris Stories uses artificial intelligence to create podcast scripts. When you request a podcast, your chosen topic is sent to <strong>Anthropic Claude</strong>, a third-party AI service, which generates the script. The generated script is then converted to audio using <strong>Google Cloud Text-to-Speech</strong>.</p>
-<p>Your topic input is processed by these AI services solely for the purpose of generating your podcast. We do not use your input to train AI models. Anthropic and Google process this data according to their own privacy policies.</p>
-
-<h2>4. Third-Party Services</h2>
-<p>We use the following third-party services:</p>
-<ul>
-<li><strong>Firebase Authentication</strong> (Google) for secure account management.</li>
-<li><strong>Anthropic Claude</strong> (Anthropic) for AI-powered script generation. Your podcast topic is sent to this service.</li>
-<li><strong>Google Cloud Text-to-Speech</strong> (Google) for converting scripts to spoken audio.</li>
-</ul>
-<p>These services have their own privacy policies. We do not sell your data to third parties.</p>
-
-<h2>5. Data Storage</h2>
-<p>Your data is stored securely on our servers. Audio files are stored in cloud object storage. We retain your data as long as your account is active.</p>
-
-<h2>6. Your Rights</h2>
-<ul>
-<li><strong>Delete your account:</strong> You can delete your account and all associated data at any time from the Profile screen in the app.</li>
-<li><strong>Access your data:</strong> You can view all your podcasts and account information within the app.</li>
-<li><strong>Contact us:</strong> For any privacy-related questions, contact us at vragen@greenhome.nl.</li>
-</ul>
-
-<h2>7. Children's Privacy</h2>
-<p>Paris Stories is not intended for children under 13. We do not knowingly collect data from children.</p>
-
-<h2>8. Changes to This Policy</h2>
-<p>We may update this policy from time to time. We will notify users of significant changes through the app.</p>
-</div>
-</body>
-</html>`);
+    res.send(getPrivacyPolicyHtml());
   });
 
   const httpServer = createServer(app);

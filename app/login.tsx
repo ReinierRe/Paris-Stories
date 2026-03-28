@@ -22,55 +22,14 @@ import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiUrl } from "@/lib/query-client";
+import { onboardingSlides, OnboardingSlide } from "@/constants/onboarding";
+import city from "@/constants/city";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type Mode = "login" | "register";
 
-interface Slide {
-  id: string;
-  title: string;
-  subtitle: string;
-  features?: { icon: string; text: string }[];
-}
-
-const slides: Slide[] = [
-  {
-    id: "welcome",
-    title: "Discover the\nReal Paris",
-    subtitle: "Tailored history, culture, and local tales — brought to life through immersive audio stories.",
-  },
-  {
-    id: "audio-tours",
-    title: "Immersive\nAudio Tours",
-    subtitle: "Expertly crafted podcasts for museums, landmarks, and neighborhoods — available in multiple languages.",
-    features: [
-      { icon: "headset", text: "Professional narration" },
-      { icon: "language", text: "Multiple languages" },
-      { icon: "timer", text: "Short & long formats" },
-    ],
-  },
-  {
-    id: "real-paris",
-    title: "Stories That\nCome Alive",
-    subtitle: "Explore the French Revolution, hidden neighborhoods, iconic buildings, and centuries of fascinating history.",
-    features: [
-      { icon: "time", text: "Rich historical depth" },
-      { icon: "map", text: "Neighborhood guides" },
-      { icon: "restaurant", text: "Culinary traditions" },
-    ],
-  },
-  {
-    id: "custom",
-    title: "Create Your\nOwn Adventure",
-    subtitle: "Tell the AI your interests and get a personalized story — your own private Paris guide.",
-    features: [
-      { icon: "sparkles", text: "AI-powered stories" },
-      { icon: "create", text: "Choose your angle" },
-      { icon: "heart", text: "Save your favorites" },
-    ],
-  },
-];
+const slides = onboardingSlides;
 
 function PhoneMockup({ children }: { children: React.ReactNode }) {
   return (
@@ -104,7 +63,7 @@ function PodcastItem({ category, title, voice, duration, lang, color }: {
   );
 }
 
-function SlideContent({ slide, index }: { slide: Slide; index: number }) {
+function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number }) {
   const categoryIcons = [
     { name: "History", image: require("@/assets/images/category-history.png") },
     { name: "Revolution", image: require("@/assets/images/category-french-revolution.png") },
@@ -149,7 +108,7 @@ function SlideContent({ slide, index }: { slide: Slide; index: number }) {
     return (
       <View style={slideStyles.visualContainer}>
         <PhoneMockup>
-          <Text style={mockupStyles.screenTitle}>Paris Stories</Text>
+          <Text style={mockupStyles.screenTitle}>{city.appName}</Text>
           <Text style={mockupStyles.screenSubtitle}>Explore categories</Text>
           <View style={mockupStyles.categoryList}>
             {categoryIcons.slice(0, 5).map((cat, i) => (
@@ -179,7 +138,7 @@ function SlideContent({ slide, index }: { slide: Slide; index: number }) {
                 <Text style={mockupStyles.customLabel}>CUSTOM PODCAST</Text>
               </View>
               <Text style={mockupStyles.customTitle}>Your subject</Text>
-              <Text style={mockupStyles.customSubtitle}>What Paris story would you like?</Text>
+              <Text style={mockupStyles.customSubtitle}>What {city.name} story would you like?</Text>
               <View style={mockupStyles.textareaBox}>
                 <Text style={mockupStyles.textareaText}>I am visiting Montmartre, tell me about Picasso's life here</Text>
               </View>
@@ -291,7 +250,7 @@ export default function LoginScreen() {
     setResetSent(false);
   };
 
-  const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
+  const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => {
     return (
       <View style={[slideStyles.slide, { width: SCREEN_WIDTH }]}>
         <ScrollView

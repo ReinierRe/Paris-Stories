@@ -1019,6 +1019,8 @@ export const podcastLengths: PodcastLength[] = [
   { id: "long", name: "Long", nameNl: "Lang", nameFr: "Long", nameDe: "Lang", nameEs: "Largo", duration: "~8 min", words: 1100 },
 ];
 
+import city from "./city";
+
 export interface UserLevel {
   id: string;
   name: string;
@@ -1035,68 +1037,21 @@ export interface UserLevel {
   descriptionEs: string;
 }
 
-export const userLevels: UserLevel[] = [
-  {
-    id: "traveler",
-    name: "Traveler",
-    nameNl: "Reiziger",
-    nameFr: "Voyageur",
-    nameDe: "Reisender",
-    nameEs: "Viajero",
-    icon: "airplane-outline",
-    minPodcasts: 0,
-    description: "Just getting started on your Paris journey",
-    descriptionNl: "Net begonnen aan je Parijse reis",
-    descriptionFr: "Vous commencez tout juste votre voyage parisien",
-    descriptionDe: "Gerade am Anfang Ihrer Pariser Reise",
-    descriptionEs: "Acabas de empezar tu viaje por París",
-  },
-  {
-    id: "explorer",
-    name: "Explorer",
-    nameNl: "Ontdekker",
-    nameFr: "Explorateur",
-    nameDe: "Entdecker",
-    nameEs: "Explorador",
-    icon: "compass-outline",
-    minPodcasts: 5,
-    description: "Discovering the hidden stories of Paris",
-    descriptionNl: "De verborgen verhalen van Parijs ontdekken",
-    descriptionFr: "À la découverte des histoires cachées de Paris",
-    descriptionDe: "Die verborgenen Geschichten von Paris entdecken",
-    descriptionEs: "Descubriendo las historias ocultas de París",
-  },
-  {
-    id: "connoisseur",
-    name: "Connoisseur",
-    nameNl: "Kenner",
-    nameFr: "Connaisseur",
-    nameDe: "Kenner",
-    nameEs: "Conocedor",
-    icon: "wine-outline",
-    minPodcasts: 15,
-    description: "A true connoisseur of Parisian culture",
-    descriptionNl: "Een echte kenner van de Parijse cultuur",
-    descriptionFr: "Un vrai connaisseur de la culture parisienne",
-    descriptionDe: "Ein wahrer Kenner der Pariser Kultur",
-    descriptionEs: "Un verdadero conocedor de la cultura parisina",
-  },
-  {
-    id: "parisien",
-    name: "Parisien",
-    nameNl: "Parisien",
-    nameFr: "Parisien",
-    nameDe: "Parisien",
-    nameEs: "Parisien",
-    icon: "star-outline",
-    minPodcasts: 30,
-    description: "You know Paris like a true local",
-    descriptionNl: "Je kent Parijs als een echte local",
-    descriptionFr: "Vous connaissez Paris comme un vrai local",
-    descriptionDe: "Sie kennen Paris wie ein wahrer Einheimischer",
-    descriptionEs: "Conoces París como un verdadero local",
-  },
-];
+export const userLevels: UserLevel[] = city.userLevels.map((level) => ({
+  id: level.id,
+  name: level.name.en,
+  nameNl: level.name.nl,
+  nameFr: level.name.fr,
+  nameDe: level.name.de,
+  nameEs: level.name.es,
+  icon: level.icon,
+  minPodcasts: level.minPodcasts,
+  description: level.description.en,
+  descriptionNl: level.description.nl,
+  descriptionFr: level.description.fr,
+  descriptionDe: level.description.de,
+  descriptionEs: level.description.es,
+}));
 
 interface Localizable {
   name: string;

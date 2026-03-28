@@ -20,14 +20,19 @@ server/           - Express backend
   storage.ts      - Database client and user queries
   tts.ts          - TTS interface (Google Cloud Text-to-Speech)
   google-tts.ts   - Google Cloud Text-to-Speech client (Chirp 3 HD / Neural2 / Wavenet voices)
+  city-prompts.ts - City-specific AI prompt config (role descriptions, moderation, privacy policy)
 shared/           - Shared types and database schema
   schema.ts       - Drizzle ORM table definitions (users, cachedPodcasts, customPodcasts, userPodcasts)
 components/       - React Native components
 contexts/         - React contexts (Auth, Podcast)
 constants/        - Theme and color constants
+  city.ts         - City identity config (name, localizations, user levels) — single source of truth
+  onboarding.ts   - Login/onboarding slide content (derived from city.ts)
+  themes.ts       - Curated themes, topics, angles, podcast lengths, user levels
 assets/           - Images and icons
 podcast-audio/    - Generated audio files
 patches/          - npm patch files
+CITY_SETUP.md     - White-label duplication guide
 ```
 
 ## Key Scripts
@@ -80,6 +85,7 @@ See `APP_STORE_METADATA.md` for complete App Store Connect metadata including:
 - Apple Developer Team ID, App Store Connect App ID, and Apple ID must be filled in `eas.json` submit section
 
 ## Recent Changes
+- 2026-03-28: White-label prep — centralized all city-specific content for easy duplication. Created `constants/city.ts` (frontend city config), `server/city-prompts.ts` (backend AI prompt config), `constants/onboarding.ts` (login slides). Updated i18n files to use `%{city}` interpolation (auto-injected by `useTranslation` hook). User levels in `themes.ts` now derived from `city.ts`. AI prompts (role descriptions, moderation, user prompts, walking-tour/modern-culture perspectives) and privacy policy HTML all read from `city-prompts.ts`. See `CITY_SETUP.md` for full duplication guide.
 - 2026-03-12: App Store launch prep — EAS build configuration (eas.json), deployment configured (autoscale), metadata updated with Spanish language, AI model references removed from descriptions, privacy policy email updated to vragen@greenhome.nl.
 - 2026-02-27: Fixed SSML tags showing in French/German/Spanish transcripts — added markdown code fence stripping, improved SSML detection based on voice type instead of content parsing.
 - 2026-02-27: Fixed custom podcast error handling — moderation rejections now show friendly in-app alerts instead of console errors, fixed split bundle error from dynamic imports.

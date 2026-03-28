@@ -23,6 +23,8 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isNewUser: boolean;
+  clearNewUser: () => void;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, firstName: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -47,6 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  const clearNewUser = useCallback(() => setIsNewUser(false), []);
 
   const verifyWithBackend = useCallback(async (idToken: string): Promise<{ user: AuthUser | null; error?: string }> => {
     try {
@@ -132,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result.user) {
         setUser(result.user);
         setToken(idToken);
+        setIsNewUser(true);
         return { success: true };
       }
       return { success: false, error: result.error || "Failed to verify with server" };
@@ -237,6 +243,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token,
       isLoading,
       isAuthenticated: !!user && !!token,
+      isNewUser,
+      clearNewUser,
       login,
       register,
       logout,
@@ -244,7 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetPassword,
       updatePreferences,
     }),
-    [user, token, isLoading, login, register, logout, deleteAccount, resetPassword, updatePreferences],
+    [user, token, isLoading, isNewUser, clearNewUser, login, register, logout, deleteAccount, resetPassword, updatePreferences],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

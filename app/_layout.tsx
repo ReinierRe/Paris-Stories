@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -66,7 +66,18 @@ function RootLayoutNav() {
 }
 
 function AuthGate() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isNewUser, clearNewUser } = useAuth();
+  const hasNavigatedNewUser = useRef(false);
+
+  useEffect(() => {
+    if (isAuthenticated && isNewUser && !hasNavigatedNewUser.current) {
+      hasNavigatedNewUser.current = true;
+      setTimeout(() => {
+        router.replace("/(tabs)/profile");
+        clearNewUser();
+      }, 100);
+    }
+  }, [isAuthenticated, isNewUser, clearNewUser]);
 
   if (isLoading) {
     return (

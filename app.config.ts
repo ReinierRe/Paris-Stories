@@ -12,7 +12,12 @@ const CITY_CONFIGS: Record<string, { name: string; slug: string; bundleId: strin
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const cityId = process.env.EXPO_PUBLIC_CITY_ID || "paris";
-  const cityConfig = CITY_CONFIGS[cityId] || CITY_CONFIGS.paris;
+  const cityConfig = CITY_CONFIGS[cityId];
+  if (!cityConfig) {
+    throw new Error(
+      `Unknown EXPO_PUBLIC_CITY_ID: "${cityId}". Add this city to CITY_CONFIGS in app.config.ts before building.`
+    );
+  }
 
   return {
     ...config,

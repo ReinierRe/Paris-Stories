@@ -152,6 +152,8 @@ function generateId(): string {
 }
 
 interface GenerationJob {
+  userId: string;
+  cityId: string;
   status: "generating" | "ready" | "error";
   progress?: string;
   result?: {
@@ -951,6 +953,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
+    const userId = (req as any).user?.id;
+    const { cityId } = getCityFromRequest(req);
+    if (job.userId !== userId || job.cityId !== cityId) {
+      return res.status(404).json({ error: "Job not found" });
+    }
     res.json({
       status: job.status,
       progress: job.progress,
@@ -1030,6 +1037,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const jobId = generateId();
       generationJobs.set(jobId, {
+        userId,
+        cityId,
         status: "generating",
         progress: "Starting...",
         createdAt: Date.now(),
@@ -1337,6 +1346,8 @@ To sound natural, follow these rules:
 
       const jobId = generateId();
       generationJobs.set(jobId, {
+        userId,
+        cityId,
         status: "generating",
         progress: "Starting...",
         createdAt: Date.now(),

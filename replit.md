@@ -37,6 +37,9 @@ constants/        - Theme and color constants
 assets/           - Images and icons
 podcast-audio/    - Generated audio files (local cache)
 patches/          - npm patch files
+scripts/          - Database migration scripts
+  multi-tenant-migration.sql - Reproducible multi-tenant schema + Paris seed
+app.config.ts     - Dynamic Expo config (reads EXPO_PUBLIC_CITY_ID for per-city builds)
 CITY_SETUP.md     - Multi-tenant city setup guide
 ```
 
@@ -91,7 +94,7 @@ See `APP_STORE_METADATA.md` for complete App Store Connect metadata including:
 - Apple Developer Team ID, App Store Connect App ID, and Apple ID must be filled in `eas.json` submit section
 
 ## Recent Changes
-- 2026-03-28: Multi-tenant refactor — single server now serves multiple city apps. Added `cities` table with all city config (AI prompts, localized names, user levels). Added `cityId` column to all tables (users, cached_podcasts, custom_podcasts, user_podcasts) with updated unique indexes. Created `server/city-middleware.ts` (X-City-Id header resolution, DB city config loading with 5-min cache). Refactored `server/city-prompts.ts` to accept City param from DB instead of global constants. All DB queries in routes.ts, storage.ts, auth.ts now scoped by cityId. Frontend sends X-City-Id header via `lib/query-client.ts` (reads from app.json extra.cityId). Privacy policy endpoint uses `?city=` query param. Paris seeded as default city. See `CITY_SETUP.md` for adding new cities.
+- 2026-03-28: Multi-tenant refactor — single server now serves multiple city apps. Added `cities` table with all city config (AI prompts, localized names, user levels). Added `cityId` column to all tables (users, cached_podcasts, custom_podcasts, user_podcasts) with updated unique indexes and FK constraints. Created `server/city-middleware.ts` (X-City-Id header resolution, DB city config loading with 5-min cache). Refactored `server/city-prompts.ts` to accept City param from DB instead of global constants. All DB queries in routes.ts, storage.ts, auth.ts now scoped by cityId. Frontend sends X-City-Id header via `lib/query-client.ts` (reads from app.json extra.cityId). Audio stream endpoint accepts `?city=` query param for native audio players. Privacy policy endpoint uses `?city=` query param. Account deletion only removes Firebase user when no other city accounts remain. Dynamic `app.config.ts` reads `EXPO_PUBLIC_CITY_ID` for per-city EAS builds. Reproducible migration script at `scripts/multi-tenant-migration.sql`. Paris seeded as default city. See `CITY_SETUP.md` for adding new cities.
 - 2026-03-28: White-label prep — centralized all city-specific content for easy duplication. Created `constants/city.ts` (frontend city config), `server/city-prompts.ts` (backend AI prompt config), `constants/onboarding.ts` (login slides). Updated i18n files to use `%{city}` interpolation (auto-injected by `useTranslation` hook). User levels in `themes.ts` now derived from `city.ts`. AI prompts (role descriptions, moderation, user prompts, walking-tour/modern-culture perspectives) and privacy policy HTML all read from `city-prompts.ts`. See `CITY_SETUP.md` for full duplication guide.
 - 2026-03-12: App Store launch prep — EAS build configuration (eas.json), deployment configured (autoscale), metadata updated with Spanish language, AI model references removed from descriptions, privacy policy email updated to vragen@greenhome.nl.
 - 2026-02-27: Fixed SSML tags showing in French/German/Spanish transcripts — added markdown code fence stripping, improved SSML detection based on voice type instead of content parsing.

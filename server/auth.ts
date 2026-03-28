@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
-import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser, deleteUserAndData, getUserCustomPodcastAudioFiles, updateUserPreferences } from "./storage";
+import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser, deleteUserAndData, getUserCustomPodcastAudioFiles, updateUserPreferences, countUserCityAccounts } from "./storage";
 import { getCityFromRequest } from "./city-middleware";
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
@@ -137,13 +137,16 @@ export async function setupAuth(app: Express): Promise<void> {
         await deleteAudioFiles(audioFiles, cityId);
       }
 
+      const firebaseUid = user.firebaseUid;
       await deleteUserAndData(user.id);
 
-      try {
-        const firebaseUser = await admin.auth().getUserByEmail(user.email);
-        await admin.auth().deleteUser(firebaseUser.uid);
-      } catch (fbErr) {
-        console.warn("Could not delete Firebase user:", fbErr);
+      const remainingAccounts = await countUserCityAccounts(firebaseUid);
+      if (remainingAccounts === 0) {
+        try {
+          await admin.auth().deleteUser(firebaseUid);
+        } catch (fbErr) {
+          console.warn("Could not delete Firebase user:", fbErr);
+        }
       }
 
       return res.json({ success: true });

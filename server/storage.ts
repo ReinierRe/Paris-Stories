@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { users, customPodcasts, userPodcasts, type User } from "@shared/schema";
 
@@ -51,6 +51,11 @@ export async function updateUserPreferences(
   if (Object.keys(updates).length === 0) return getUser(userId);
   const [user] = await db.update(users).set(updates).where(eq(users.id, userId)).returning();
   return user;
+}
+
+export async function countUserCityAccounts(firebaseUid: string): Promise<number> {
+  const result = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.firebaseUid, firebaseUid));
+  return Number(result[0]?.count ?? 0);
 }
 
 export async function deleteUserAndData(userId: string): Promise<void> {

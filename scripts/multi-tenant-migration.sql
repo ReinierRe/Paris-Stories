@@ -67,9 +67,15 @@ ALTER TABLE custom_podcasts ADD CONSTRAINT custom_podcasts_city_id_cities_id_fk 
 ALTER TABLE user_podcasts DROP CONSTRAINT IF EXISTS user_podcasts_city_id_cities_id_fk;
 ALTER TABLE user_podcasts ADD CONSTRAINT user_podcasts_city_id_cities_id_fk FOREIGN KEY (city_id) REFERENCES cities(id);
 
--- 5. Update unique indexes
+-- 5. Drop legacy unique constraints/indexes and recreate city-scoped versions
 DROP INDEX IF EXISTS users_firebase_uid_unique;
-CREATE UNIQUE INDEX IF NOT EXISTS users_email_city_idx ON users (email, city_id);
-CREATE UNIQUE INDEX IF NOT EXISTS users_firebase_uid_city_idx ON users (firebase_uid, city_id);
-CREATE UNIQUE INDEX IF NOT EXISTS cached_podcast_lookup_idx ON cached_podcasts (city_id, topic_id, angle, voice, language, length);
-CREATE UNIQUE INDEX IF NOT EXISTS user_podcast_lookup_idx ON user_podcasts (city_id, user_id, cached_podcast_id);
+DROP INDEX IF EXISTS users_email_unique;
+DROP INDEX IF EXISTS users_email_city_idx;
+DROP INDEX IF EXISTS users_firebase_uid_city_idx;
+DROP INDEX IF EXISTS cached_podcast_lookup_idx;
+DROP INDEX IF EXISTS user_podcast_lookup_idx;
+
+CREATE UNIQUE INDEX users_email_city_idx ON users (email, city_id);
+CREATE UNIQUE INDEX users_firebase_uid_city_idx ON users (firebase_uid, city_id);
+CREATE UNIQUE INDEX cached_podcast_lookup_idx ON cached_podcasts (city_id, topic_id, angle, voice, language, length);
+CREATE UNIQUE INDEX user_podcast_lookup_idx ON user_podcasts (city_id, user_id, cached_podcast_id);

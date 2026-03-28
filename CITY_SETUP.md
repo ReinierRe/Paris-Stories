@@ -40,9 +40,7 @@ Update onboarding slide content if the city warrants different highlights:
 - Category icon labels should match the new themes
 
 ### `app/login.tsx`
-The mockup content in the onboarding slides uses hardcoded example data:
-- `SlideContent` index 1: Example podcast items (topics, categories)
-- `SlideContent` index 3: Example custom podcast subject text
+Login screen renders mockup data from `constants/onboarding.ts`. Update the image map (`categoryImageMap`) if category image filenames change. No other changes needed — all data is config-driven.
 
 ## Step 3: Update i18n Strings
 

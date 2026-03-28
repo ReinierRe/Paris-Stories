@@ -68,8 +68,14 @@ ALTER TABLE user_podcasts DROP CONSTRAINT IF EXISTS user_podcasts_city_id_cities
 ALTER TABLE user_podcasts ADD CONSTRAINT user_podcasts_city_id_cities_id_fk FOREIGN KEY (city_id) REFERENCES cities(id);
 
 -- 5. Drop legacy unique constraints/indexes and recreate city-scoped versions
+-- Drop as both index and constraint for safety (one or the other may exist)
 DROP INDEX IF EXISTS users_firebase_uid_unique;
 DROP INDEX IF EXISTS users_email_unique;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_firebase_uid_unique;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_unique;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_firebase_uid_key;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key;
+
 DROP INDEX IF EXISTS users_email_city_idx;
 DROP INDEX IF EXISTS users_firebase_uid_city_idx;
 DROP INDEX IF EXISTS cached_podcast_lookup_idx;

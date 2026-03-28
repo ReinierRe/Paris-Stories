@@ -100,11 +100,12 @@ Then build with: `eas build --platform ios --profile production:amsterdam`
 
 ### Step 3: Update Content (per-city customization)
 
+City identity (name, localized names, user levels) is loaded dynamically from the server via `/api/city/config`. No code changes needed for basic identity.
+
 These files contain curated content and may need city-specific updates:
 
 - `constants/themes.ts` — Replace all curated themes, topics, and angles
 - `constants/onboarding.ts` — Update slide content for the new city
-- `constants/city.ts` — Frontend city identity (name, localizations, user levels)
 - `i18n/*.ts` — Review city-specific flavor text (most uses `%{city}` interpolation)
 - `APP_STORE_METADATA.md` — Full rewrite for the new city
 - Assets — Icons, splash screen, category images
@@ -147,7 +148,7 @@ Podcast generation jobs are scoped by `(userId, cityId)`. The job polling endpoi
 
 - [ ] City record inserted in `cities` table with all fields
 - [ ] EAS build profile created with all `EXPO_PUBLIC_*` env vars
-- [ ] `constants/city.ts` updated for frontend identity
+- [ ] Verify `/api/city/config` returns correct data with `X-City-Id` header
 - [ ] `constants/themes.ts` — All themes, topics, angles replaced
 - [ ] `constants/onboarding.ts` — Slide content updated
 - [ ] `i18n/*.ts` — City-specific text reviewed

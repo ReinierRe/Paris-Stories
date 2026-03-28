@@ -927,6 +927,23 @@ async function generateScriptAndAudio(params: {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.get("/api/city/config", (req: Request, res: Response) => {
+    const { cityConfig } = getCityFromRequest(req);
+    res.json({
+      id: cityConfig.id,
+      name: cityConfig.name,
+      country: cityConfig.country,
+      appName: cityConfig.appName,
+      bundleId: cityConfig.bundleId,
+      contactEmail: cityConfig.contactEmail,
+      privacyPolicyDate: cityConfig.privacyPolicyDate,
+      localizedNames: cityConfig.localizedNames,
+      localizedCountry: cityConfig.localizedCountry,
+      topLevelName: cityConfig.topLevelName,
+      userLevels: cityConfig.userLevels,
+    });
+  });
+
   app.use("/api/podcast/audio", express.static(AUDIO_DIR));
 
   app.get("/api/podcast/audio-stream/:filename", async (req: Request, res: Response) => {

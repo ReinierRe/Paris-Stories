@@ -1,3 +1,5 @@
+import Constants from "expo-constants";
+
 export interface CityConfig {
   id: string;
   name: string;
@@ -40,93 +42,86 @@ export interface CityConfig {
   }[];
 }
 
-const city: CityConfig = {
-  id: "paris",
-  name: "Paris",
+const extra = Constants.expoConfig?.extra ?? {};
+
+let _cityConfig: CityConfig | null = null;
+let _fetchPromise: Promise<CityConfig> | null = null;
+
+const DEFAULT_CITY: CityConfig = {
+  id: extra.cityId || "paris",
+  name: extra.cityId ? (extra.cityId.charAt(0).toUpperCase() + extra.cityId.slice(1)) : "Paris",
   country: "France",
-  appName: "Paris Stories",
-  bundleId: "app.replit.parisstories",
+  appName: Constants.expoConfig?.name || "Paris Stories",
+  bundleId: Constants.expoConfig?.ios?.bundleIdentifier || "app.replit.parisstories",
   contactEmail: "vragen@greenhome.nl",
   privacyPolicyDate: "February 20, 2026",
-
-  localizedNames: {
-    en: "Paris",
-    nl: "Parijs",
-    fr: "Paris",
-    de: "Paris",
-    es: "París",
-  },
-
-  localizedCountry: {
-    en: "France",
-    nl: "Frankrijk",
-    fr: "la France",
-    de: "Frankreich",
-    es: "Francia",
-  },
-
-  topLevelName: {
-    en: "Paris Stories",
-    nl: "Paris Stories",
-    fr: "Paris Stories",
-    de: "Paris Stories",
-    es: "Paris Stories",
-  },
-
+  localizedNames: { en: "Paris", nl: "Parijs", fr: "Paris", de: "Paris", es: "París" },
+  localizedCountry: { en: "France", nl: "Frankrijk", fr: "la France", de: "Frankreich", es: "Francia" },
+  topLevelName: { en: "Paris Stories", nl: "Paris Stories", fr: "Paris Stories", de: "Paris Stories", es: "Paris Stories" },
   userLevels: [
     {
       id: "traveler",
       icon: "airplane-outline",
       minPodcasts: 0,
       name: { en: "Traveler", nl: "Reiziger", fr: "Voyageur", de: "Reisender", es: "Viajero" },
-      description: {
-        en: "Just getting started on your Paris journey",
-        nl: "Net begonnen aan je Parijse reis",
-        fr: "Vous commencez tout juste votre voyage parisien",
-        de: "Gerade am Anfang Ihrer Pariser Reise",
-        es: "Acabas de empezar tu viaje por París",
-      },
+      description: { en: "Just getting started", nl: "Net begonnen", fr: "Vous commencez", de: "Gerade am Anfang", es: "Acabas de empezar" },
     },
     {
       id: "explorer",
       icon: "compass-outline",
       minPodcasts: 5,
       name: { en: "Explorer", nl: "Ontdekker", fr: "Explorateur", de: "Entdecker", es: "Explorador" },
-      description: {
-        en: "Discovering the hidden stories of Paris",
-        nl: "De verborgen verhalen van Parijs ontdekken",
-        fr: "À la découverte des histoires cachées de Paris",
-        de: "Die verborgenen Geschichten von Paris entdecken",
-        es: "Descubriendo las historias ocultas de París",
-      },
+      description: { en: "Discovering hidden stories", nl: "Verborgen verhalen ontdekken", fr: "Découvrir les histoires cachées", de: "Verborgene Geschichten entdecken", es: "Descubriendo historias ocultas" },
     },
     {
       id: "connoisseur",
       icon: "wine-outline",
       minPodcasts: 15,
       name: { en: "Connoisseur", nl: "Kenner", fr: "Connaisseur", de: "Kenner", es: "Conocedor" },
-      description: {
-        en: "A true connoisseur of Parisian culture",
-        nl: "Een echte kenner van de Parijse cultuur",
-        fr: "Un vrai connaisseur de la culture parisienne",
-        de: "Ein wahrer Kenner der Pariser Kultur",
-        es: "Un verdadero conocedor de la cultura parisina",
-      },
+      description: { en: "A true connoisseur", nl: "Een echte kenner", fr: "Un vrai connaisseur", de: "Ein wahrer Kenner", es: "Un verdadero conocedor" },
     },
     {
-      id: "parisien",
+      id: "local",
       icon: "star-outline",
       minPodcasts: 30,
-      name: { en: "Parisien", nl: "Parisien", fr: "Parisien", de: "Parisien", es: "Parisien" },
-      description: {
-        en: "You know Paris like a true local",
-        nl: "Je kent Parijs als een echte local",
-        fr: "Vous connaissez Paris comme un vrai local",
-        de: "Sie kennen Paris wie ein wahrer Einheimischer",
-        es: "Conoces París como un verdadero local",
-      },
+      name: { en: "Local", nl: "Local", fr: "Local", de: "Einheimischer", es: "Local" },
+      description: { en: "You know the city like a true local", nl: "Je kent de stad als een echte local", fr: "Vous connaissez la ville comme un vrai local", de: "Sie kennen die Stadt wie ein Einheimischer", es: "Conoces la ciudad como un verdadero local" },
     },
   ],
 };
 
+export async function fetchCityConfig(): Promise<CityConfig> {
+  if (_cityConfig) return _cityConfig;
+  if (_fetchPromise) return _fetchPromise;
+
+  _fetchPromise = (async () => {
+    try {
+      const { getApiUrl, getCityHeaders } = await import("@/lib/query-client");
+      const baseUrl = getApiUrl();
+      const headers = getCityHeaders();
+      const response = await fetch(`${baseUrl}/api/city/config`, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        _cityConfig = data as CityConfig;
+        return _cityConfig;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch city config, using defaults:", err);
+    }
+    _cityConfig = DEFAULT_CITY;
+    return _cityConfig;
+  })();
+
+  return _fetchPromise;
+}
+
+export function getCityConfigSync(): CityConfig {
+  return _cityConfig || DEFAULT_CITY;
+}
+
+export function setCityConfig(config: CityConfig): void {
+  _cityConfig = config;
+}
+
+const city = DEFAULT_CITY;
 export default city;

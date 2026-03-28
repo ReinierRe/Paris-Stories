@@ -1,3 +1,5 @@
+import city from "./city";
+
 export interface Topic {
   id: string;
   name: string;
@@ -1018,8 +1020,6 @@ export const podcastLengths: PodcastLength[] = [
   { id: "short", name: "Short", nameNl: "Kort", nameFr: "Court", nameDe: "Kurz", nameEs: "Corto", duration: "~3 min", words: 400 },
   { id: "long", name: "Long", nameNl: "Lang", nameFr: "Long", nameDe: "Lang", nameEs: "Largo", duration: "~8 min", words: 1100 },
 ];
-
-import city from "./city";
 
 export interface UserLevel {
   id: string;

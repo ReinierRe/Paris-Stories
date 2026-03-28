@@ -1,36 +1,17 @@
-import city from "../constants/city";
+import type { City } from "@shared/schema";
 
-export interface CityPromptConfig {
-  name: string;
-  country: string;
-  appName: string;
-  contactEmail: string;
-  privacyPolicyDate: string;
-
-  localizedNames: Record<string, string>;
-  localizedCountry: Record<string, string>;
+export function getCityName(city: City, lang: string): string {
+  const names = city.localizedNames as Record<string, string>;
+  return names[lang] || city.name;
 }
 
-export const cityPromptConfig: CityPromptConfig = {
-  name: city.name,
-  country: city.country,
-  appName: city.appName,
-  contactEmail: city.contactEmail,
-  privacyPolicyDate: city.privacyPolicyDate,
-  localizedNames: { ...city.localizedNames },
-  localizedCountry: { ...city.localizedCountry },
-};
-
-export function getCityName(lang: string): string {
-  return cityPromptConfig.localizedNames[lang] || cityPromptConfig.name;
+export function getCountryName(city: City, lang: string): string {
+  const countries = city.localizedCountry as Record<string, string>;
+  return countries[lang] || city.country;
 }
 
-export function getCountryName(lang: string): string {
-  return cityPromptConfig.localizedCountry[lang] || cityPromptConfig.country;
-}
-
-export function getRoleDescription(lang: string): Record<string, string> {
-  const c = getCityName(lang);
+export function getRoleDescription(city: City, lang: string): Record<string, string> {
+  const c = getCityName(city, lang);
   return {
     nl: `Je bent een deskundige solo-podcastverteller. Je bent een ervaren gids die met de luisteraar door ${c} wandelt. Je vertelstijl is warm maar nuchter. Je deelt feiten en achtergronden op een toegankelijke, ontspannen manier. Je schrijft in vloeiend, natuurlijk Nederlands.`,
     fr: `Vous etes un narrateur de podcast solo expert. Vous etes un guide experimente qui marche dans ${c} avec l'auditeur. Votre style est chaleureux mais ancre dans les faits. Vous partagez des faits et du contexte de maniere accessible et detendue. Vous ecrivez en francais fluide et naturel.`,
@@ -40,36 +21,35 @@ export function getRoleDescription(lang: string): Record<string, string> {
   };
 }
 
-export function getCuratedUserPrompt(lang: string, topicName: string, themeName: string): string {
-  const c = getCityName(lang);
+export function getCuratedUserPrompt(city: City, lang: string, topicName: string, themeName: string): string {
+  const c = getCityName(city, lang);
   if (lang === "nl") {
     return `Schrijf een podcast over: ${topicName} (thema: ${themeName} in ${c})`;
   }
-  return `Write a podcast about: ${topicName} (theme: ${themeName} in ${getCityName("en")})`;
+  return `Write a podcast about: ${topicName} (theme: ${themeName} in ${getCityName(city, "en")})`;
 }
 
-export function getCustomUserPrompts(lang: string, subject: string): Record<string, string> {
-  const names = cityPromptConfig.localizedNames;
+export function getCustomUserPrompts(city: City, lang: string, subject: string): Record<string, string> {
+  const names = city.localizedNames as Record<string, string>;
   return {
-    nl: `Schrijf een podcast over: ${subject} (in de context van ${names.nl || cityPromptConfig.name})`,
-    fr: `Ecrivez un podcast sur: ${subject} (dans le contexte de ${names.fr || cityPromptConfig.name})`,
-    de: `Schreibe einen Podcast ueber: ${subject} (im Kontext von ${names.de || cityPromptConfig.name})`,
-    es: `Escribe un podcast sobre: ${subject} (en el contexto de ${names.es || cityPromptConfig.name})`,
-    en: `Write a podcast about: ${subject} (in the context of ${names.en || cityPromptConfig.name})`,
+    nl: `Schrijf een podcast over: ${subject} (in de context van ${names.nl || city.name})`,
+    fr: `Ecrivez un podcast sur: ${subject} (dans le contexte de ${names.fr || city.name})`,
+    de: `Schreibe einen Podcast ueber: ${subject} (im Kontext von ${names.de || city.name})`,
+    es: `Escribe un podcast sobre: ${subject} (en el contexto de ${names.es || city.name})`,
+    en: `Write a podcast about: ${subject} (in the context of ${names.en || city.name})`,
   };
 }
 
-export function getModerationPrompt(subject: string): string {
-  const { name, country } = cityPromptConfig;
-  return `You are a content moderator. Determine if the following podcast topic is appropriate for a general audience. The topic should be related to ${name}, ${country}, travel, culture, history, food, or similar subjects. Reject topics that are: sexually explicit, promoting violence or hate, about illegal activities, about weapons or drugs, or completely unrelated to ${name}/${country}.\n\nTopic: "${subject}"\n\nRespond with ONLY "ALLOW" or "REJECT".`;
+export function getModerationPrompt(city: City, subject: string): string {
+  return `You are a content moderator. Determine if the following podcast topic is appropriate for a general audience. The topic should be related to ${city.name}, ${city.country}, travel, culture, history, food, or similar subjects. Reject topics that are: sexually explicit, promoting violence or hate, about illegal activities, about weapons or drugs, or completely unrelated to ${city.name}/${city.country}.\n\nTopic: "${subject}"\n\nRespond with ONLY "ALLOW" or "REJECT".`;
 }
 
-export function getModerationRejectMessage(): string {
-  return `This topic is not suitable for ${cityPromptConfig.appName}. Please choose a topic related to ${cityPromptConfig.name}, its culture, history, or daily life.`;
+export function getModerationRejectMessage(city: City): string {
+  return `This topic is not suitable for ${city.appName}. Please choose a topic related to ${city.name}, its culture, history, or daily life.`;
 }
 
-export function getCustomAnglePerspectives(): Record<string, Record<string, string>> {
-  const names = cityPromptConfig.localizedNames;
+export function getCustomAnglePerspectives(city: City): Record<string, Record<string, string>> {
+  const names = city.localizedNames as Record<string, string>;
   return {
     "modern-culture": {
       en: `Focus on contemporary culture, modern-day significance, current trends, and how this topic connects to life in ${names.en} today.`,
@@ -81,8 +61,8 @@ export function getCustomAnglePerspectives(): Record<string, Record<string, stri
   };
 }
 
-export function getWalkingTourPerspective(): Record<string, string> {
-  const names = cityPromptConfig.localizedNames;
+export function getWalkingTourPerspective(city: City): Record<string, string> {
+  const names = city.localizedNames as Record<string, string>;
   return {
     en: `Guide the listener as if walking through ${names.en} together. Describe what they would see, hear, and smell. Take them to the best and most famous places in the area. Use directional language and vivid sensory details.`,
     nl: `Begeleid de luisteraar alsof je samen door ${names.nl} wandelt. Beschrijf wat ze zouden zien, horen en ruiken. Neem ze mee naar de beste en beroemdste plekken in het gebied. Gebruik richtinggevende taal en levendige zintuiglijke details.`,
@@ -92,14 +72,13 @@ export function getWalkingTourPerspective(): Record<string, string> {
   };
 }
 
-export function getPrivacyPolicyHtml(): string {
-  const { appName, contactEmail, privacyPolicyDate } = cityPromptConfig;
+export function getPrivacyPolicyHtml(city: City): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy Policy - ${appName}</title>
+<title>Privacy Policy - ${city.appName}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F6F1; color: #1A1A2E; line-height: 1.7; padding: 20px; }
@@ -115,9 +94,9 @@ export function getPrivacyPolicyHtml(): string {
 <body>
 <div class="container">
 <h1>Privacy Policy</h1>
-<p class="date">Last updated: ${privacyPolicyDate}</p>
+<p class="date">Last updated: ${city.privacyPolicyDate}</p>
 
-<p>${appName} ("we", "our", or "the app") is committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
+<p>${city.appName} ("we", "our", or "the app") is committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
 
 <h2>1. Data We Collect</h2>
 <ul>
@@ -134,7 +113,7 @@ export function getPrivacyPolicyHtml(): string {
 </ul>
 
 <h2>3. AI-Generated Content</h2>
-<p>${appName} uses artificial intelligence to create podcast scripts. When you request a podcast, your chosen topic is sent to <strong>Anthropic Claude</strong>, a third-party AI service, which generates the script. The generated script is then converted to audio using <strong>Google Cloud Text-to-Speech</strong>.</p>
+<p>${city.appName} uses artificial intelligence to create podcast scripts. When you request a podcast, your chosen topic is sent to <strong>Anthropic Claude</strong>, a third-party AI service, which generates the script. The generated script is then converted to audio using <strong>Google Cloud Text-to-Speech</strong>.</p>
 <p>Your topic input is processed by these AI services solely for the purpose of generating your podcast. We do not use your input to train AI models. Anthropic and Google process this data according to their own privacy policies.</p>
 
 <h2>4. Third-Party Services</h2>
@@ -153,11 +132,11 @@ export function getPrivacyPolicyHtml(): string {
 <ul>
 <li><strong>Delete your account:</strong> You can delete your account and all associated data at any time from the Profile screen in the app.</li>
 <li><strong>Access your data:</strong> You can view all your podcasts and account information within the app.</li>
-<li><strong>Contact us:</strong> For any privacy-related questions, contact us at ${contactEmail}.</li>
+<li><strong>Contact us:</strong> For any privacy-related questions, contact us at ${city.contactEmail}.</li>
 </ul>
 
 <h2>7. Children's Privacy</h2>
-<p>${appName} is not intended for children under 13. We do not knowingly collect data from children.</p>
+<p>${city.appName} is not intended for children under 13. We do not knowingly collect data from children.</p>
 
 <h2>8. Changes to This Policy</h2>
 <p>We may update this policy from time to time. We will notify users of significant changes through the app.</p>

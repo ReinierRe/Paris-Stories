@@ -1,38 +1,43 @@
-# Paris Stories
+# Paris Stories (Multi-Tenant)
 
 ## Overview
-Paris Stories is an Expo React Native app with an Express backend that generates AI-powered podcast stories about Paris. Users can browse curated topics or create custom podcasts with AI-generated scripts and audio.
+Paris Stories is an Expo React Native app with an Express backend that generates AI-powered podcast stories. The backend is **multi-tenant**: a single server serves multiple city apps (separate App Store listings, shared infrastructure). Each city frontend sends an `X-City-Id` header; the server loads city config from the database.
 
 ## Architecture
 - **Frontend**: Expo React Native (mobile app served via Expo Go / landing page for web)
-- **Backend**: Express.js server on port 5000
-- **Database**: PostgreSQL with Drizzle ORM
-- **AI**: Anthropic Claude (via Replit AI Integrations) for script generation
+- **Backend**: Express.js server on port 5000 (multi-tenant, serves all cities)
+- **Database**: PostgreSQL with Drizzle ORM (all tables scoped by `cityId`)
+- **AI**: Anthropic Claude claude-sonnet-4-5 (via Replit AI Integrations) for script generation
 - **TTS**: Google Cloud Text-to-Speech for audio generation
+- **Multi-Tenant**: Frontend sends `X-City-Id` header; server resolves city config from DB with 5-min cache
 
 ## Project Structure
 ```
 app/              - Expo React Native screens (tabs, player, login, etc.)
 server/           - Express backend
-  index.ts        - Server entry point (port 5000)
-  routes.ts       - API routes for podcast generation, history, custom podcasts
-  auth.ts         - Firebase Authentication (Admin SDK token verification, user sync)
-  storage.ts      - Database client and user queries
+  index.ts        - Server entry point (port 5000), wires city middleware
+  routes.ts       - API routes for podcast generation, history, custom podcasts (city-aware)
+  auth.ts         - Firebase Authentication (Admin SDK token verification, user sync with cityId)
+  storage.ts      - Database client and user queries (cityId-scoped)
+  city-middleware.ts - X-City-Id header resolution, DB city config loading, 5-min cache
+  city-prompts.ts - City-specific AI prompt helpers (accept City param from DB)
   tts.ts          - TTS interface (Google Cloud Text-to-Speech)
   google-tts.ts   - Google Cloud Text-to-Speech client (Chirp 3 HD / Neural2 / Wavenet voices)
-  city-prompts.ts - City-specific AI prompt config (role descriptions, moderation, privacy policy)
+  audio-cleanup.ts - Audio file deletion (local + Object Storage)
 shared/           - Shared types and database schema
-  schema.ts       - Drizzle ORM table definitions (users, cachedPodcasts, customPodcasts, userPodcasts)
+  schema.ts       - Drizzle ORM table definitions (cities, users, cachedPodcasts, customPodcasts, userPodcasts)
+lib/              - Frontend utilities
+  query-client.ts - API client that sends X-City-Id header on all requests
 components/       - React Native components
 contexts/         - React contexts (Auth, Podcast)
 constants/        - Theme and color constants
-  city.ts         - City identity config (name, localizations, user levels) — single source of truth
+  city.ts         - Frontend city identity config (name, localizations, user levels)
   onboarding.ts   - Login/onboarding slide content (derived from city.ts)
   themes.ts       - Curated themes, topics, angles, podcast lengths, user levels
 assets/           - Images and icons
-podcast-audio/    - Generated audio files
+podcast-audio/    - Generated audio files (local cache)
 patches/          - npm patch files
-CITY_SETUP.md     - White-label duplication guide
+CITY_SETUP.md     - Multi-tenant city setup guide
 ```
 
 ## Key Scripts
@@ -43,10 +48,11 @@ CITY_SETUP.md     - White-label duplication guide
 - `npm run expo:dev` - Start Expo dev server (for native development)
 
 ## Database Tables
-- `users` - User accounts with Firebase Authentication (firebaseUid, email)
-- `cached_podcasts` - Pre-generated podcast cache (by topic/angle/voice/language/length)
-- `custom_podcasts` - User-created custom podcasts
-- `user_podcasts` - Links users to cached podcasts they've listened to
+- `cities` - City configuration (name, country, app name, localized names, AI prompt config, privacy policy)
+- `users` - User accounts with Firebase Authentication (firebaseUid, email, cityId) — unique on `(email, cityId)`
+- `cached_podcasts` - Pre-generated podcast cache — unique on `(cityId, topicId, angle, voice, language, length)`
+- `custom_podcasts` - User-created custom podcasts (scoped by cityId)
+- `user_podcasts` - Links users to cached podcasts — unique on `(cityId, userId, cachedPodcastId)`
 
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string
@@ -85,6 +91,7 @@ See `APP_STORE_METADATA.md` for complete App Store Connect metadata including:
 - Apple Developer Team ID, App Store Connect App ID, and Apple ID must be filled in `eas.json` submit section
 
 ## Recent Changes
+- 2026-03-28: Multi-tenant refactor — single server now serves multiple city apps. Added `cities` table with all city config (AI prompts, localized names, user levels). Added `cityId` column to all tables (users, cached_podcasts, custom_podcasts, user_podcasts) with updated unique indexes. Created `server/city-middleware.ts` (X-City-Id header resolution, DB city config loading with 5-min cache). Refactored `server/city-prompts.ts` to accept City param from DB instead of global constants. All DB queries in routes.ts, storage.ts, auth.ts now scoped by cityId. Frontend sends X-City-Id header via `lib/query-client.ts` (reads from app.json extra.cityId). Privacy policy endpoint uses `?city=` query param. Paris seeded as default city. See `CITY_SETUP.md` for adding new cities.
 - 2026-03-28: White-label prep — centralized all city-specific content for easy duplication. Created `constants/city.ts` (frontend city config), `server/city-prompts.ts` (backend AI prompt config), `constants/onboarding.ts` (login slides). Updated i18n files to use `%{city}` interpolation (auto-injected by `useTranslation` hook). User levels in `themes.ts` now derived from `city.ts`. AI prompts (role descriptions, moderation, user prompts, walking-tour/modern-culture perspectives) and privacy policy HTML all read from `city-prompts.ts`. See `CITY_SETUP.md` for full duplication guide.
 - 2026-03-12: App Store launch prep — EAS build configuration (eas.json), deployment configured (autoscale), metadata updated with Spanish language, AI model references removed from descriptions, privacy policy email updated to vragen@greenhome.nl.
 - 2026-02-27: Fixed SSML tags showing in French/German/Spanish transcripts — added markdown code fence stripping, improved SSML detection based on voice type instead of content parsing.

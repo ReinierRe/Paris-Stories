@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
 import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser, deleteUserAndData, getUserCustomPodcastAudioFiles, updateUserPreferences } from "./storage";
+import { getCityFromRequest } from "./city-middleware";
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is required. Add your Firebase service account JSON to secrets.");
@@ -25,17 +26,18 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ error: "Authentication required" });
   }
 
+  const { cityId } = getCityFromRequest(req);
   const token = authHeader.slice(7);
   try {
     const decoded = await admin.auth().verifyIdToken(token);
-    let user = await getUserByFirebaseUid(decoded.uid);
+    let user = await getUserByFirebaseUid(decoded.uid, cityId);
 
     if (!user) {
       const email = decoded.email;
       if (email) {
-        user = await getUserByEmail(email);
+        user = await getUserByEmail(email, cityId);
         if (!user) {
-          user = await createFirebaseUser(email, decoded.uid, decoded.name);
+          user = await createFirebaseUser(email, decoded.uid, cityId, decoded.name);
         }
       }
     }
@@ -60,8 +62,9 @@ export async function setupAuth(app: Express): Promise<void> {
         return res.status(400).json({ error: "ID token is required" });
       }
 
+      const { cityId } = getCityFromRequest(req);
       const decoded = await admin.auth().verifyIdToken(idToken);
-      let user = await getUserByFirebaseUid(decoded.uid);
+      let user = await getUserByFirebaseUid(decoded.uid, cityId);
 
       if (!user) {
         const email = decoded.email;
@@ -69,7 +72,7 @@ export async function setupAuth(app: Express): Promise<void> {
           return res.status(400).json({ error: "Email not available from Firebase" });
         }
 
-        user = await getUserByEmail(email);
+        user = await getUserByEmail(email, cityId);
         if (user) {
           const { db } = await import("./storage");
           const { users } = await import("@shared/schema");
@@ -77,7 +80,7 @@ export async function setupAuth(app: Express): Promise<void> {
           await db.update(users).set({ firebaseUid: decoded.uid }).where(eq(users.id, user.id));
           user = { ...user, firebaseUid: decoded.uid };
         } else {
-          user = await createFirebaseUser(email, decoded.uid, decoded.name);
+          user = await createFirebaseUser(email, decoded.uid, cityId, decoded.name);
         }
       }
 

@@ -19,7 +19,7 @@ import Colors from "@/constants/colors";
 import { podcastLengths, checkLevelUp, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiRequest, getApiUrl } from "@/lib/query-client";
+import { apiRequest, getApiUrl, getCityHeaders } from "@/lib/query-client";
 import { auth as firebaseAuth } from "@/lib/firebase";
 import { useTranslation } from "@/i18n/useTranslation";
 
@@ -186,7 +186,7 @@ export default function CustomCreateScreen() {
     try {
       const baseUrl = getApiUrl();
       const token = firebaseAuth.currentUser ? await firebaseAuth.currentUser.getIdToken() : null;
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const headers: Record<string, string> = { "Content-Type": "application/json", ...getCityHeaders() };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const res = await fetch(`${baseUrl}/api/podcast/generate-custom`, {

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { users, customPodcasts, userPodcasts, type User } from "@shared/schema";
 
@@ -9,24 +9,27 @@ export async function getUser(id: string): Promise<User | undefined> {
   return user;
 }
 
-export async function getUserByEmail(email: string): Promise<User | undefined> {
-  const [user] = await db.select().from(users).where(eq(users.email, email));
+export async function getUserByEmail(email: string, cityId: string): Promise<User | undefined> {
+  const [user] = await db.select().from(users).where(
+    and(eq(users.email, email), eq(users.cityId, cityId))
+  );
   return user;
 }
 
-export async function getUserByFirebaseUid(uid: string): Promise<User | undefined> {
-  const [user] = await db.select().from(users).where(eq(users.firebaseUid, uid));
+export async function getUserByFirebaseUid(uid: string, cityId: string): Promise<User | undefined> {
+  const [user] = await db.select().from(users).where(and(eq(users.firebaseUid, uid), eq(users.cityId, cityId)));
   return user;
 }
 
 export async function createFirebaseUser(
   email: string,
   firebaseUid: string,
+  cityId: string,
   firstName?: string,
 ): Promise<User> {
   const [user] = await db
     .insert(users)
-    .values({ email, firebaseUid, firstName: firstName || null })
+    .values({ email, firebaseUid, cityId, firstName: firstName || null })
     .returning();
   return user;
 }

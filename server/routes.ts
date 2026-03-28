@@ -10,11 +10,11 @@ import express from "express";
 import { eq, and, count } from "drizzle-orm";
 import { db } from "./storage";
 import { cachedPodcasts, customPodcasts, userPodcasts } from "@shared/schema";
+import type { City } from "@shared/schema";
 import { desc } from "drizzle-orm";
 import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
 import {
-  cityPromptConfig,
-  getCityName as getCityLocalizedName,
+  getCityName,
   getRoleDescription,
   getCuratedUserPrompt,
   getCustomUserPrompts,
@@ -23,8 +23,8 @@ import {
   getCustomAnglePerspectives,
   getWalkingTourPerspective,
   getPrivacyPolicyHtml,
-  getCityName,
 } from "./city-prompts";
+import { getCityFromRequest, getCityConfig } from "./city-middleware";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY!,
@@ -168,7 +168,7 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 
-function getChirp3Instructions(language: string): string {
+function getChirp3Instructions(language: string, _city?: City): string {
   const instructions: Record<string, string> = {
     nl: `
 
@@ -252,7 +252,7 @@ IMPORTANT:
 - Do NOT use markdown formatting or headings.`;
 }
 
-function getSsmlInstructions(language: string): string {
+function getSsmlInstructions(language: string, _city?: City): string {
   const ssmlTags = `
 - \`<break time="300ms"/>\` to \`<break time="800ms"/>\`
 - \`<prosody rate="90%">...</prosody>\`
@@ -274,7 +274,7 @@ Schrijfregels voor SSML-scripts:
 - Schrijf fonetisch helder: vermijd moeilijke woordcombinaties en tongbrekers.
 
 Voorbeeld van correcte output:
-<speak>De regen valt op de kasseien. <break time="400ms"/> En daar, om de hoek, <prosody rate="90%">zie je het licht van een klein cafe.</prosody> <break time="300ms"/> <emphasis level="strong">Dit</emphasis> is het ${getCityName("nl")} dat de meeste toeristen nooit zien.</speak>
+<speak>De regen valt op de kasseien. <break time="400ms"/> En daar, om de hoek, <prosody rate="90%">zie je het licht van een klein cafe.</prosody> <break time="300ms"/> <emphasis level="strong">Dit</emphasis> is de stad dat de meeste toeristen nooit zien.</speak>
 
 BELANGRIJK:
 - Het HELE script moet binnen \`<speak>\` en \`</speak>\` tags staan.
@@ -354,7 +354,7 @@ Writing rules for SSML scripts:
 - Write phonetically clear text: avoid difficult word combinations and tongue twisters.
 
 Example of correct output:
-<speak>Rain falls on the cobblestones. <break time="400ms"/> And there, around the corner, <prosody rate="90%">you see the light of a small cafe.</prosody> <break time="300ms"/> <emphasis level="strong">This</emphasis> is the ${getCityName("en")} most tourists never see.</speak>
+<speak>Rain falls on the cobblestones. <break time="400ms"/> And there, around the corner, <prosody rate="90%">you see the light of a small cafe.</prosody> <break time="300ms"/> <emphasis level="strong">This</emphasis> is the city most tourists never see.</speak>
 
 IMPORTANT:
 - The ENTIRE script must be within \`<speak>\` and \`</speak>\` tags.
@@ -370,11 +370,11 @@ function stripSsmlTags(text: string): string {
   return clean.trim();
 }
 
-function getGoogleTtsInstructions(language: string, voiceType: VoiceType): string {
+function getGoogleTtsInstructions(language: string, voiceType: VoiceType, city?: City): string {
   if (voiceType === "chirp3") {
-    return getChirp3Instructions(language);
+    return getChirp3Instructions(language, city);
   }
-  return getSsmlInstructions(language);
+  return getSsmlInstructions(language, city);
 }
 
 function getLanguageKey(language: string): "en" | "nl" | "fr" | "de" | "es" {
@@ -457,7 +457,7 @@ Since the listener can listen to those separately, do not spend much time on tho
   return templates[langKey] || templates.en;
 }
 
-function getSystemPrompt(language: string, perspective: string, wordCount: number, googleVoiceType?: VoiceType, siblingAngles?: SiblingAngle[]): string {
+function getSystemPrompt(language: string, perspective: string, wordCount: number, googleVoiceType?: VoiceType, siblingAngles?: SiblingAngle[], city?: City): string {
   const langKey = getLanguageKey(language);
 
   const perspectiveMap: Record<string, Record<string, string>> = {
@@ -517,7 +517,7 @@ function getSystemPrompt(language: string, perspective: string, wordCount: numbe
       de: "Erzaehle die Geschichte, wie dieser Ort heute aussieht und sich anfuehlt. Was hat sich in den letzten Jahrzehnten veraendert? Wie spielt sich das moderne Leben hier ab? Fange die zeitgenoessische Atmosphaere ein.",
       es: "Cuenta la historia de como se ve y se siente este lugar hoy. Que ha cambiado en las ultimas decadas? Como se desarrolla la vida moderna aqui? Captura la atmosfera contemporanea.",
     },
-    "walking-tour": getWalkingTourPerspective(),
+    "walking-tour": city ? getWalkingTourPerspective(city) : {},
   };
 
   const defaultStyle: Record<string, string> = {
@@ -531,7 +531,7 @@ function getSystemPrompt(language: string, perspective: string, wordCount: numbe
     ? (perspectiveMap[perspective]?.[langKey] || defaultStyle[langKey])
     : defaultStyle[langKey];
 
-  const roles = getRoleDescription(langKey);
+  const roles = city ? getRoleDescription(city, langKey) : { nl: "", fr: "", de: "", es: "", en: "" };
 
   const prompts: Record<string, string> = {
     nl: `## Jouw Rol
@@ -558,7 +558,7 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Schrijf in vloeiende alinea's zonder koppen of opsommingstekens.
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Lengte: schrijf ongeveer ${wordCount} woorden.
-- Eindig met een interessant feit of een gedachte die blijft hangen.${googleVoiceType ? getGoogleTtsInstructions("nl", googleVoiceType) : ""}`,
+- Eindig met een interessant feit of een gedachte die blijft hangen.${googleVoiceType ? getGoogleTtsInstructions("nl", googleVoiceType, city) : ""}`,
 
     fr: `## Votre Role
 ${roles.fr}
@@ -584,7 +584,7 @@ Pour sonner naturellement, suivez ces regles:
 - Ecrivez en paragraphes fluides sans titres ni puces.
 - Utilisez "vous" pour creer un lien direct avec l'auditeur.
 - Longueur: ecrivez environ ${wordCount} mots.
-- Terminez avec un fait interessant ou une pensee qui reste.${googleVoiceType ? getGoogleTtsInstructions("fr", googleVoiceType) : ""}`,
+- Terminez avec un fait interessant ou une pensee qui reste.${googleVoiceType ? getGoogleTtsInstructions("fr", googleVoiceType, city) : ""}`,
 
     de: `## Deine Rolle
 ${roles.de}
@@ -610,7 +610,7 @@ Um natuerlich zu klingen, befolge diese Regeln:
 - Schreibe in fliessenden Absaetzen ohne Ueberschriften oder Aufzaehlungszeichen.
 - Verwende "du" um eine direkte Verbindung mit dem Zuhoerer aufzubauen.
 - Laenge: schreibe ungefaehr ${wordCount} Woerter.
-- Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${googleVoiceType ? getGoogleTtsInstructions("de", googleVoiceType) : ""}`,
+- Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${googleVoiceType ? getGoogleTtsInstructions("de", googleVoiceType, city) : ""}`,
 
     es: `## Tu Rol
 ${roles.es}
@@ -636,7 +636,7 @@ Para sonar natural, sigue estas reglas:
 - Escribe en parrafos fluidos sin encabezados ni vinetas.
 - Usa "tu" para construir una conexion directa con el oyente.
 - Longitud: escribe aproximadamente ${wordCount} palabras.
-- Termina con un hecho interesante o un pensamiento que permanezca.${googleVoiceType ? getGoogleTtsInstructions("es", googleVoiceType) : ""}`,
+- Termina con un hecho interesante o un pensamiento que permanezca.${googleVoiceType ? getGoogleTtsInstructions("es", googleVoiceType, city) : ""}`,
 
     en: `## Your Role
 ${roles.en}
@@ -662,7 +662,7 @@ To sound natural, follow these rules:
 - Write in flowing paragraphs without headings or bullet points.
 - Use 'you' to build a direct connection with the listener.
 - Length: write approximately ${wordCount} words.
-- End with an interesting fact or a thought that lingers.${googleVoiceType ? getGoogleTtsInstructions("en", googleVoiceType) : ""}`,
+- End with an interesting fact or a thought that lingers.${googleVoiceType ? getGoogleTtsInstructions("en", googleVoiceType, city) : ""}`,
   };
 
   const focusGuidance = siblingAngles && siblingAngles.length > 0
@@ -944,6 +944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId } = req.body;
       const userId = (req as any).user?.id;
+      const { cityId, cityConfig } = getCityFromRequest(req);
 
       if (!topicName || !voice || !language) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -962,6 +963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .from(cachedPodcasts)
           .where(
             and(
+              eq(cachedPodcasts.cityId, cityId),
               eq(cachedPodcasts.topicId, topicId),
               eq(cachedPodcasts.angle, cacheAngle),
               eq(cachedPodcasts.voice, voice),
@@ -980,6 +982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (userId) {
               try {
                 await db.insert(userPodcasts).values({
+                  cityId,
                   userId,
                   cachedPodcastId: cached.id,
                   topicName: topicName || "",
@@ -1017,8 +1020,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const googleVoiceType = getGoogleVoiceType(voice, language);
       const siblingAngles = getSiblingAngles(topicId, perspective, language);
-      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, googleVoiceType, siblingAngles);
-      const userPrompt = getCuratedUserPrompt(language, topicName, themeName);
+      const systemPrompt = getSystemPrompt(language, perspective, wordCount || 750, googleVoiceType, siblingAngles, cityConfig);
+      const userPrompt = getCuratedUserPrompt(cityConfig, language, topicName, themeName);
 
       generateScriptAndAudio({
         systemPrompt,
@@ -1033,6 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (topicId) {
           try {
             const [inserted] = await db.insert(cachedPodcasts).values({
+              cityId,
               topicId,
               angle: cacheAngle,
               voice,
@@ -1052,6 +1056,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (userId && topicId) {
           try {
             await db.insert(userPodcasts).values({
+              cityId,
               userId,
               cachedPodcastId: cachedId,
               topicName: topicName || "",
@@ -1093,6 +1098,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { subject, angle, voice, language, wordCount, lengthId } = req.body;
       const userId = (req as any).user?.id;
+      const { cityId, cityConfig } = getCityFromRequest(req);
 
       if (!subject || !angle || !voice || !language || !userId) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -1101,7 +1107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const MAX_FREE_CUSTOM_PODCASTS = 5;
       const [{ value: customCount }] = await db.select({ value: count() })
         .from(customPodcasts)
-        .where(eq(customPodcasts.userId, userId));
+        .where(and(eq(customPodcasts.userId, userId), eq(customPodcasts.cityId, cityId)));
       if (customCount >= MAX_FREE_CUSTOM_PODCASTS) {
         return res.status(403).json({
           error: "You have reached the maximum of 5 free custom podcasts.",
@@ -1117,12 +1123,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           max_tokens: 20,
           messages: [{
             role: "user",
-            content: getModerationPrompt(subject),
+            content: getModerationPrompt(cityConfig, subject),
           }],
         });
         const moderationResult = (moderationResponse.content[0] as any)?.text?.trim().toUpperCase();
         if (moderationResult !== "ALLOW") {
-          return res.status(400).json({ error: getModerationRejectMessage() });
+          return res.status(400).json({ error: getModerationRejectMessage(cityConfig) });
         }
       } catch (modErr) {
         console.error("Content moderation check failed:", modErr);
@@ -1137,7 +1143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           de: "Verwende einen faktenbasierten, chronologischen Erzaehlansatz. Nenne konkrete Daten, Namen und historischen Kontext. Verwebe die Fakten zu einer fesselnden Erzaehlung statt einer trockenen Zusammenfassung.",
           es: "Utiliza un enfoque narrativo factual y cronologico. Incluye fechas, nombres y contexto historico especificos. Teje los hechos en una narrativa cautivadora en lugar de un resumen seco.",
         },
-        "modern-culture": getCustomAnglePerspectives()["modern-culture"],
+        "modern-culture": getCustomAnglePerspectives(cityConfig)["modern-culture"],
         "personal-stories": {
           en: "Tell personal, intimate stories. Use anecdotes, first-person perspectives, and emotional storytelling to bring this topic to life through the eyes of real people.",
           nl: "Vertel persoonlijke, intieme verhalen. Gebruik anekdotes, eerstepersoonperspectieven en emotioneel vertellen om dit onderwerp tot leven te brengen door de ogen van echte mensen.",
@@ -1170,7 +1176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       const customFocusGuidance = buildFocusGuidance(customSiblingAngles, language);
 
-      const customRoles = getRoleDescription(customLangKey);
+      const customRoles = getRoleDescription(cityConfig, customLangKey);
 
       const customPrompts: Record<string, string> = {
         nl: `## Jouw Rol
@@ -1197,7 +1203,7 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Schrijf in vloeiende alinea's zonder koppen of opsommingstekens.
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Lengte: schrijf ongeveer ${wordCount || 400} woorden.
-- Eindig met een interessant feit of een gedachte die blijft hangen.${customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType) : ""}`,
+- Eindig met een interessant feit of een gedachte die blijft hangen.${customGoogleVoiceType ? getGoogleTtsInstructions("nl", customGoogleVoiceType, cityConfig) : ""}`,
 
         fr: `## Votre Role
 ${customRoles.fr}
@@ -1223,7 +1229,7 @@ Pour sonner naturellement, suivez ces regles:
 - Ecrivez en paragraphes fluides sans titres ni puces.
 - Utilisez "vous" pour creer un lien direct avec l'auditeur.
 - Longueur: ecrivez environ ${wordCount || 400} mots.
-- Terminez avec un fait interessant ou une pensee qui reste.${customGoogleVoiceType ? getGoogleTtsInstructions("fr", customGoogleVoiceType) : ""}`,
+- Terminez avec un fait interessant ou une pensee qui reste.${customGoogleVoiceType ? getGoogleTtsInstructions("fr", customGoogleVoiceType, cityConfig) : ""}`,
 
         de: `## Deine Rolle
 ${customRoles.de}
@@ -1249,7 +1255,7 @@ Um natuerlich zu klingen, befolge diese Regeln:
 - Schreibe in fliessenden Absaetzen ohne Ueberschriften oder Aufzaehlungszeichen.
 - Verwende "du" um eine direkte Verbindung mit dem Zuhoerer aufzubauen.
 - Laenge: schreibe ungefaehr ${wordCount || 400} Woerter.
-- Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${customGoogleVoiceType ? getGoogleTtsInstructions("de", customGoogleVoiceType) : ""}`,
+- Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${customGoogleVoiceType ? getGoogleTtsInstructions("de", customGoogleVoiceType, cityConfig) : ""}`,
 
         es: `## Tu Rol
 ${customRoles.es}
@@ -1275,7 +1281,7 @@ Para sonar natural, sigue estas reglas:
 - Escribe en parrafos fluidos sin encabezados ni vinetas.
 - Usa "tu" para construir una conexion directa con el oyente.
 - Longitud: escribe aproximadamente ${wordCount || 400} palabras.
-- Termina con un hecho interesante o un pensamiento que permanezca.${customGoogleVoiceType ? getGoogleTtsInstructions("es", customGoogleVoiceType) : ""}`,
+- Termina con un hecho interesante o un pensamiento que permanezca.${customGoogleVoiceType ? getGoogleTtsInstructions("es", customGoogleVoiceType, cityConfig) : ""}`,
 
         en: `## Your Role
 ${customRoles.en}
@@ -1301,12 +1307,12 @@ To sound natural, follow these rules:
 - Write in flowing paragraphs without headings or bullet points.
 - Use 'you' to build a direct connection with the listener.
 - Length: write approximately ${wordCount || 400} words.
-- End with an interesting fact or a thought that lingers.${customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType) : ""}`,
+- End with an interesting fact or a thought that lingers.${customGoogleVoiceType ? getGoogleTtsInstructions("en", customGoogleVoiceType, cityConfig) : ""}`,
       };
 
       const systemPrompt = (customPrompts[customLangKey] || customPrompts.en) + customFocusGuidance;
 
-      const customUserPrompts = getCustomUserPrompts(customLangKey, subject);
+      const customUserPrompts = getCustomUserPrompts(cityConfig, customLangKey, subject);
       const userPrompt = customUserPrompts[customLangKey] || customUserPrompts.en;
 
       const jobId = generateId();
@@ -1381,6 +1387,7 @@ To sound natural, follow these rules:
         const id = generateId();
         const [saved] = await db.insert(customPodcasts).values({
           id,
+          cityId,
           userId,
           subject,
           title: generatedTitle,
@@ -1432,11 +1439,12 @@ To sound natural, follow these rules:
     try {
       const userId = (req as any).user?.id;
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { cityId } = getCityFromRequest(req);
 
       const MAX_FREE_CUSTOM_PODCASTS = 5;
       const [{ value: customCount }] = await db.select({ value: count() })
         .from(customPodcasts)
-        .where(eq(customPodcasts.userId, userId));
+        .where(and(eq(customPodcasts.userId, userId), eq(customPodcasts.cityId, cityId)));
 
       res.json({
         customCount,
@@ -1452,10 +1460,11 @@ To sound natural, follow these rules:
   app.get("/api/podcast/custom", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
+      const { cityId } = getCityFromRequest(req);
       const results = await db
         .select()
         .from(customPodcasts)
-        .where(eq(customPodcasts.userId, userId))
+        .where(and(eq(customPodcasts.userId, userId), eq(customPodcasts.cityId, cityId)))
         .orderBy(desc(customPodcasts.createdAt));
 
       const needsTitle = results.filter((p) => !p.title || p.title === p.subject);
@@ -1512,6 +1521,7 @@ To sound natural, follow these rules:
   app.get("/api/podcast/history", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
+      const { cityId } = getCityFromRequest(req);
 
       const genericResults = await db
         .select({
@@ -1520,7 +1530,7 @@ To sound natural, follow these rules:
         })
         .from(userPodcasts)
         .innerJoin(cachedPodcasts, eq(userPodcasts.cachedPodcastId, cachedPodcasts.id))
-        .where(eq(userPodcasts.userId, userId))
+        .where(and(eq(userPodcasts.userId, userId), eq(userPodcasts.cityId, cityId)))
         .orderBy(desc(userPodcasts.createdAt));
 
       const genericPodcasts = genericResults
@@ -1544,7 +1554,7 @@ To sound natural, follow these rules:
       const customResults = await db
         .select()
         .from(customPodcasts)
-        .where(eq(customPodcasts.userId, userId))
+        .where(and(eq(customPodcasts.userId, userId), eq(customPodcasts.cityId, cityId)))
         .orderBy(desc(customPodcasts.createdAt));
 
       const customPodcastsList = customResults
@@ -1581,12 +1591,13 @@ To sound natural, follow these rules:
   app.delete("/api/podcast/custom/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
-      const podcastId = req.params.id;
+      const podcastId = req.params.id as string;
+      const { cityId } = getCityFromRequest(req);
 
       const [podcast] = await db
         .select()
         .from(customPodcasts)
-        .where(and(eq(customPodcasts.id, podcastId), eq(customPodcasts.userId, userId)));
+        .where(and(eq(customPodcasts.id, podcastId), eq(customPodcasts.userId, userId), eq(customPodcasts.cityId, cityId)));
 
       if (!podcast) {
         return res.status(404).json({ error: "Podcast not found" });
@@ -1606,10 +1617,15 @@ To sound natural, follow these rules:
     }
   });
 
-  app.get("/privacy-policy", (_req: Request, res: Response) => {
+  app.get("/privacy-policy", async (req: Request, res: Response) => {
+    const queryCityId = (req.query.city as string) || "paris";
+    const city = await getCityConfig(queryCityId);
+    if (!city) {
+      return res.status(404).send("City not found");
+    }
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
-    res.send(getPrivacyPolicyHtml());
+    res.send(getPrivacyPolicyHtml(city));
   });
 
   const httpServer = createServer(app);

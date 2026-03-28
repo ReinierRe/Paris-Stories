@@ -22,6 +22,11 @@ export function getApiUrl(): string {
   return url.href.replace(/\/$/, "");
 }
 
+export function getCityId(): string {
+  const extra = Constants.expoConfig?.extra ?? {};
+  return process.env.EXPO_PUBLIC_CITY_ID || extra.cityId || "paris";
+}
+
 async function getAuthHeaders(forceRefresh = false): Promise<Record<string, string>> {
   try {
     const currentUser = auth.currentUser;
@@ -31,6 +36,10 @@ async function getAuthHeaders(forceRefresh = false): Promise<Record<string, stri
     }
   } catch {}
   return {};
+}
+
+export function getCityHeaders(): Record<string, string> {
+  return { "X-City-Id": getCityId() };
 }
 
 async function throwIfResNotOk(res: Response) {
@@ -53,6 +62,7 @@ export async function apiRequest(
   const authHeaders = await getAuthHeaders();
 
   const headers: Record<string, string> = {
+    ...getCityHeaders(),
     ...authHeaders,
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
@@ -69,7 +79,7 @@ export async function apiRequest(
     if (refreshedHeaders.Authorization) {
       const retryRes = await fetch(url.toString(), {
         method,
-        headers: { ...refreshedHeaders, ...(data ? { "Content-Type": "application/json" } : {}) },
+        headers: { ...getCityHeaders(), ...refreshedHeaders, ...(data ? { "Content-Type": "application/json" } : {}) },
         body: data ? JSON.stringify(data) : undefined,
         credentials: "include",
       });
@@ -97,7 +107,7 @@ export const getQueryFn: <T>(options: {
 
     const res = await fetch(url.toString(), {
       credentials: "include",
-      headers: authHeaders,
+      headers: { ...getCityHeaders(), ...authHeaders },
     });
 
     if (res.status === 401) {
@@ -105,7 +115,7 @@ export const getQueryFn: <T>(options: {
       if (refreshedHeaders.Authorization) {
         const retryRes = await fetch(url.toString(), {
           credentials: "include",
-          headers: refreshedHeaders,
+          headers: { ...getCityHeaders(), ...refreshedHeaders },
         });
         if (retryRes.status === 401) {
           if (unauthorizedBehavior === "returnNull") return null;

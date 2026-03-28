@@ -2,6 +2,7 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
+import { cityMiddleware } from "./city-middleware";
 import * as fs from "fs";
 import * as path from "path";
 import * as net from "net";
@@ -141,7 +142,7 @@ function setupCors(app: express.Application) {
       res.header("Access-Control-Allow-Origin", "*");
     }
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, expo-platform, expo-runtime-version, expo-dev-client-id");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-City-Id, expo-platform, expo-runtime-version, expo-dev-client-id");
 
     if (req.method === "OPTIONS") {
       return res.sendStatus(200);
@@ -350,6 +351,8 @@ function setupErrorHandler(app: express.Application) {
   setupCors(app);
   setupRequestLogging(app);
   setupBodyParsing(app);
+
+  app.use("/api", cityMiddleware);
 
   await setupAuth(app);
 

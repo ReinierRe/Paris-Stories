@@ -8,7 +8,7 @@ import {
   updateProfile,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { getApiUrl, setOnUnauthorized } from "@/lib/query-client";
+import { getApiUrl, setOnUnauthorized, getCityHeaders } from "@/lib/query-client";
 
 interface AuthUser {
   id: string;
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const url = new URL("/api/auth/verify", baseUrl);
       const res = await fetch(url.toString(), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getCityHeaders() },
         body: JSON.stringify({ idToken }),
       });
       if (res.ok) {
@@ -169,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const url = new URL("/api/auth/account", baseUrl);
       const res = await fetch(url.toString(), {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${freshToken}` },
+        headers: { Authorization: `Bearer ${freshToken}`, ...getCityHeaders() },
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const url = new URL("/api/auth/preferences", baseUrl);
       const res = await fetch(url.toString(), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}`, ...getCityHeaders() },
         body: JSON.stringify(prefs),
       });
       if (!res.ok) {

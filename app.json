@@ -61,6 +61,7 @@
       "eas": {
         "projectId": "68998269-2bf6-4afa-8d80-56df617ea768"
       },
+      "cityId": "paris",
       "apiDomain": "paris-stories.replit.app",
       "firebaseApiKey": "AIzaSyDjq7lvBKqtIeHBrDCCqiHna-pHPRqUIxw",
       "firebaseProjectId": "city-stories-f966e",

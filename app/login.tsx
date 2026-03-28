@@ -22,7 +22,14 @@ import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiUrl } from "@/lib/query-client";
-import { onboardingSlides, OnboardingSlide } from "@/constants/onboarding";
+import {
+  onboardingSlides,
+  OnboardingSlide,
+  onboardingCategories,
+  onboardingPodcastExamples,
+  onboardingCategoryTopicCounts,
+  onboardingCustomSubjectExample,
+} from "@/constants/onboarding";
 import city from "@/constants/city";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -63,16 +70,21 @@ function PodcastItem({ category, title, voice, duration, lang, color }: {
   );
 }
 
+const categoryImageMap: Record<string, any> = {
+  "category-history": require("@/assets/images/category-history.png"),
+  "category-french-revolution": require("@/assets/images/category-french-revolution.png"),
+  "category-museums": require("@/assets/images/category-museums.png"),
+  "category-epic-buildings": require("@/assets/images/category-epic-buildings.png"),
+  "category-modern-history": require("@/assets/images/category-modern-history.png"),
+  "category-culinary": require("@/assets/images/category-culinary.png"),
+  "category-neighborhoods": require("@/assets/images/category-neighborhoods.png"),
+};
+
 function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number }) {
-  const categoryIcons = [
-    { name: "History", image: require("@/assets/images/category-history.png") },
-    { name: "Revolution", image: require("@/assets/images/category-french-revolution.png") },
-    { name: "Museums", image: require("@/assets/images/category-museums.png") },
-    { name: "Buildings", image: require("@/assets/images/category-epic-buildings.png") },
-    { name: "Modern", image: require("@/assets/images/category-modern-history.png") },
-    { name: "Culinary", image: require("@/assets/images/category-culinary.png") },
-    { name: "Neighborhoods", image: require("@/assets/images/category-neighborhoods.png") },
-  ];
+  const categoryIcons = onboardingCategories.map((cat) => ({
+    name: cat.name,
+    image: categoryImageMap[cat.imageKey],
+  }));
 
   if (index === 0) {
     return (
@@ -95,10 +107,9 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
         <PhoneMockup>
           <Text style={mockupStyles.screenTitle}>My Podcasts</Text>
           <Text style={mockupStyles.screenSubtitle}>20 ready</Text>
-          <PodcastItem category="MUSEUMS" title="Musée d'Orsay" voice="Male" duration="2:09" lang="EN" color="#5B9BD5" />
-          <PodcastItem category="FRENCH REVOLUTION" title="Danton: Stem van het Volk" voice="Female" duration="4:16" lang="NL" color="#E06060" />
-          <PodcastItem category="EPIC BUILDINGS" title="The Panthéon" voice="Male" duration="3:09" lang="EN" color="#7A8B9A" />
-          <PodcastItem category="CULINARY" title="Café Culture" voice="Female" duration="2:36" lang="EN" color="#E0A040" />
+          {onboardingPodcastExamples.map((ex, i) => (
+            <PodcastItem key={i} category={ex.category} title={ex.title} voice={ex.voice} duration={ex.duration} lang={ex.lang} color={ex.color} />
+          ))}
         </PhoneMockup>
       </View>
     );
@@ -116,7 +127,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
                 <Image source={cat.image} style={mockupStyles.categoryRowIcon} cachePolicy="memory-disk" />
                 <View style={mockupStyles.categoryRowText}>
                   <Text style={mockupStyles.categoryRowName}>{cat.name}</Text>
-                  <Text style={mockupStyles.categoryRowCount}>{[8, 6, 10, 8, 7][i]} topics</Text>
+                  <Text style={mockupStyles.categoryRowCount}>{onboardingCategoryTopicCounts[i]} topics</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.3)" />
               </View>
@@ -140,7 +151,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
               <Text style={mockupStyles.customTitle}>Your subject</Text>
               <Text style={mockupStyles.customSubtitle}>What {city.name} story would you like?</Text>
               <View style={mockupStyles.textareaBox}>
-                <Text style={mockupStyles.textareaText}>I am visiting Montmartre, tell me about Picasso's life here</Text>
+                <Text style={mockupStyles.textareaText}>{onboardingCustomSubjectExample}</Text>
               </View>
               <View style={mockupStyles.continueBtn}>
                 <Text style={mockupStyles.continueBtnText}>Continue</Text>

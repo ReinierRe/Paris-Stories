@@ -21,12 +21,9 @@ Single source of truth for the app identity. Update all fields:
   - Descriptions should reference the city name in each language
 
 ### `server/city-prompts.ts` (backend)
-Server-side equivalent of city config for AI prompts. Update:
-- `name`, `country`, `appName` — Must match `constants/city.ts`
-- `contactEmail`, `privacyPolicyDate` — Must match `constants/city.ts`
-- `localizedNames`, `localizedCountry` — Must match `constants/city.ts`
+Server-side prompt config that **imports identity from `constants/city.ts`** — no duplication needed. The `name`, `country`, `appName`, `contactEmail`, `privacyPolicyDate`, `localizedNames`, and `localizedCountry` fields are all derived from `constants/city.ts` automatically.
 
-These values flow into: AI system prompts (role descriptions), content moderation, user prompts, and the privacy policy page.
+These values flow into: AI system prompts (role descriptions), content moderation, user prompts, and the privacy policy page. No separate update needed — just update `constants/city.ts`.
 
 ## Step 2: Update Curated Content
 
@@ -98,8 +95,7 @@ Review the perspective map entries that are NOT centralized (they are city-neutr
 
 ## Checklist
 
-- [ ] `constants/city.ts` — All fields updated
-- [ ] `server/city-prompts.ts` — All fields match city.ts
+- [ ] `constants/city.ts` — All fields updated (single source of truth for both frontend and backend)
 - [ ] `constants/themes.ts` — All themes, topics, angles replaced
 - [ ] `constants/onboarding.ts` — Slide content reviewed
 - [ ] `app/login.tsx` — Mockup examples updated

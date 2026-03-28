@@ -7,6 +7,41 @@ export interface OnboardingSlide {
   features?: { icon: string; text: string }[];
 }
 
+export interface OnboardingCategory {
+  name: string;
+  imageKey: string;
+}
+
+export interface OnboardingPodcastExample {
+  category: string;
+  title: string;
+  voice: string;
+  duration: string;
+  lang: string;
+  color: string;
+}
+
+export const onboardingCategories: OnboardingCategory[] = [
+  { name: "History", imageKey: "category-history" },
+  { name: "Revolution", imageKey: "category-french-revolution" },
+  { name: "Museums", imageKey: "category-museums" },
+  { name: "Buildings", imageKey: "category-epic-buildings" },
+  { name: "Modern", imageKey: "category-modern-history" },
+  { name: "Culinary", imageKey: "category-culinary" },
+  { name: "Neighborhoods", imageKey: "category-neighborhoods" },
+];
+
+export const onboardingPodcastExamples: OnboardingPodcastExample[] = [
+  { category: "MUSEUMS", title: "Musée d'Orsay", voice: "Male", duration: "2:09", lang: "EN", color: "#5B9BD5" },
+  { category: "FRENCH REVOLUTION", title: "Danton: Stem van het Volk", voice: "Female", duration: "4:16", lang: "NL", color: "#E06060" },
+  { category: "EPIC BUILDINGS", title: "The Panthéon", voice: "Male", duration: "3:09", lang: "EN", color: "#7A8B9A" },
+  { category: "CULINARY", title: "Café Culture", voice: "Female", duration: "2:36", lang: "EN", color: "#E0A040" },
+];
+
+export const onboardingCategoryTopicCounts = [8, 6, 10, 8, 7];
+
+export const onboardingCustomSubjectExample = `I am visiting Montmartre, tell me about Picasso's life here`;
+
 export const onboardingSlides: OnboardingSlide[] = [
   {
     id: "welcome",

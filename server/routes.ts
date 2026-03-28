@@ -273,7 +273,7 @@ Schrijfregels voor SSML-scripts:
 - Schrijf fonetisch helder: vermijd moeilijke woordcombinaties en tongbrekers.
 
 Voorbeeld van correcte output:
-<speak>De regen valt op de kasseien. <break time="400ms"/> En daar, om de hoek, <prosody rate="90%">zie je het licht van een klein cafe.</prosody> <break time="300ms"/> <emphasis level="strong">Dit</emphasis> is het Parijs dat de meeste toeristen nooit zien.</speak>
+<speak>De regen valt op de kasseien. <break time="400ms"/> En daar, om de hoek, <prosody rate="90%">zie je het licht van een klein cafe.</prosody> <break time="300ms"/> <emphasis level="strong">Dit</emphasis> is het ${getCityName("nl")} dat de meeste toeristen nooit zien.</speak>
 
 BELANGRIJK:
 - Het HELE script moet binnen \`<speak>\` en \`</speak>\` tags staan.
@@ -353,7 +353,7 @@ Writing rules for SSML scripts:
 - Write phonetically clear text: avoid difficult word combinations and tongue twisters.
 
 Example of correct output:
-<speak>Rain falls on the cobblestones. <break time="400ms"/> And there, around the corner, <prosody rate="90%">you see the light of a small cafe.</prosody> <break time="300ms"/> <emphasis level="strong">This</emphasis> is the Paris most tourists never see.</speak>
+<speak>Rain falls on the cobblestones. <break time="400ms"/> And there, around the corner, <prosody rate="90%">you see the light of a small cafe.</prosody> <break time="300ms"/> <emphasis level="strong">This</emphasis> is the ${getCityName("en")} most tourists never see.</speak>
 
 IMPORTANT:
 - The ENTIRE script must be within \`<speak>\` and \`</speak>\` tags.

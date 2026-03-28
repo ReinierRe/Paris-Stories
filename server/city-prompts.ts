@@ -1,3 +1,5 @@
+import city from "../constants/city";
+
 export interface CityPromptConfig {
   name: string;
   country: string;
@@ -10,27 +12,13 @@ export interface CityPromptConfig {
 }
 
 export const cityPromptConfig: CityPromptConfig = {
-  name: "Paris",
-  country: "France",
-  appName: "Paris Stories",
-  contactEmail: "vragen@greenhome.nl",
-  privacyPolicyDate: "February 20, 2026",
-
-  localizedNames: {
-    en: "Paris",
-    nl: "Parijs",
-    fr: "Paris",
-    de: "Paris",
-    es: "París",
-  },
-
-  localizedCountry: {
-    en: "France",
-    nl: "Frankrijk",
-    fr: "la France",
-    de: "Frankreich",
-    es: "Francia",
-  },
+  name: city.name,
+  country: city.country,
+  appName: city.appName,
+  contactEmail: city.contactEmail,
+  privacyPolicyDate: city.privacyPolicyDate,
+  localizedNames: { ...city.localizedNames },
+  localizedCountry: { ...city.localizedCountry },
 };
 
 export function getCityName(lang: string): string {

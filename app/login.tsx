@@ -21,7 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
-import { getApiUrl } from "@/lib/query-client";
+import { getApiUrl, getCityHeaders } from "@/lib/query-client";
 import {
   onboardingSlides,
   OnboardingSlide,
@@ -403,7 +403,7 @@ export default function LoginScreen() {
 
                 {mode === "register" && (
                   <Pressable
-                    onPress={() => Linking.openURL(`${getApiUrl()}/privacy-policy`)}
+                    onPress={() => { const cityId = getCityHeaders()["X-City-Id"] || "paris"; Linking.openURL(`${getApiUrl()}/privacy-policy?city=${cityId}`); }}
                     style={formStyles.privacyContainer}
                   >
                     <Text style={formStyles.privacyText}>

@@ -19,7 +19,7 @@ import Colors from "@/constants/colors";
 import { getUserLevel, getNextLevel, getLocalizedName } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePodcasts } from "@/contexts/PodcastContext";
-import { getApiUrl } from "@/lib/query-client";
+import { getApiUrl, getCityHeaders } from "@/lib/query-client";
 import { useTranslation } from "@/i18n/useTranslation";
 
 const LANGUAGES = [
@@ -160,7 +160,8 @@ export default function ProfileScreen() {
 
   const openPrivacyPolicy = () => {
     const baseUrl = getApiUrl();
-    Linking.openURL(`${baseUrl}/privacy-policy`);
+    const cityId = getCityHeaders()["X-City-Id"] || "paris";
+    Linking.openURL(`${baseUrl}/privacy-policy?city=${cityId}`);
   };
 
   if (!user) return null;

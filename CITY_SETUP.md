@@ -5,7 +5,7 @@ This project runs a **single server** that serves multiple city apps. Each city 
 ## How It Works
 
 1. The `cities` table in the database holds all city configuration (name, country, app name, localized names, AI prompt config, etc.)
-2. The frontend reads its city ID from `app.json` → `expo.extra.cityId` (or `EXPO_PUBLIC_CITY_ID` env var)
+2. The frontend reads its city ID from `EXPO_PUBLIC_CITY_ID` env var (passed through `app.config.ts` → `expo.extra.cityId`)
 3. Every API request includes `X-City-Id: <citySlug>` header via `lib/query-client.ts`
 4. Server middleware (`server/city-middleware.ts`) resolves the city config from DB with a 5-minute cache
 5. All DB queries are scoped by `cityId` — users, podcasts, and history are city-isolated
@@ -43,35 +43,78 @@ INSERT INTO cities (
 );
 ```
 
-See the Paris seed data for the complete structure of each JSON field.
+See the Paris seed data in `scripts/multi-tenant-migration.sql` for the complete structure of each JSON field.
 
-### Step 2: Create the Frontend App
+### Step 2: Build the Frontend App
 
-1. Duplicate the Expo project (or create a new Repl)
-2. Update `app.json`:
-   - `name` — App display name (e.g., "Amsterdam Stories")
-   - `slug` — URL-safe slug (e.g., "amsterdam-stories")
-   - `ios.bundleIdentifier` — Must match `bundleId` in the city DB record
-   - `expo.extra.cityId` — Set to the city slug (e.g., `"amsterdam"`)
-3. Update `constants/city.ts` with the matching city identity for the frontend
-4. Update `constants/themes.ts` with city-specific curated themes, topics, and angles
-5. Update `constants/onboarding.ts` with city-specific slide content
-6. Update assets (icon, splash, category images)
+The frontend is configured entirely via environment variables — no code changes are needed for app identity. Set these env vars in your EAS build profile or local environment:
 
-### Step 3: Configure Environment
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `EXPO_PUBLIC_CITY_ID` | `amsterdam` | City slug (matches `id` in cities table) |
+| `EXPO_PUBLIC_APP_NAME` | `Amsterdam Stories` | App display name |
+| `EXPO_PUBLIC_APP_SLUG` | `amsterdam-stories` | URL-safe app slug |
+| `EXPO_PUBLIC_BUNDLE_ID` | `app.replit.amsterdamstories` | iOS bundle identifier |
+| `EXPO_PUBLIC_SCHEME` | `amsterdamstories` | URL scheme for deep linking |
+| `EXPO_PUBLIC_ANDROID_PACKAGE` | `com.greenhome.amsterdamstories` | Android package name |
+| `EXPO_PUBLIC_API_DOMAIN` | `paris-stories.replit.app` | Shared backend domain |
+| `EXPO_PUBLIC_EAS_PROJECT_ID` | `(your EAS project ID)` | EAS project ID |
+| `EXPO_PUBLIC_FIREBASE_API_KEY` | `(key)` | Firebase API key (shared or per-city) |
+| `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | `(project)` | Firebase project ID |
+| `EXPO_PUBLIC_FIREBASE_APP_ID` | `(app id)` | Firebase app ID |
 
-The frontend app needs:
-- `EXPO_PUBLIC_CITY_ID` — City slug (matches `id` in cities table)
-- `FIREBASE_*` vars — Can share the same Firebase project or use a separate one
-- The same backend URL (all cities share one server)
+`app.config.ts` reads these env vars and configures the Expo build automatically. If a var is not set, it defaults to Paris values.
 
-### Step 4: Update Content
+#### EAS Build Profile Example
+
+Add a new profile to `eas.json`:
+
+```json
+{
+  "build": {
+    "production:amsterdam": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "amsterdam",
+        "EXPO_PUBLIC_APP_NAME": "Amsterdam Stories",
+        "EXPO_PUBLIC_APP_SLUG": "amsterdam-stories",
+        "EXPO_PUBLIC_BUNDLE_ID": "app.replit.amsterdamstories",
+        "EXPO_PUBLIC_SCHEME": "amsterdamstories",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories"
+      }
+    }
+  },
+  "submit": {
+    "production:amsterdam": {
+      "ios": {
+        "appleId": "your@email.com",
+        "ascAppId": "YOUR_APP_STORE_CONNECT_ID",
+        "appleTeamId": "YOUR_TEAM_ID"
+      }
+    }
+  }
+}
+```
+
+Then build with: `eas build --platform ios --profile production:amsterdam`
+
+### Step 3: Update Content (per-city customization)
+
+These files contain curated content and may need city-specific updates:
 
 - `constants/themes.ts` — Replace all curated themes, topics, and angles
 - `constants/onboarding.ts` — Update slide content for the new city
+- `constants/city.ts` — Frontend city identity (name, localizations, user levels)
 - `i18n/*.ts` — Review city-specific flavor text (most uses `%{city}` interpolation)
 - `APP_STORE_METADATA.md` — Full rewrite for the new city
 - Assets — Icons, splash screen, category images
+
+### Step 4: Verify
+
+- Test privacy policy: `/privacy-policy?city=amsterdam`
+- Test podcast generation with city-specific prompts
+- Test moderation accepts new-city topics
+- Verify audio files stored under `podcast-audio/amsterdam/`
 
 ## Architecture Notes
 
@@ -86,22 +129,29 @@ The frontend app needs:
 - City config is loaded from DB and cached in memory for 5 minutes
 - If no header is sent, defaults to `"paris"` for backward compatibility
 - Privacy policy endpoint uses `?city=<slug>` query parameter
+- Audio stream endpoint uses `?city=<slug>` query parameter (for native audio players)
 
 ### AI Prompts
-AI prompt content (role descriptions, moderation templates, walking tour and modern culture perspectives) is stored in the `cities` table and loaded dynamically. The `server/city-prompts.ts` module provides helper functions that accept a `City` object, reading DB values first and falling back to code-generated prompts using city name interpolation. User prompt templates and curated/custom prompts are generated from city identity fields (localized names).
+AI prompt content (role descriptions, moderation templates, walking tour and modern culture perspectives) is stored in the `cities` table and loaded dynamically. The `server/city-prompts.ts` module provides helper functions that accept a `City` object, reading DB values first and falling back to code-generated prompts using city name interpolation.
 
 ### Object Storage
 Audio files are stored under `podcast-audio/{cityId}/{filename}` in Object Storage. Legacy files under `podcast-audio/{filename}` (pre-multi-tenant) are checked as fallback for backward compatibility.
 
+### Account Deletion
+When a user deletes their account for one city, only the DB data for that city is removed. The underlying Firebase auth user is only deleted if no other city accounts remain for the same Firebase UID.
+
+### Generation Job Isolation
+Podcast generation jobs are scoped by `(userId, cityId)`. The job polling endpoint validates ownership before returning job status/results.
+
 ## Checklist for New City
 
 - [ ] City record inserted in `cities` table with all fields
-- [ ] Frontend `app.json` updated (name, slug, bundleId, cityId)
+- [ ] EAS build profile created with all `EXPO_PUBLIC_*` env vars
 - [ ] `constants/city.ts` updated for frontend identity
 - [ ] `constants/themes.ts` — All themes, topics, angles replaced
 - [ ] `constants/onboarding.ts` — Slide content updated
 - [ ] `i18n/*.ts` — City-specific text reviewed
-- [ ] `eas.json` — Apple credentials for new app
+- [ ] `eas.json` submit section — Apple credentials for new app
 - [ ] Assets — Icons, splash, category images
 - [ ] `APP_STORE_METADATA.md` — Full rewrite
 - [ ] Privacy policy — Verify via `/privacy-policy?city=<slug>`

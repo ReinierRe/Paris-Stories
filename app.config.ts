@@ -1,33 +1,24 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
-const CITY_CONFIGS: Record<string, { name: string; slug: string; bundleId: string; scheme: string; androidPackage: string }> = {
-  paris: {
-    name: "Paris Stories",
-    slug: "paris-stories",
-    bundleId: "app.replit.parisstories",
-    scheme: "parisstories",
-    androidPackage: "com.greenhome.parisstories",
-  },
-};
-
 export default ({ config }: ConfigContext): ExpoConfig => {
   const cityId = process.env.EXPO_PUBLIC_CITY_ID || "paris";
-  const cityConfig = CITY_CONFIGS[cityId];
-  if (!cityConfig) {
-    throw new Error(
-      `Unknown EXPO_PUBLIC_CITY_ID: "${cityId}". Add this city to CITY_CONFIGS in app.config.ts before building.`
-    );
-  }
+  const appName = process.env.EXPO_PUBLIC_APP_NAME || "Paris Stories";
+  const appSlug = process.env.EXPO_PUBLIC_APP_SLUG || "paris-stories";
+  const bundleId = process.env.EXPO_PUBLIC_BUNDLE_ID || "app.replit.parisstories";
+  const scheme = process.env.EXPO_PUBLIC_SCHEME || "parisstories";
+  const androidPackage = process.env.EXPO_PUBLIC_ANDROID_PACKAGE || "com.greenhome.parisstories";
+  const apiDomain = process.env.EXPO_PUBLIC_API_DOMAIN || config.extra?.apiDomain || "paris-stories.replit.app";
+  const easProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID || config.extra?.eas?.projectId || "68998269-2bf6-4afa-8d80-56df617ea768";
 
   return {
     ...config,
-    name: cityConfig.name,
-    slug: cityConfig.slug,
+    name: appName,
+    slug: appSlug,
     version: config.version || "1.0.4",
     runtimeVersion: "exposdk:54.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: cityConfig.scheme,
+    scheme,
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
@@ -37,9 +28,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     ios: {
       supportsTablet: false,
-      bundleIdentifier: cityConfig.bundleId,
+      bundleIdentifier: bundleId,
       associatedDomains: [
-        `webcredentials:${cityConfig.slug}.replit.app`,
+        `webcredentials:${appSlug}.replit.app`,
       ],
       infoPlist: {
         UIBackgroundModes: ["audio"],
@@ -47,7 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
     },
     android: {
-      package: cityConfig.androidPackage,
+      package: androidPackage,
       adaptiveIcon: {
         backgroundColor: "#0B1628",
         foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -70,12 +61,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     extra: {
       router: { origin: "https://replit.com/" },
-      eas: { projectId: config.extra?.eas?.projectId || "68998269-2bf6-4afa-8d80-56df617ea768" },
+      eas: { projectId: easProjectId },
       cityId,
-      apiDomain: config.extra?.apiDomain || "paris-stories.replit.app",
-      firebaseApiKey: config.extra?.firebaseApiKey || process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
-      firebaseProjectId: config.extra?.firebaseProjectId || process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "",
-      firebaseAppId: config.extra?.firebaseAppId || process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
+      apiDomain,
+      firebaseApiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || config.extra?.firebaseApiKey || "",
+      firebaseProjectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || config.extra?.firebaseProjectId || "",
+      firebaseAppId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || config.extra?.firebaseAppId || "",
     },
   };
 };

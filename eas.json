@@ -11,25 +11,34 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_CITY_ID": "paris"
+        "EXPO_PUBLIC_CITY_ID": "paris",
+        "EXPO_PUBLIC_APP_NAME": "Paris Stories",
+        "EXPO_PUBLIC_APP_SLUG": "paris-stories",
+        "EXPO_PUBLIC_BUNDLE_ID": "app.replit.parisstories",
+        "EXPO_PUBLIC_SCHEME": "parisstories",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.parisstories"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_CITY_ID": "paris"
+        "EXPO_PUBLIC_CITY_ID": "paris",
+        "EXPO_PUBLIC_APP_NAME": "Paris Stories",
+        "EXPO_PUBLIC_APP_SLUG": "paris-stories",
+        "EXPO_PUBLIC_BUNDLE_ID": "app.replit.parisstories",
+        "EXPO_PUBLIC_SCHEME": "parisstories",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.parisstories"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_CITY_ID": "paris"
-      }
-    },
-    "production:paris": {
-      "extends": "production",
-      "env": {
-        "EXPO_PUBLIC_CITY_ID": "paris"
+        "EXPO_PUBLIC_CITY_ID": "paris",
+        "EXPO_PUBLIC_APP_NAME": "Paris Stories",
+        "EXPO_PUBLIC_APP_SLUG": "paris-stories",
+        "EXPO_PUBLIC_BUNDLE_ID": "app.replit.parisstories",
+        "EXPO_PUBLIC_SCHEME": "parisstories",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.parisstories"
       }
     }
   },

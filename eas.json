@@ -9,13 +9,28 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "paris"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "paris"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "paris"
+      }
+    },
+    "production:paris": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "paris"
+      }
     }
   },
   "submit": {

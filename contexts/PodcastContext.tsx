@@ -1,19 +1,25 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiRequest, getApiUrl } from "@/lib/query-client";
+import { apiRequest, getApiUrl, getCityHeaders } from "@/lib/query-client";
 
 export function resolveAudioUrl(audioUrl: string): string {
   if (!audioUrl) return "";
+  const cityHeaders = getCityHeaders();
+  const cityId = cityHeaders["X-City-Id"] || "paris";
   if (audioUrl.startsWith("http://") || audioUrl.startsWith("https://")) {
     try {
       const url = new URL(audioUrl);
-      return new URL(url.pathname, getApiUrl()).toString();
+      const resolved = new URL(url.pathname, getApiUrl());
+      resolved.searchParams.set("city", cityId);
+      return resolved.toString();
     } catch {
       return audioUrl;
     }
   }
-  return new URL(audioUrl, getApiUrl()).toString();
+  const resolved = new URL(audioUrl, getApiUrl());
+  resolved.searchParams.set("city", cityId);
+  return resolved.toString();
 }
 
 export interface Podcast {

@@ -938,8 +938,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendFile(localPath);
     }
 
-    const { cityId } = getCityFromRequest(req);
-    const streamed = await streamAudioFromStorage(cityId, filename, res);
+    const cityIdParam = (req.query.city as string) || req.headers["x-city-id"] as string || "paris";
+    const streamed = await streamAudioFromStorage(cityIdParam, filename, res);
     if (!streamed) {
       return res.status(404).json({ error: "Audio not found" });
     }

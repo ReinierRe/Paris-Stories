@@ -1037,21 +1037,23 @@ export interface UserLevel {
   descriptionEs: string;
 }
 
-export const userLevels: UserLevel[] = getCityConfigSync().userLevels.map((level) => ({
-  id: level.id,
-  name: level.name.en,
-  nameNl: level.name.nl,
-  nameFr: level.name.fr,
-  nameDe: level.name.de,
-  nameEs: level.name.es,
-  icon: level.icon,
-  minPodcasts: level.minPodcasts,
-  description: level.description.en,
-  descriptionNl: level.description.nl,
-  descriptionFr: level.description.fr,
-  descriptionDe: level.description.de,
-  descriptionEs: level.description.es,
-}));
+export function getUserLevels(): UserLevel[] {
+  return getCityConfigSync().userLevels.map((level) => ({
+    id: level.id,
+    name: level.name.en,
+    nameNl: level.name.nl,
+    nameFr: level.name.fr,
+    nameDe: level.name.de,
+    nameEs: level.name.es,
+    icon: level.icon,
+    minPodcasts: level.minPodcasts,
+    description: level.description.en,
+    descriptionNl: level.description.nl,
+    descriptionFr: level.description.fr,
+    descriptionDe: level.description.de,
+    descriptionEs: level.description.es,
+  }));
+}
 
 interface Localizable {
   name: string;
@@ -1090,19 +1092,21 @@ export function getLocalizedDescription(item: LocalizableWithDescription, langua
 }
 
 export function getUserLevel(podcastCount: number): UserLevel {
-  for (let i = userLevels.length - 1; i >= 0; i--) {
-    if (podcastCount >= userLevels[i].minPodcasts) {
-      return userLevels[i];
+  const levels = getUserLevels();
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (podcastCount >= levels[i].minPodcasts) {
+      return levels[i];
     }
   }
-  return userLevels[0];
+  return levels[0];
 }
 
 export function getNextLevel(podcastCount: number): UserLevel | null {
+  const levels = getUserLevels();
   const currentLevel = getUserLevel(podcastCount);
-  const currentIndex = userLevels.indexOf(currentLevel);
-  if (currentIndex < userLevels.length - 1) {
-    return userLevels[currentIndex + 1];
+  const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
+  if (currentIndex >= 0 && currentIndex < levels.length - 1) {
+    return levels[currentIndex + 1];
   }
   return null;
 }

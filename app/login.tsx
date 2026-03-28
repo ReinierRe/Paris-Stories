@@ -23,7 +23,7 @@ import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiUrl, getCityHeaders } from "@/lib/query-client";
 import {
-  onboardingSlides,
+  getOnboardingSlides,
   OnboardingSlide,
   onboardingCategories,
   onboardingPodcastExamples,
@@ -35,8 +35,6 @@ import { getCityConfigSync } from "@/constants/city";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type Mode = "login" | "register";
-
-const slides = onboardingSlides;
 
 function PhoneMockup({ children }: { children: React.ReactNode }) {
   return (
@@ -186,6 +184,7 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { login, register, isLoading, resetPassword } = useAuth();
   const flatListRef = useRef<FlatList>(null);
+  const slides = getOnboardingSlides();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mode, setMode] = useState<Mode>("register");

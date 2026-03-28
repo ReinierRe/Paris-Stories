@@ -84,7 +84,7 @@ Welcome to Paris Stories! Discover the real Paris through AI-powered podcast sto
 
 **Subtitle**:
 ```
-Jouw Persoonlijke Parijs Podcast
+Jouw Parijs Podcastgids
 ```
 
 **Description**:
@@ -202,7 +202,7 @@ Bienvenue dans Paris Stories ! Découvrez le vrai Paris à travers des podcasts 
 
 **Subtitle**:
 ```
-Dein persönlicher Paris-Podcast
+Dein Paris-Podcast Erlebnis
 ```
 
 **Description**:
@@ -261,7 +261,7 @@ Willkommen bei Paris Stories! Entdecke das echte Paris mit KI-generierten Podcas
 
 **Subtitle**:
 ```
-Podcasts de París Personalizados
+Podcasts de París a tu medida
 ```
 
 **Description**:

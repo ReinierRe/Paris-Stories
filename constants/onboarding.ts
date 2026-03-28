@@ -1,4 +1,4 @@
-import city from "./city";
+import { getCityConfigSync } from "./city";
 
 export interface OnboardingSlide {
   id: string;
@@ -45,7 +45,7 @@ export const onboardingCustomSubjectExample = `I am visiting Montmartre, tell me
 export const onboardingSlides: OnboardingSlide[] = [
   {
     id: "welcome",
-    title: `Discover the\nReal ${city.name}`,
+    title: `Discover the\nReal ${getCityConfigSync().name}`,
     subtitle: "Tailored history, culture, and local tales — brought to life through immersive audio stories.",
   },
   {
@@ -71,7 +71,7 @@ export const onboardingSlides: OnboardingSlide[] = [
   {
     id: "custom",
     title: "Create Your\nOwn Adventure",
-    subtitle: `Tell the AI your interests and get a personalized story — your own private ${city.name} guide.`,
+    subtitle: `Tell the AI your interests and get a personalized story — your own private ${getCityConfigSync().name} guide.`,
     features: [
       { icon: "sparkles", text: "AI-powered stories" },
       { icon: "create", text: "Choose your angle" },

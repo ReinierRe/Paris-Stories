@@ -30,7 +30,7 @@ import {
   onboardingCategoryTopicCounts,
   onboardingCustomSubjectExample,
 } from "@/constants/onboarding";
-import city from "@/constants/city";
+import { getCityConfigSync } from "@/constants/city";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -119,7 +119,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
     return (
       <View style={slideStyles.visualContainer}>
         <PhoneMockup>
-          <Text style={mockupStyles.screenTitle}>{city.appName}</Text>
+          <Text style={mockupStyles.screenTitle}>{getCityConfigSync().appName}</Text>
           <Text style={mockupStyles.screenSubtitle}>Explore categories</Text>
           <View style={mockupStyles.categoryList}>
             {categoryIcons.slice(0, 5).map((cat, i) => (
@@ -149,7 +149,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
                 <Text style={mockupStyles.customLabel}>CUSTOM PODCAST</Text>
               </View>
               <Text style={mockupStyles.customTitle}>Your subject</Text>
-              <Text style={mockupStyles.customSubtitle}>What {city.name} story would you like?</Text>
+              <Text style={mockupStyles.customSubtitle}>What {getCityConfigSync().name} story would you like?</Text>
               <View style={mockupStyles.textareaBox}>
                 <Text style={mockupStyles.textareaText}>{onboardingCustomSubjectExample}</Text>
               </View>

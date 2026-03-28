@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { PodcastProvider } from "@/contexts/PodcastContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { CityConfigProvider } from "@/contexts/CityConfigContext";
 import LoginScreen from "@/app/login";
 import { Asset } from "expo-asset";
 import {
@@ -120,15 +121,17 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <PodcastProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <KeyboardProvider>
-                <AuthGate />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </PodcastProvider>
-        </AuthProvider>
+        <CityConfigProvider>
+          <AuthProvider>
+            <PodcastProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <KeyboardProvider>
+                  <AuthGate />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </PodcastProvider>
+          </AuthProvider>
+        </CityConfigProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCityConfig } from "@/contexts/CityConfigContext";
 import i18n from "./index";
-import city from "@/constants/city";
 
 const supportedLocales = ["en", "nl", "fr", "de", "es"] as const;
 type SupportedLanguage = (typeof supportedLocales)[number];
@@ -13,12 +13,9 @@ function toSupportedLocale(lang: string | undefined): SupportedLanguage {
   return "en";
 }
 
-function getCityName(locale: SupportedLanguage): string {
-  return city.localizedNames[locale] || city.localizedNames.en;
-}
-
 export function useTranslation() {
   const { user } = useAuth();
+  const { cityConfig } = useCityConfig();
   const locale = toSupportedLocale(user?.preferredLanguage);
 
   i18n.locale = locale;
@@ -31,9 +28,11 @@ export function useTranslation() {
 
   const t = useCallback(
     (key: string, options?: Record<string, any>) => {
-      return i18n.t(key, { city: getCityName(locale), appName: city.topLevelName[locale] || city.appName, ...options });
+      const cityName = cityConfig.localizedNames[locale] || cityConfig.localizedNames.en;
+      const appName = cityConfig.topLevelName[locale] || cityConfig.appName;
+      return i18n.t(key, { city: cityName, appName, ...options });
     },
-    [locale],
+    [locale, cityConfig],
   );
 
   return {

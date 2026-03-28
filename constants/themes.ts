@@ -1,4 +1,4 @@
-import city from "./city";
+import { getCityConfigSync } from "./city";
 
 export interface Topic {
   id: string;
@@ -1037,7 +1037,7 @@ export interface UserLevel {
   descriptionEs: string;
 }
 
-export const userLevels: UserLevel[] = city.userLevels.map((level) => ({
+export const userLevels: UserLevel[] = getCityConfigSync().userLevels.map((level) => ({
   id: level.id,
   name: level.name.en,
   nameNl: level.name.nl,

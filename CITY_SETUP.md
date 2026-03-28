@@ -21,10 +21,8 @@ INSERT INTO cities (
   id, name, country, app_name, bundle_id, contact_email,
   privacy_policy_date, localized_names, localized_country,
   top_level_name, user_levels,
-  role_description, moderation_prompt, moderation_reject_message,
-  custom_angle_perspectives, walking_tour_perspective,
-  curated_user_prompt_template, custom_user_prompt_template,
-  google_tts_instructions
+  role_description, moderation_prompt_template, moderation_reject_template,
+  walking_tour_perspective, modern_culture_perspective
 ) VALUES (
   'amsterdam',
   'Amsterdam',
@@ -36,15 +34,12 @@ INSERT INTO cities (
   '{"en":"Amsterdam","nl":"Amsterdam","fr":"Amsterdam","de":"Amsterdam","es":"Ámsterdam"}',
   '{"en":"the Netherlands","nl":"Nederland","fr":"les Pays-Bas","de":"die Niederlande","es":"los Países Bajos"}',
   '{"en":"Amsterdam Stories","nl":"Amsterdam Stories","fr":"Amsterdam Stories","de":"Amsterdam Stories","es":"Amsterdam Stories"}',
-  '[...]',  -- JSON array of user level objects
-  '{...}',  -- JSON object with role descriptions per language
-  '...',    -- Moderation system prompt text
-  '...',    -- Moderation rejection message
-  '{...}',  -- Custom angle perspectives JSON
-  '{...}',  -- Walking tour perspective JSON
-  '...',    -- Curated user prompt template
-  '...',    -- Custom user prompt template
-  '{...}'   -- Google TTS instructions JSON
+  '[...]',  -- JSON array of user level objects (see Paris seed for format)
+  '{...}',  -- JSON object with role descriptions per language (nl/fr/de/es/en)
+  '...',    -- Moderation prompt template with {city}, {country}, {subject} placeholders
+  '...',    -- Moderation rejection template with {appName}, {city} placeholders
+  '{...}',  -- Walking tour perspective JSON per language (nl/fr/de/es/en)
+  '{...}'   -- Modern culture perspective JSON per language (nl/fr/de/es/en)
 );
 ```
 
@@ -93,7 +88,10 @@ The frontend app needs:
 - Privacy policy endpoint uses `?city=<slug>` query parameter
 
 ### AI Prompts
-All AI prompt content (role descriptions, moderation, user prompts, TTS instructions) is stored in the `cities` table and loaded dynamically. The `server/city-prompts.ts` module provides helper functions that accept a `City` object parameter.
+AI prompt content (role descriptions, moderation templates, walking tour and modern culture perspectives) is stored in the `cities` table and loaded dynamically. The `server/city-prompts.ts` module provides helper functions that accept a `City` object, reading DB values first and falling back to code-generated prompts using city name interpolation. User prompt templates and curated/custom prompts are generated from city identity fields (localized names).
+
+### Object Storage
+Audio files are stored under `podcast-audio/{cityId}/{filename}` in Object Storage. Legacy files under `podcast-audio/{filename}` (pre-multi-tenant) are checked as fallback for backward compatibility.
 
 ## Checklist for New City
 

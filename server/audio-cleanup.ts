@@ -12,7 +12,7 @@ function getAudioBucketName(): string {
   return bucketId;
 }
 
-export async function deleteAudioFiles(filenames: string[]): Promise<void> {
+export async function deleteAudioFiles(filenames: string[], cityId: string = "paris"): Promise<void> {
   for (const filename of filenames) {
     try {
       const localPath = path.join(AUDIO_DIR, filename);
@@ -26,11 +26,13 @@ export async function deleteAudioFiles(filenames: string[]): Promise<void> {
     try {
       const bucketName = getAudioBucketName();
       const bucket = objectStorageClient.bucket(bucketName);
-      const file = bucket.file(`podcast-audio/${filename}`);
-      const [exists] = await file.exists();
-      if (exists) {
-        await file.delete();
-        console.log(`Deleted ${filename} from Object Storage`);
+      for (const p of [`podcast-audio/${cityId}/${filename}`, `podcast-audio/${filename}`]) {
+        const file = bucket.file(p);
+        const [exists] = await file.exists();
+        if (exists) {
+          await file.delete();
+          console.log(`Deleted ${filename} from Object Storage (${p})`);
+        }
       }
     } catch (err) {
       console.warn(`Failed to delete ${filename} from Object Storage:`, err);

@@ -130,10 +130,11 @@ export async function setupAuth(app: Express): Promise<void> {
     try {
       const user = (req as any).user;
 
+      const { cityId } = getCityFromRequest(req);
       const audioFiles = await getUserCustomPodcastAudioFiles(user.id);
       if (audioFiles.length > 0) {
         const { deleteAudioFiles } = await import("./audio-cleanup");
-        await deleteAudioFiles(audioFiles);
+        await deleteAudioFiles(audioFiles, cityId);
       }
 
       await deleteUserAndData(user.id);

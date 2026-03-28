@@ -21,6 +21,11 @@ export const cities = pgTable("cities", {
     name: Record<string, string>;
     description: Record<string, string>;
   }[]>(),
+  roleDescription: jsonb("role_description").$type<Record<string, string>>(),
+  moderationPromptTemplate: text("moderation_prompt_template"),
+  moderationRejectTemplate: text("moderation_reject_template"),
+  walkingTourPerspective: jsonb("walking_tour_perspective").$type<Record<string, string>>(),
+  modernCulturePerspective: jsonb("modern_culture_perspective").$type<Record<string, string>>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -31,7 +36,7 @@ export const users = pgTable("users", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris"),
+  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
   email: text("email").notNull(),
   password: text("password"),
   firstName: text("first_name"),
@@ -58,7 +63,7 @@ export const cachedPodcasts = pgTable("cached_podcasts", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris"),
+  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
   topicId: text("topic_id").notNull(),
   angle: text("angle").notNull().default(""),
   voice: text("voice").notNull(),
@@ -85,7 +90,7 @@ export const customPodcasts = pgTable("custom_podcasts", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris"),
+  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
   userId: text("user_id").notNull(),
   subject: text("subject").notNull(),
   title: text("title").notNull().default(""),
@@ -105,7 +110,7 @@ export const userPodcasts = pgTable("user_podcasts", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris"),
+  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
   userId: text("user_id").notNull(),
   cachedPodcastId: text("cached_podcast_id").notNull(),
   topicName: text("topic_name").notNull(),

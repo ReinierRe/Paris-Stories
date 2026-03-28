@@ -11,6 +11,9 @@ export function getCountryName(city: City, lang: string): string {
 }
 
 export function getRoleDescription(city: City, lang: string): Record<string, string> {
+  if (city.roleDescription) {
+    return city.roleDescription as Record<string, string>;
+  }
   const c = getCityName(city, lang);
   return {
     nl: `Je bent een deskundige solo-podcastverteller. Je bent een ervaren gids die met de luisteraar door ${c} wandelt. Je vertelstijl is warm maar nuchter. Je deelt feiten en achtergronden op een toegankelijke, ontspannen manier. Je schrijft in vloeiend, natuurlijk Nederlands.`,
@@ -41,14 +44,29 @@ export function getCustomUserPrompts(city: City, lang: string, subject: string):
 }
 
 export function getModerationPrompt(city: City, subject: string): string {
+  if (city.moderationPromptTemplate) {
+    return city.moderationPromptTemplate
+      .replace(/\{city\}/g, city.name)
+      .replace(/\{country\}/g, city.country)
+      .replace(/\{subject\}/g, subject);
+  }
   return `You are a content moderator. Determine if the following podcast topic is appropriate for a general audience. The topic should be related to ${city.name}, ${city.country}, travel, culture, history, food, or similar subjects. Reject topics that are: sexually explicit, promoting violence or hate, about illegal activities, about weapons or drugs, or completely unrelated to ${city.name}/${city.country}.\n\nTopic: "${subject}"\n\nRespond with ONLY "ALLOW" or "REJECT".`;
 }
 
 export function getModerationRejectMessage(city: City): string {
+  if (city.moderationRejectTemplate) {
+    return city.moderationRejectTemplate
+      .replace(/\{appName\}/g, city.appName)
+      .replace(/\{city\}/g, city.name);
+  }
   return `This topic is not suitable for ${city.appName}. Please choose a topic related to ${city.name}, its culture, history, or daily life.`;
 }
 
 export function getCustomAnglePerspectives(city: City): Record<string, Record<string, string>> {
+  const perspective = city.modernCulturePerspective as Record<string, string> | null;
+  if (perspective) {
+    return { "modern-culture": perspective };
+  }
   const names = city.localizedNames as Record<string, string>;
   return {
     "modern-culture": {
@@ -62,6 +80,9 @@ export function getCustomAnglePerspectives(city: City): Record<string, Record<st
 }
 
 export function getWalkingTourPerspective(city: City): Record<string, string> {
+  if (city.walkingTourPerspective) {
+    return city.walkingTourPerspective as Record<string, string>;
+  }
   const names = city.localizedNames as Record<string, string>;
   return {
     en: `Guide the listener as if walking through ${names.en} together. Describe what they would see, hear, and smell. Take them to the best and most famous places in the area. Use directional language and vivid sensory details.`,

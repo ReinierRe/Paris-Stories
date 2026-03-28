@@ -62,51 +62,68 @@ function getAudioBucketName(): string {
   return bucketId;
 }
 
-async function uploadAudioToStorage(filename: string, audioBuffer: Buffer): Promise<void> {
+function audioStoragePath(cityId: string, filename: string): string {
+  return `podcast-audio/${cityId}/${filename}`;
+}
+
+function legacyAudioStoragePath(filename: string): string {
+  return `podcast-audio/${filename}`;
+}
+
+async function uploadAudioToStorage(cityId: string, filename: string, audioBuffer: Buffer): Promise<void> {
   const bucketName = getAudioBucketName();
   const bucket = objectStorageClient.bucket(bucketName);
-  const file = bucket.file(`podcast-audio/${filename}`);
+  const file = bucket.file(audioStoragePath(cityId, filename));
   await file.save(audioBuffer, {
     contentType: "audio/wav",
     resumable: false,
   });
-  console.log(`Uploaded ${filename} to Object Storage`);
+  console.log(`Uploaded ${filename} to Object Storage (city: ${cityId})`);
 }
 
-async function audioExistsInStorage(filename: string): Promise<boolean> {
+async function audioExistsInStorage(cityId: string, filename: string): Promise<boolean> {
   try {
     const bucketName = getAudioBucketName();
     const bucket = objectStorageClient.bucket(bucketName);
-    const file = bucket.file(`podcast-audio/${filename}`);
+    const file = bucket.file(audioStoragePath(cityId, filename));
     const [exists] = await file.exists();
-    return exists;
+    if (exists) return true;
+    const legacyFile = bucket.file(legacyAudioStoragePath(filename));
+    const [legacyExists] = await legacyFile.exists();
+    return legacyExists;
   } catch {
     return false;
   }
 }
 
-async function deleteAudioFromStorage(filename: string): Promise<void> {
+async function deleteAudioFromStorage(cityId: string, filename: string): Promise<void> {
   try {
     const bucketName = getAudioBucketName();
     const bucket = objectStorageClient.bucket(bucketName);
-    const file = bucket.file(`podcast-audio/${filename}`);
-    const [exists] = await file.exists();
-    if (exists) {
-      await file.delete();
-      console.log(`Deleted ${filename} from Object Storage`);
+    for (const p of [audioStoragePath(cityId, filename), legacyAudioStoragePath(filename)]) {
+      const file = bucket.file(p);
+      const [exists] = await file.exists();
+      if (exists) {
+        await file.delete();
+        console.log(`Deleted ${filename} from Object Storage (${p})`);
+      }
     }
   } catch (err) {
     console.error(`Failed to delete ${filename} from Object Storage:`, err);
   }
 }
 
-async function streamAudioFromStorage(filename: string, res: Response): Promise<boolean> {
+async function streamAudioFromStorage(cityId: string, filename: string, res: Response): Promise<boolean> {
   try {
     const bucketName = getAudioBucketName();
     const bucket = objectStorageClient.bucket(bucketName);
-    const file = bucket.file(`podcast-audio/${filename}`);
-    const [exists] = await file.exists();
-    if (!exists) return false;
+    let file = bucket.file(audioStoragePath(cityId, filename));
+    let [exists] = await file.exists();
+    if (!exists) {
+      file = bucket.file(legacyAudioStoragePath(filename));
+      [exists] = await file.exists();
+      if (!exists) return false;
+    }
 
     const [metadata] = await file.getMetadata();
     res.set({
@@ -786,6 +803,7 @@ async function concatenateWavBuffers(buffers: Buffer[]): Promise<Buffer> {
 }
 
 async function generateScriptAndAudio(params: {
+  cityId: string;
   systemPrompt: string;
   userPrompt: string;
   voice: string;
@@ -881,7 +899,7 @@ async function generateScriptAndAudio(params: {
   const id = generateId();
   const filename = `${id}.wav`;
 
-  await uploadAudioToStorage(filename, combinedAudio);
+  await uploadAudioToStorage(params.cityId, filename, combinedAudio);
 
   try {
     const localPath = path.join(AUDIO_DIR, filename);
@@ -910,7 +928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/podcast/audio", express.static(AUDIO_DIR));
 
   app.get("/api/podcast/audio-stream/:filename", async (req: Request, res: Response) => {
-    const filename = req.params.filename;
+    const filename = req.params.filename as string;
     if (!filename) {
       return res.status(400).json({ error: "Missing filename" });
     }
@@ -920,7 +938,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendFile(localPath);
     }
 
-    const streamed = await streamAudioFromStorage(filename, res);
+    const { cityId } = getCityFromRequest(req);
+    const streamed = await streamAudioFromStorage(cityId, filename, res);
     if (!streamed) {
       return res.status(404).json({ error: "Audio not found" });
     }
@@ -975,7 +994,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (cached) {
           const audioPath = path.join(AUDIO_DIR, cached.audioFilename);
           const localExists = fs.existsSync(audioPath);
-          const storageExists = !localExists ? await audioExistsInStorage(cached.audioFilename) : false;
+          const storageExists = !localExists ? await audioExistsInStorage(cityId, cached.audioFilename) : false;
           if (localExists || storageExists) {
             console.log(`Cache hit for "${topicName}" [${cacheAngle || "no angle"}/${voice}/${language}/${cacheLength}]`);
 
@@ -1024,6 +1043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPrompt = getCuratedUserPrompt(cityConfig, language, topicName, themeName);
 
       generateScriptAndAudio({
+        cityId,
         systemPrompt,
         userPrompt,
         voice,
@@ -1327,6 +1347,7 @@ To sound natural, follow these rules:
       res.json({ jobId, status: "generating" });
 
       generateScriptAndAudio({
+        cityId,
         systemPrompt,
         userPrompt,
         voice,
@@ -1341,13 +1362,17 @@ To sound natural, follow these rules:
           const customFilename = `custom_${filename}`;
           const bucketName = getAudioBucketName();
           const bucket = objectStorageClient.bucket(bucketName);
-          const oldFile = bucket.file(`podcast-audio/${filename}`);
-          const [exists] = await oldFile.exists();
+          let sourceFile = bucket.file(audioStoragePath(cityId, filename));
+          let [exists] = await sourceFile.exists();
+          if (!exists) {
+            sourceFile = bucket.file(legacyAudioStoragePath(filename));
+            [exists] = await sourceFile.exists();
+          }
           if (exists) {
-            const [content] = await oldFile.download();
-            const newFile = bucket.file(`podcast-audio/${customFilename}`);
+            const [content] = await sourceFile.download();
+            const newFile = bucket.file(audioStoragePath(cityId, customFilename));
             await newFile.save(content, { contentType: "audio/wav", resumable: false });
-            await oldFile.delete();
+            await sourceFile.delete();
             finalFilename = customFilename;
           }
 
@@ -1607,7 +1632,7 @@ To sound natural, follow these rules:
       if (fs.existsSync(audioPath)) {
         fs.unlinkSync(audioPath);
       }
-      await deleteAudioFromStorage(podcast.audioFilename);
+      await deleteAudioFromStorage(cityId, podcast.audioFilename);
 
       await db.delete(customPodcasts).where(eq(customPodcasts.id, podcastId));
       res.json({ success: true });

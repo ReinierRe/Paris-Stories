@@ -85,6 +85,7 @@ async function startMetroBundler(): Promise<void> {
       EXPO_PUBLIC_FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || "",
       EXPO_PUBLIC_FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || "",
       EXPO_PUBLIC_FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || "",
+      EXPO_PUBLIC_CITY_ID: "amsterdam",
     },
     cwd: process.cwd(),
   });

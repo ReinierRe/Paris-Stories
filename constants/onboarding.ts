@@ -56,7 +56,7 @@ const amsterdamPodcastExamples: OnboardingPodcastExample[] = [
 ];
 
 const parisCategoryTopicCounts = [8, 6, 10, 8, 7];
-const amsterdamCategoryTopicCounts = [8, 8, 8, 8, 8];
+const amsterdamCategoryTopicCounts = [8, 8, 8, 8, 8, 8, 8];
 
 const parisCustomSubjectExample = `I am visiting Montmartre, tell me about Picasso's life here`;
 const amsterdamCustomSubjectExample = `I am visiting the Jordaan, tell me about the history of the canals`;

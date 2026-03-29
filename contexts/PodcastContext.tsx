@@ -53,7 +53,10 @@ interface PodcastContextValue {
   refreshFromServer: () => Promise<void>;
 }
 
-const STORAGE_KEY = "paris_stories_podcasts";
+function getStorageKey(): string {
+  const cityId = getCityHeaders()["X-City-Id"] || "paris";
+  return `${cityId}_stories_podcasts`;
+}
 
 const PodcastContext = createContext<PodcastContextValue | null>(null);
 
@@ -65,7 +68,7 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
 
   const savePodcasts = async (newPodcasts: Podcast[]) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newPodcasts));
+      await AsyncStorage.setItem(getStorageKey(), JSON.stringify(newPodcasts));
     } catch (e) {
       console.error("Failed to save podcasts:", e);
     }
@@ -114,7 +117,7 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadLocal = async () => {
       try {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        const stored = await AsyncStorage.getItem(getStorageKey());
         if (stored) {
           const parsed: Podcast[] = JSON.parse(stored);
           const migrated = parsed.map((p) => {

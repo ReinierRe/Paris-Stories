@@ -26,20 +26,24 @@ export function getRoleDescription(city: City, lang: string): Record<string, str
 
 export function getCuratedUserPrompt(city: City, lang: string, topicName: string, themeName: string): string {
   const c = getCityName(city, lang);
+  const country = getCountryName(city, lang);
   if (lang === "nl") {
-    return `Schrijf een podcast over: ${topicName} (thema: ${themeName} in ${c})`;
+    return `Schrijf een podcast over: ${topicName} in ${c}, ${country} (thema: ${themeName}). Dit gaat UITSLUITEND over ${c}, NIET over een andere stad.`;
   }
-  return `Write a podcast about: ${topicName} (theme: ${themeName} in ${getCityName(city, "en")})`;
+  const cEn = getCityName(city, "en");
+  const countryEn = getCountryName(city, "en");
+  return `Write a podcast about: ${topicName} in ${cEn}, ${countryEn} (theme: ${themeName}). This is EXCLUSIVELY about ${cEn}, NOT about any other city.`;
 }
 
 export function getCustomUserPrompts(city: City, lang: string, subject: string): Record<string, string> {
   const names = city.localizedNames as Record<string, string>;
+  const countries = city.localizedCountry as Record<string, string>;
   return {
-    nl: `Schrijf een podcast over: ${subject} (in de context van ${names.nl || city.name})`,
-    fr: `Ecrivez un podcast sur: ${subject} (dans le contexte de ${names.fr || city.name})`,
-    de: `Schreibe einen Podcast ueber: ${subject} (im Kontext von ${names.de || city.name})`,
-    es: `Escribe un podcast sobre: ${subject} (en el contexto de ${names.es || city.name})`,
-    en: `Write a podcast about: ${subject} (in the context of ${names.en || city.name})`,
+    nl: `Schrijf een podcast over: ${subject} in ${names.nl || city.name}, ${countries.nl || city.country}. Dit gaat UITSLUITEND over ${names.nl || city.name}, NIET over een andere stad.`,
+    fr: `Ecrivez un podcast sur: ${subject} a ${names.fr || city.name}, ${countries.fr || city.country}. Ceci concerne EXCLUSIVEMENT ${names.fr || city.name}, PAS une autre ville.`,
+    de: `Schreibe einen Podcast ueber: ${subject} in ${names.de || city.name}, ${countries.de || city.country}. Dies handelt AUSSCHLIESSLICH von ${names.de || city.name}, NICHT von einer anderen Stadt.`,
+    es: `Escribe un podcast sobre: ${subject} en ${names.es || city.name}, ${countries.es || city.country}. Esto es EXCLUSIVAMENTE sobre ${names.es || city.name}, NO sobre otra ciudad.`,
+    en: `Write a podcast about: ${subject} in ${names.en || city.name}, ${countries.en || city.country}. This is EXCLUSIVELY about ${names.en || city.name}, NOT about any other city.`,
   };
 }
 

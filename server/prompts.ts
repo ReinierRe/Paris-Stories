@@ -1,6 +1,6 @@
 import type { City } from "@shared/schema";
 import type { VoiceType } from "./google-tts";
-import { getRoleDescription, getWalkingTourPerspective, getCustomAnglePerspectives } from "./city-prompts";
+import { getRoleDescription, getWalkingTourPerspective, getCustomAnglePerspectives, getCityName, getCountryName } from "./city-prompts";
 
 export interface SiblingAngle {
   name: string;
@@ -445,9 +445,17 @@ export function getSystemPrompt(params: {
 
   const roles = city ? getRoleDescription(city, langKey) : { nl: "", fr: "", de: "", es: "", en: "" };
 
+  const cityConstraint: Record<string, string> = city ? {
+    nl: `\n\n## Locatie\nDeze podcast gaat UITSLUITEND over ${getCityName(city, "nl")}, ${getCountryName(city, "nl")}. Alle feiten, locaties en verhalen moeten betrekking hebben op ${getCityName(city, "nl")}. Verwijs NIET naar plaatsen in andere steden.`,
+    fr: `\n\n## Localisation\nCe podcast concerne EXCLUSIVEMENT ${getCityName(city, "fr")}, ${getCountryName(city, "fr")}. Tous les faits, lieux et histoires doivent se rapporter a ${getCityName(city, "fr")}. Ne faites PAS reference a des lieux d'autres villes.`,
+    de: `\n\n## Standort\nDieser Podcast handelt AUSSCHLIESSLICH von ${getCityName(city, "de")}, ${getCountryName(city, "de")}. Alle Fakten, Orte und Geschichten muessen sich auf ${getCityName(city, "de")} beziehen. Verweisen Sie NICHT auf Orte in anderen Staedten.`,
+    es: `\n\n## Ubicacion\nEste podcast es EXCLUSIVAMENTE sobre ${getCityName(city, "es")}, ${getCountryName(city, "es")}. Todos los hechos, lugares e historias deben estar relacionados con ${getCityName(city, "es")}. NO hagas referencia a lugares de otras ciudades.`,
+    en: `\n\n## Location\nThis podcast is EXCLUSIVELY about ${getCityName(city, "en")}, ${getCountryName(city, "en")}. All facts, locations, and stories must relate to ${getCityName(city, "en")}. Do NOT reference places in other cities.`,
+  } : { nl: "", fr: "", de: "", es: "", en: "" };
+
   const prompts: Record<string, string> = {
     nl: `## Jouw Rol
-${roles.nl}
+${roles.nl}${cityConstraint.nl}
 
 ## Perspectief
 ${perspectiveText}
@@ -473,7 +481,7 @@ Om natuurlijk te klinken, hanteer je deze regels:
 - Eindig met een interessant feit of een gedachte die blijft hangen.${googleVoiceType ? getGoogleTtsInstructions("nl", googleVoiceType, city) : ""}`,
 
     fr: `## Votre Role
-${roles.fr}
+${roles.fr}${cityConstraint.fr}
 
 ## Perspective
 ${perspectiveText}
@@ -499,7 +507,7 @@ Pour sonner naturellement, suivez ces regles:
 - Terminez avec un fait interessant ou une pensee qui reste.${googleVoiceType ? getGoogleTtsInstructions("fr", googleVoiceType, city) : ""}`,
 
     de: `## Deine Rolle
-${roles.de}
+${roles.de}${cityConstraint.de}
 
 ## Perspektive
 ${perspectiveText}
@@ -525,7 +533,7 @@ Um natuerlich zu klingen, befolge diese Regeln:
 - Ende mit einem interessanten Fakt oder einem Gedanken, der nachhallt.${googleVoiceType ? getGoogleTtsInstructions("de", googleVoiceType, city) : ""}`,
 
     es: `## Tu Rol
-${roles.es}
+${roles.es}${cityConstraint.es}
 
 ## Perspectiva
 ${perspectiveText}
@@ -551,7 +559,7 @@ Para sonar natural, sigue estas reglas:
 - Termina con un hecho interesante o un pensamiento que permanezca.${googleVoiceType ? getGoogleTtsInstructions("es", googleVoiceType, city) : ""}`,
 
     en: `## Your Role
-${roles.en}
+${roles.en}${cityConstraint.en}
 
 ## Perspective
 ${perspectiveText}

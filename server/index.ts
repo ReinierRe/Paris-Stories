@@ -74,8 +74,10 @@ async function startMetroBundler(): Promise<void> {
     stdio: ["pipe", "pipe", "pipe"],
     env: {
       ...process.env,
-      CI: "false",
+      CI: "1",
       EXPO_NO_DOCTOR: "1",
+      EXPO_OFFLINE: "1",
+      EXPO_NO_TELEMETRY: "1",
       EXPO_PACKAGER_PROXY_URL: `https://${process.env.REPLIT_DEV_DOMAIN}`,
       REACT_NATIVE_PACKAGER_HOSTNAME: process.env.REPLIT_DEV_DOMAIN || "0.0.0.0",
       EXPO_PUBLIC_DOMAIN: `${process.env.REPLIT_DEV_DOMAIN}`,

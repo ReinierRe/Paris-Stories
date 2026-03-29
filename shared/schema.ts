@@ -26,6 +26,9 @@ export const cities = pgTable("cities", {
   moderationRejectTemplate: text("moderation_reject_template"),
   walkingTourPerspective: jsonb("walking_tour_perspective").$type<Record<string, string>>(),
   modernCulturePerspective: jsonb("modern_culture_perspective").$type<Record<string, string>>(),
+  topicThemeMap: jsonb("topic_theme_map").$type<Record<string, string>>(),
+  themeAngles: jsonb("theme_angles").$type<Record<string, { id: string; names: Record<string, string>; descriptions: Record<string, string> }[]>>(),
+  perspectivePrompts: jsonb("perspective_prompts").$type<Record<string, Record<string, string>>>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

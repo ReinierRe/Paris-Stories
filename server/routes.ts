@@ -174,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const googleVoiceType = getGoogleVoiceType(voice, language);
       const langKey = getLanguageKey(language);
-      const siblingAngles = getSiblingAngles(topicId, perspective, language);
+      const siblingAngles = getSiblingAngles(topicId, perspective, language, cityConfig);
       const perspectiveText = resolvePerspectiveText(perspective, langKey, cityConfig);
       const systemPrompt = getSystemPrompt({
         language,

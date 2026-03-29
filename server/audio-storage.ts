@@ -67,6 +67,36 @@ export async function deleteAudioFromStorage(cityId: string, filename: string): 
   }
 }
 
+export async function renameAudioInStorage(cityId: string, oldFilename: string, newFilename: string): Promise<string> {
+  try {
+    const bucketName = getAudioBucketName();
+    const bucket = objectStorageClient.bucket(bucketName);
+    let sourceFile = bucket.file(audioStoragePath(cityId, oldFilename));
+    let [exists] = await sourceFile.exists();
+    if (!exists) {
+      sourceFile = bucket.file(legacyAudioStoragePath(oldFilename));
+      [exists] = await sourceFile.exists();
+    }
+    if (exists) {
+      const [content] = await sourceFile.download();
+      const newFile = bucket.file(audioStoragePath(cityId, newFilename));
+      await newFile.save(content, { contentType: "audio/wav", resumable: false });
+      await sourceFile.delete();
+    }
+
+    const oldPath = path.join(AUDIO_DIR, oldFilename);
+    const newPath = path.join(AUDIO_DIR, newFilename);
+    if (fs.existsSync(oldPath)) {
+      fs.renameSync(oldPath, newPath);
+    }
+
+    return newFilename;
+  } catch (err) {
+    console.error("Failed to rename audio, using original filename:", err);
+    return oldFilename;
+  }
+}
+
 export async function streamAudioFromStorage(cityId: string, filename: string, res: Response): Promise<boolean> {
   try {
     const bucketName = getAudioBucketName();

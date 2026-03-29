@@ -134,3 +134,25 @@ export async function generateScriptAndAudio(params: {
 
   return { script: displayScript, filename, durationSeconds, combinedAudio };
 }
+
+export async function generatePodcastTitle(subject: string, language: string): Promise<string> {
+  const titlePrompts: Record<string, string> = {
+    nl: `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`,
+    en: `Generate a short, catchy podcast title (maximum 6 words) for a podcast about: "${subject}". Return ONLY the title, no quotes, no explanation.`,
+    fr: `Génère un titre de podcast court et accrocheur (maximum 6 mots) pour un podcast sur : "${subject}". Retourne UNIQUEMENT le titre, sans guillemets, sans explication.`,
+    de: `Erstelle einen kurzen, einprägsamen Podcast-Titel (maximal 6 Wörter) für einen Podcast über: "${subject}". Gib NUR den Titel zurück, ohne Anführungszeichen, ohne Erklärung.`,
+  };
+  const titlePrompt = titlePrompts[language] || titlePrompts.en;
+
+  const titleResponse = await anthropic.messages.create({
+    model: "claude-sonnet-4-5",
+    max_tokens: 50,
+    messages: [{ role: "user", content: titlePrompt }],
+  });
+
+  const titleText = (titleResponse.content[0] as any)?.text?.trim().replace(/^["'""]|["'""]$/g, "");
+  if (titleText && titleText.length > 0 && titleText.length <= 80) {
+    return titleText;
+  }
+  return subject.length > 60 ? subject.substring(0, 57) + "..." : subject;
+}

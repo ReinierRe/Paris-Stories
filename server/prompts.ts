@@ -371,8 +371,11 @@ const defaultStyle: Record<string, string> = {
   es: "Cuenta una historia cautivadora y completa que cubra los aspectos mas interesantes de este tema.",
 };
 
+export const CUSTOM_ANGLE_IDS = ["historical", "modern-culture", "personal-stories"] as const;
+
 export const customAngleMap: Record<string, Record<string, string>> = {
   historical: curatedPerspectiveMap.historical,
+  "modern-culture": {},
   "personal-stories": {
     en: "Tell personal, intimate stories. Use anecdotes, first-person perspectives, and emotional storytelling to bring this topic to life through the eyes of real people.",
     nl: "Vertel persoonlijke, intieme verhalen. Gebruik anekdotes, eerstepersoonperspectieven en emotioneel vertellen om dit onderwerp tot leven te brengen door de ogen van echte mensen.",
@@ -393,6 +396,16 @@ export const customAngleDescriptions: Record<string, Record<string, string>> = {
   "modern-culture": { en: "Contemporary culture, modern-day significance, and current trends", nl: "Hedendaagse cultuur, moderne betekenis en huidige trends", fr: "Culture contemporaine, signification moderne et tendances actuelles", de: "Zeitgenössische Kultur, moderne Bedeutung und aktuelle Trends", es: "Cultura contemporánea, importancia moderna y tendencias actuales" },
   "personal-stories": { en: "Personal, intimate stories through the eyes of real people", nl: "Persoonlijke, intieme verhalen door de ogen van echte mensen", fr: "Histoires personnelles et intimes à travers les yeux de vraies personnes", de: "Persönliche, intime Geschichten durch die Augen echter Menschen", es: "Historias personales e íntimas a través de los ojos de personas reales" },
 };
+
+export function getCustomSiblingAngles(currentAngle: string, language: string): SiblingAngle[] {
+  const langKey = getLanguageKey(language);
+  return CUSTOM_ANGLE_IDS
+    .filter(a => a !== currentAngle)
+    .map(a => ({
+      name: customAngleNames[a]?.[langKey] || customAngleNames[a]?.en || a,
+      description: customAngleDescriptions[a]?.[langKey] || customAngleDescriptions[a]?.en || "",
+    }));
+}
 
 export function resolvePerspectiveText(perspective: string, langKey: string, city?: City): string {
   if (perspective === "walking-tour" && city) {

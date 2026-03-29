@@ -20,11 +20,9 @@ import { getCityFromRequest, getCityConfig } from "./city-middleware";
 import {
   AUDIO_DIR,
   audioExistsInStorage,
-  audioStoragePath,
-  legacyAudioStoragePath,
-  getAudioBucketName,
   deleteAudioFromStorage,
   streamAudioFromStorage,
+  renameAudioInStorage,
 } from "./audio-storage";
 import { generationJobs, generateId, checkRateLimit } from "./job-tracker";
 import {
@@ -33,16 +31,9 @@ import {
   getSiblingAngles,
   resolveCustomPerspectiveText,
   resolvePerspectiveText,
-  customAngleMap,
-  customAngleNames,
-  customAngleDescriptions,
-  buildFocusGuidance,
-  themeAngleDefinitions,
-  topicToThemeMap,
-  type SiblingAngle,
+  getCustomSiblingAngles,
 } from "./prompts";
-import { generateScriptAndAudio, anthropic } from "./generation";
-import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
+import { generateScriptAndAudio, generatePodcastTitle, anthropic } from "./generation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/city/config", (req: Request, res: Response) => {
@@ -313,12 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const customGoogleVoiceType = getGoogleVoiceType(voice, language);
 
-      const customSiblingAngles: SiblingAngle[] = Object.keys(customAngleMap)
-        .filter(a => a !== angle)
-        .map(a => ({
-          name: customAngleNames[a]?.[customLangKey] || customAngleNames[a]?.en || a,
-          description: customAngleDescriptions[a]?.[customLangKey] || customAngleDescriptions[a]?.en || "",
-        }));
+      const customSiblingAngles = getCustomSiblingAngles(angle, language);
 
       const systemPrompt = getSystemPrompt({
         language,
@@ -355,55 +341,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         jobId,
         googleVoiceType: customGoogleVoiceType,
       }).then(async ({ script, filename, durationSeconds }) => {
-        let finalFilename = filename;
-
-        try {
-          const customFilename = `custom_${filename}`;
-          const bucketName = getAudioBucketName();
-          const bucket = objectStorageClient.bucket(bucketName);
-          let sourceFile = bucket.file(audioStoragePath(cityId, filename));
-          let [exists] = await sourceFile.exists();
-          if (!exists) {
-            sourceFile = bucket.file(legacyAudioStoragePath(filename));
-            [exists] = await sourceFile.exists();
-          }
-          if (exists) {
-            const [content] = await sourceFile.download();
-            const newFile = bucket.file(audioStoragePath(cityId, customFilename));
-            await newFile.save(content, { contentType: "audio/wav", resumable: false });
-            await sourceFile.delete();
-            finalFilename = customFilename;
-          }
-
-          const oldPath = path.join(AUDIO_DIR, filename);
-          const newPath = path.join(AUDIO_DIR, customFilename);
-          if (fs.existsSync(oldPath)) {
-            fs.renameSync(oldPath, newPath);
-          }
-        } catch (renameErr) {
-          console.error("Failed to rename audio, using original filename:", renameErr);
-        }
+        const finalFilename = await renameAudioInStorage(cityId, filename, `custom_${filename}`);
 
         let generatedTitle = subject;
         try {
-          const titlePrompts: Record<string, string> = {
-            nl: `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`,
-            en: `Generate a short, catchy podcast title (maximum 6 words) for a podcast about: "${subject}". Return ONLY the title, no quotes, no explanation.`,
-            fr: `Génère un titre de podcast court et accrocheur (maximum 6 mots) pour un podcast sur : "${subject}". Retourne UNIQUEMENT le titre, sans guillemets, sans explication.`,
-            de: `Erstelle einen kurzen, einprägsamen Podcast-Titel (maximal 6 Wörter) für einen Podcast über: "${subject}". Gib NUR den Titel zurück, ohne Anführungszeichen, ohne Erklärung.`,
-          };
-          const titlePrompt = titlePrompts[language] || titlePrompts.en;
-
-          const titleResponse = await anthropic.messages.create({
-            model: "claude-sonnet-4-5",
-            max_tokens: 50,
-            messages: [{ role: "user", content: titlePrompt }],
-          });
-
-          const titleText = (titleResponse.content[0] as any)?.text?.trim().replace(/^["'""]|["'""]$/g, "");
-          if (titleText && titleText.length > 0 && titleText.length <= 80) {
-            generatedTitle = titleText;
-          }
+          generatedTitle = await generatePodcastTitle(subject, language);
         } catch (titleErr) {
           console.error("Failed to generate title, using subject:", titleErr);
         }
@@ -496,24 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const p of toRegenerate) {
         try {
-          const titlePrompts: Record<string, string> = {
-            nl: `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${p.subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`,
-            en: `Generate a short, catchy podcast title (maximum 6 words) for a podcast about: "${p.subject}". Return ONLY the title, no quotes, no explanation.`,
-            fr: `Génère un titre de podcast court et accrocheur (maximum 6 mots) pour un podcast sur : "${p.subject}". Retourne UNIQUEMENT le titre, sans guillemets, sans explication.`,
-            de: `Erstelle einen kurzen, einprägsamen Podcast-Titel (maximal 6 Wörter) für einen Podcast über: "${p.subject}". Gib NUR den Titel zurück, ohne Anführungszeichen, ohne Erklärung.`,
-          };
-          const titlePrompt = titlePrompts[p.language] || titlePrompts.en;
-          const titleResponse = await anthropic.messages.create({
-            model: "claude-sonnet-4-5",
-            max_tokens: 50,
-            messages: [{ role: "user", content: titlePrompt }],
-          });
-          const titleText = (titleResponse.content[0] as any)?.text?.trim().replace(/^["'""]|["'""]$/g, "");
-          if (titleText && titleText.length > 0 && titleText.length <= 80) {
-            p.title = titleText;
-          } else {
-            p.title = p.subject.length > 60 ? p.subject.substring(0, 57) + "..." : p.subject;
-          }
+          p.title = await generatePodcastTitle(p.subject, p.language);
           await db.update(customPodcasts).set({ title: p.title }).where(eq(customPodcasts.id, p.id));
         } catch {
           p.title = p.subject.length > 60 ? p.subject.substring(0, 57) + "..." : p.subject;

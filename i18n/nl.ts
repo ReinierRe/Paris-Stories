@@ -38,7 +38,7 @@ export default {
     about: "Over",
     appName: "%{appName}",
     appVersion: "Versie 1.0.0",
-    appDescription: "Ontdek de verborgen verhalen van %{city} via AI-gestuurde audiotours. Van de Franse Revolutie tot verborgen wijken, elk verhaal is met zorg gemaakt.",
+    appDescription: "Ontdek de verborgen verhalen van %{city} via AI-gestuurde audiotours. Van %{cityHighlight} tot verborgen wijken, elk verhaal is met zorg gemaakt.",
     rateApp: "Beoordeel deze app",
     legal: "Juridisch",
     privacyPolicy: "Privacybeleid",
@@ -86,7 +86,7 @@ export default {
     continue: "Doorgaan",
     levelUp: "Nieuw niveau: %{level}!",
     levelUpMessage: "Je hebt een nieuw niveau bereikt. Blijf %{city} ontdekken!",
-    merci: "Merci!",
+    merci: "%{thanks}",
   },
   customCreate: {
     yourSubject: "Jouw onderwerp",

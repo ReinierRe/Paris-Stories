@@ -15,6 +15,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     amsterdam: "./assets/images/icon-amsterdam.png",
   };
 
+  const citySplashIcons: Record<string, string> = {
+    paris: "./assets/images/splash-icon.png",
+    amsterdam: "./assets/images/splash-icon-amsterdam.png",
+  };
+
   return {
     ...config,
     name: appName,
@@ -27,7 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
-      image: "./assets/images/splash-icon.png",
+      image: citySplashIcons[cityId] || citySplashIcons.paris,
       resizeMode: "contain",
       backgroundColor: "#0B1628",
     },

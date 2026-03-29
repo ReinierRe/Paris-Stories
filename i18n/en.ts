@@ -38,7 +38,7 @@ export default {
     about: "About",
     appName: "%{appName}",
     appVersion: "Version 1.0.0",
-    appDescription: "Discover the hidden stories of %{city} through AI-powered audio tours. From the French Revolution to hidden neighborhoods, every story is crafted with care.",
+    appDescription: "Discover the hidden stories of %{city} through AI-powered audio tours. From %{cityHighlight} to hidden neighborhoods, every story is crafted with care.",
     rateApp: "Rate this App",
     legal: "Legal",
     privacyPolicy: "Privacy Policy",
@@ -86,7 +86,7 @@ export default {
     continue: "Continue",
     levelUp: "Level Up: %{level}!",
     levelUpMessage: "You've reached a new level. Keep exploring %{city}!",
-    merci: "Merci!",
+    merci: "%{thanks}",
   },
   customCreate: {
     yourSubject: "Your subject",

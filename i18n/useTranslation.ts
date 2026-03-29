@@ -26,11 +26,36 @@ export function useTranslation() {
     setRenderKey((k) => k + 1);
   }, [locale]);
 
+  const cityHighlights: Record<string, Record<string, string>> = {
+    paris: {
+      en: "the French Revolution",
+      nl: "de Franse Revolutie",
+      fr: "la Révolution française",
+      de: "der Französischen Revolution",
+      es: "la Revolución Francesa",
+    },
+    amsterdam: {
+      en: "the Golden Age",
+      nl: "de Gouden Eeuw",
+      fr: "l'Âge d'or",
+      de: "dem Goldenen Zeitalter",
+      es: "la Edad de Oro",
+    },
+  };
+
+  const cityThanks: Record<string, string> = {
+    paris: "Merci!",
+    amsterdam: "Dankjewel!",
+  };
+
   const t = useCallback(
     (key: string, options?: Record<string, any>) => {
       const cityName = cityConfig.localizedNames[locale] || cityConfig.localizedNames.en;
       const appName = cityConfig.topLevelName[locale] || cityConfig.appName;
-      return i18n.t(key, { city: cityName, appName, ...options });
+      const cityId = cityConfig.id || "paris";
+      const cityHighlight = cityHighlights[cityId]?.[locale] || cityHighlights.paris[locale] || cityHighlights.paris.en;
+      const thanks = cityThanks[cityId] || cityThanks.paris;
+      return i18n.t(key, { city: cityName, appName, cityHighlight, thanks, ...options });
     },
     [locale, cityConfig],
   );

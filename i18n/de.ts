@@ -38,7 +38,7 @@ export default {
     about: "Über",
     appName: "%{appName}",
     appVersion: "Version 1.0.0",
-    appDescription: "Entdecke die verborgenen Geschichten von %{city} durch KI-gestützte Audiotouren. Von der Französischen Revolution bis zu versteckten Vierteln, jede Geschichte ist mit Sorgfalt gestaltet.",
+    appDescription: "Entdecke die verborgenen Geschichten von %{city} durch KI-gestützte Audiotouren. Von %{cityHighlight} bis zu versteckten Vierteln, jede Geschichte ist mit Sorgfalt gestaltet.",
     rateApp: "App bewerten",
     legal: "Rechtliches",
     privacyPolicy: "Datenschutzerklärung",
@@ -86,7 +86,7 @@ export default {
     continue: "Weiter",
     levelUp: "Neues Level: %{level}!",
     levelUpMessage: "Du hast ein neues Level erreicht. Entdecke weiter %{city}!",
-    merci: "Merci!",
+    merci: "%{thanks}",
   },
   customCreate: {
     yourSubject: "Dein Thema",

@@ -38,7 +38,7 @@ export default {
     about: "Acerca de",
     appName: "%{appName}",
     appVersion: "Versión 1.0.0",
-    appDescription: "Descubre las historias ocultas de %{city} a través de audioguías impulsadas por IA. Desde la Revolución Francesa hasta barrios escondidos, cada historia está cuidadosamente elaborada.",
+    appDescription: "Descubre las historias ocultas de %{city} a través de audioguías impulsadas por IA. Desde %{cityHighlight} hasta barrios escondidos, cada historia está cuidadosamente elaborada.",
     rateApp: "Valorar esta app",
     legal: "Legal",
     privacyPolicy: "Política de privacidad",
@@ -86,7 +86,7 @@ export default {
     continue: "Continuar",
     levelUp: "¡Nuevo nivel: %{level}!",
     levelUpMessage: "Has alcanzado un nuevo nivel. ¡Sigue explorando %{city}!",
-    merci: "¡Merci!",
+    merci: "%{thanks}",
   },
   customCreate: {
     yourSubject: "Tu tema",

@@ -407,6 +407,10 @@ interface SiblingAngle {
 }
 
 const themeAngleDefinitions: Record<string, { id: string; names: Record<string, string>; descriptions: Record<string, string> }[]> = {
+  "golden-age": [
+    { id: "historical", names: { en: "Historical", nl: "Historisch", fr: "Historique", de: "Historisch", es: "Histórico" }, descriptions: { en: "Facts, dates, and chronological storytelling", nl: "Feiten, data en chronologisch vertellen", fr: "Faits, dates et récit chronologique", de: "Fakten, Daten und chronologisches Erzählen", es: "Hechos, fechas y narración cronológica" } },
+    { id: "personal-stories", names: { en: "Personal Stories", nl: "Persoonlijke Verhalen", fr: "Histoires personnelles", de: "Persönliche Geschichten", es: "Historias personales" }, descriptions: { en: "The story told from the iconic figures involved", nl: "Het verhaal verteld vanuit de iconische figuren", fr: "L'histoire racontée du point de vue des personnages emblématiques", de: "Die Geschichte aus der Perspektive der beteiligten ikonischen Figuren", es: "La historia contada desde las figuras icónicas involucradas" } },
+  ],
   revolution: [
     { id: "historical", names: { en: "Historical", nl: "Historisch", fr: "Historique", de: "Historisch", es: "Histórico" }, descriptions: { en: "Facts, dates, and chronological storytelling", nl: "Feiten, data en chronologisch vertellen", fr: "Faits, dates et récit chronologique", de: "Fakten, Daten und chronologisches Erzählen", es: "Hechos, fechas y narración cronológica" } },
     { id: "personal-stories", names: { en: "Personal Stories", nl: "Persoonlijke Verhalen", fr: "Histoires personnelles", de: "Persönliche Geschichten", es: "Historias personales" }, descriptions: { en: "The story told from the iconic figures involved", nl: "Het verhaal verteld vanuit de iconische figuren", fr: "L'histoire racontée du point de vue des personnages emblématiques", de: "Die Geschichte aus der Perspektive der beteiligten ikonischen Figuren", es: "La historia contada desde las figuras icónicas involucradas" } },
@@ -433,6 +437,15 @@ const topicToThemeMap: Record<string, string> = {
   "montmartre": "neighborhoods", "montmartre-walk": "neighborhoods", "le-marais": "neighborhoods",
   "pigalle": "neighborhoods", "saint-germain": "neighborhoods", "latin-quarter": "neighborhoods",
   "belleville": "neighborhoods", "ile-de-la-cite": "neighborhoods",
+  "ams-rembrandt": "golden-age", "ams-rembrandt-walk": "golden-age", "ams-canal-ring": "golden-age",
+  "ams-tulipmania": "golden-age", "ams-spinoza": "golden-age", "ams-jordaan-golden-age": "golden-age",
+  "ams-east-india-house": "golden-age", "ams-free-haven": "golden-age",
+  "ams-rijksmuseum": "museums", "ams-van-gogh": "museums", "ams-stedelijk": "museums",
+  "ams-anne-frank": "museums", "ams-scheepvaart": "museums", "ams-hermitage": "museums",
+  "ams-nemo": "museums", "ams-rembrandthuis": "museums",
+  "ams-jordaan": "neighborhoods", "ams-de-pijp": "neighborhoods", "ams-noord": "neighborhoods",
+  "ams-de-wallen": "neighborhoods", "ams-oud-west": "neighborhoods", "ams-plantagebuurt": "neighborhoods",
+  "ams-zuid": "neighborhoods", "ams-bijlmer": "neighborhoods",
 };
 
 function getSiblingAngles(topicId: string | undefined, currentPerspective: string, language: string): SiblingAngle[] {

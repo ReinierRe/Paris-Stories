@@ -87,13 +87,20 @@ See `APP_STORE_METADATA.md` for complete App Store Connect metadata including:
 - Build & submission checklist
 
 ## EAS Build (iOS App Store)
-- `eas.json` configured with development, preview, and production profiles
-- Production build: `eas build --platform ios --profile production`
-- Submit to App Store: `eas submit --platform ios --profile production`
+- `eas.json` configured with development, preview, and production profiles for Paris and Amsterdam
+- Paris production build: `eas build --platform ios --profile production`
+- Amsterdam production build: `eas build --platform ios --profile production:amsterdam`
+- Submit to App Store: `eas submit --platform ios --profile production` (or `production:amsterdam`)
 - Requires EAS CLI: `npm install -g eas-cli` and `eas login`
 - Apple Developer Team ID, App Store Connect App ID, and Apple ID must be filled in `eas.json` submit section
+- Amsterdam App Store Connect App ID needs to be filled in after creating the app in App Store Connect
+
+## Active Cities
+- **Paris** (`paris`): Bundle ID `app.replit.parisstories` — live in App Store
+- **Amsterdam** (`amsterdam`): Bundle ID `app.replit.amsterdamstories` — 7 themes, 56 topics (History, Golden Age, Museums, Buildings, Modern History, Neighborhoods, Culinary)
 
 ## Recent Changes
+- 2026-03-29: Amsterdam Stories added as second city. Amsterdam city record seeded in DB (`scripts/amsterdam-seed.sql`). Added 7 themes / 56 topics to `constants/themes.ts` (History, Golden Age, Museums, Buildings, Modern History, Neighborhoods, Culinary). Made themes city-aware via `getThemes(cityId?)`. Made onboarding content city-aware (categories, podcast examples, topic counts, custom subject, slides). Added Amsterdam topic-to-theme mappings and golden-age angle definitions in `server/routes.ts`. Added Amsterdam EAS build profiles to `eas.json` (development:amsterdam, preview:amsterdam, production:amsterdam). User levels: Toerist/Ontdekker/Kenner/Amsterdammer at 0/5/15/30.
 - 2026-03-28: Multi-tenant refactor — single server now serves multiple city apps. Added `cities` table with all city config (AI prompts, localized names, user levels). Added `cityId` column to all tables (users, cached_podcasts, custom_podcasts, user_podcasts) with updated unique indexes and FK constraints. Created `server/city-middleware.ts` (X-City-Id header resolution, DB city config loading with 5-min cache). Refactored `server/city-prompts.ts` to accept City param from DB instead of global constants. All DB queries in routes.ts, storage.ts, auth.ts now scoped by cityId. Frontend sends X-City-Id header via `lib/query-client.ts` (reads from app.json extra.cityId). Audio stream endpoint accepts `?city=` query param for native audio players. Privacy policy endpoint uses `?city=` query param. Account deletion only removes Firebase user when no other city accounts remain. Dynamic `app.config.ts` reads `EXPO_PUBLIC_CITY_ID` for per-city EAS builds. Reproducible migration script at `scripts/multi-tenant-migration.sql`. Paris seeded as default city. See `CITY_SETUP.md` for adding new cities.
 - 2026-03-28: White-label prep — centralized all city-specific content for easy duplication. Created `constants/city.ts` (frontend city config), `server/city-prompts.ts` (backend AI prompt config), `constants/onboarding.ts` (login slides). Updated i18n files to use `%{city}` interpolation (auto-injected by `useTranslation` hook). User levels in `themes.ts` now derived from `city.ts`. AI prompts (role descriptions, moderation, user prompts, walking-tour/modern-culture perspectives) and privacy policy HTML all read from `city-prompts.ts`. See `CITY_SETUP.md` for full duplication guide.
 - 2026-03-12: App Store launch prep — EAS build configuration (eas.json), deployment configured (autoscale), metadata updated with Spanish language, AI model references removed from descriptions, privacy policy email updated to vragen@greenhome.nl.

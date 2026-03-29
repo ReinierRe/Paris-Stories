@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
-import { themes, type Theme, type Topic, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
+import { getThemes, type Theme, type Topic, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n/useTranslation";
 
@@ -150,7 +150,7 @@ export default function LibraryScreen() {
         </View>
 
         <View style={styles.themesContainer}>
-          {themes.map((theme) => (
+          {getThemes().map((theme) => (
             <ThemeCard key={theme.id} theme={theme} locale={locale} t={t} />
           ))}
         </View>

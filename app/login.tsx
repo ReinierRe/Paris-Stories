@@ -25,10 +25,10 @@ import { getApiUrl, getCityHeaders } from "@/lib/query-client";
 import {
   getOnboardingSlides,
   OnboardingSlide,
-  onboardingCategories,
-  onboardingPodcastExamples,
-  onboardingCategoryTopicCounts,
-  onboardingCustomSubjectExample,
+  getOnboardingCategories,
+  getOnboardingPodcastExamples,
+  getOnboardingCategoryTopicCounts,
+  getOnboardingCustomSubjectExample,
 } from "@/constants/onboarding";
 import { getCityConfigSync } from "@/constants/city";
 
@@ -71,6 +71,7 @@ function PodcastItem({ category, title, voice, duration, lang, color }: {
 const categoryImageMap: Record<string, any> = {
   "category-history": require("@/assets/images/category-history.png"),
   "category-french-revolution": require("@/assets/images/category-french-revolution.png"),
+  "category-golden-age": require("@/assets/images/category-history.png"),
   "category-museums": require("@/assets/images/category-museums.png"),
   "category-epic-buildings": require("@/assets/images/category-epic-buildings.png"),
   "category-modern-history": require("@/assets/images/category-modern-history.png"),
@@ -79,7 +80,7 @@ const categoryImageMap: Record<string, any> = {
 };
 
 function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number }) {
-  const categoryIcons = onboardingCategories.map((cat) => ({
+  const categoryIcons = getOnboardingCategories().map((cat) => ({
     name: cat.name,
     image: categoryImageMap[cat.imageKey],
   }));
@@ -105,7 +106,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
         <PhoneMockup>
           <Text style={mockupStyles.screenTitle}>My Podcasts</Text>
           <Text style={mockupStyles.screenSubtitle}>20 ready</Text>
-          {onboardingPodcastExamples.map((ex, i) => (
+          {getOnboardingPodcastExamples().map((ex, i) => (
             <PodcastItem key={i} category={ex.category} title={ex.title} voice={ex.voice} duration={ex.duration} lang={ex.lang} color={ex.color} />
           ))}
         </PhoneMockup>
@@ -125,7 +126,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
                 <Image source={cat.image} style={mockupStyles.categoryRowIcon} cachePolicy="memory-disk" />
                 <View style={mockupStyles.categoryRowText}>
                   <Text style={mockupStyles.categoryRowName}>{cat.name}</Text>
-                  <Text style={mockupStyles.categoryRowCount}>{onboardingCategoryTopicCounts[i]} topics</Text>
+                  <Text style={mockupStyles.categoryRowCount}>{getOnboardingCategoryTopicCounts()[i]} topics</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.3)" />
               </View>
@@ -149,7 +150,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
               <Text style={mockupStyles.customTitle}>Your subject</Text>
               <Text style={mockupStyles.customSubtitle}>What {getCityConfigSync().name} story would you like?</Text>
               <View style={mockupStyles.textareaBox}>
-                <Text style={mockupStyles.textareaText}>{onboardingCustomSubjectExample}</Text>
+                <Text style={mockupStyles.textareaText}>{getOnboardingCustomSubjectExample()}</Text>
               </View>
               <View style={mockupStyles.continueBtn}>
                 <Text style={mockupStyles.continueBtnText}>Continue</Text>

@@ -14,7 +14,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { themes, podcastLengths, checkLevelUp, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
+import { getThemes, podcastLengths, checkLevelUp, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/query-client";
@@ -78,7 +78,7 @@ export default function CustomizeScreen() {
   const voice = (user?.preferredVoice || "female") as "male" | "female";
   const language = (user?.preferredLanguage || "nl") as "nl" | "en" | "fr" | "de";
 
-  const currentTheme = themes.find((th) => th.id === params.themeId);
+  const currentTheme = getThemes().find((th) => th.id === params.themeId);
   const currentTopic = currentTheme?.topics.find((tp) => tp.id === params.topicId);
   const hasAngles = !!(currentTheme?.angles && currentTheme.angles.length > 0);
   const steps: Step[] = hasAngles

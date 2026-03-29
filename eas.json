@@ -40,6 +40,43 @@
         "EXPO_PUBLIC_SCHEME": "parisstories",
         "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.parisstories"
       }
+    },
+    "development:amsterdam": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "amsterdam",
+        "EXPO_PUBLIC_APP_NAME": "Amsterdam Stories",
+        "EXPO_PUBLIC_APP_SLUG": "amsterdam-stories",
+        "EXPO_PUBLIC_BUNDLE_ID": "app.replit.amsterdamstories",
+        "EXPO_PUBLIC_SCHEME": "amsterdamstories",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories"
+      }
+    },
+    "preview:amsterdam": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "amsterdam",
+        "EXPO_PUBLIC_APP_NAME": "Amsterdam Stories",
+        "EXPO_PUBLIC_APP_SLUG": "amsterdam-stories",
+        "EXPO_PUBLIC_BUNDLE_ID": "app.replit.amsterdamstories",
+        "EXPO_PUBLIC_SCHEME": "amsterdamstories",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories"
+      }
+    },
+    "production:amsterdam": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CITY_ID": "amsterdam",
+        "EXPO_PUBLIC_APP_NAME": "Amsterdam Stories",
+        "EXPO_PUBLIC_APP_SLUG": "amsterdam-stories",
+        "EXPO_PUBLIC_BUNDLE_ID": "app.replit.amsterdamstories",
+        "EXPO_PUBLIC_SCHEME": "amsterdamstories",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories"
+      }
     }
   },
   "submit": {
@@ -47,6 +84,13 @@
       "ios": {
         "appleId": "reinier@greenhome.nl",
         "ascAppId": "6760458412",
+        "appleTeamId": "L9BR52LZ5P"
+      }
+    },
+    "production:amsterdam": {
+      "ios": {
+        "appleId": "reinier@greenhome.nl",
+        "ascAppId": "",
         "appleTeamId": "L9BR52LZ5P"
       }
     }

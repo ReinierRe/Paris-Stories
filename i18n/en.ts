@@ -37,7 +37,7 @@ export default {
     female: "Female",
     about: "About",
     appName: "%{appName}",
-    appVersion: "Version 1.0.0",
+    appVersion: "Version %{version}",
     appDescription: "Discover the hidden stories of %{city} through AI-powered audio tours. From %{cityHighlight} to hidden neighborhoods, every story is crafted with care.",
     rateApp: "Rate this App",
     legal: "Legal",

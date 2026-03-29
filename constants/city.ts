@@ -47,72 +47,143 @@ const extra = Constants.expoConfig?.extra ?? {};
 let _cityConfig: CityConfig | null = null;
 let _fetchPromise: Promise<CityConfig> | null = null;
 
-const DEFAULT_CITY: CityConfig = {
-  id: extra.cityId || "paris",
-  name: Constants.expoConfig?.name?.replace(" Stories", "") || "Paris",
-  country: "France",
-  appName: Constants.expoConfig?.name || "Paris Stories",
-  bundleId: Constants.expoConfig?.ios?.bundleIdentifier || "app.replit.parisstories",
-  contactEmail: "vragen@greenhome.nl",
-  privacyPolicyDate: "February 20, 2026",
-  localizedNames: { en: "Paris", nl: "Parijs", fr: "Paris", de: "Paris", es: "París" },
-  localizedCountry: { en: "France", nl: "Frankrijk", fr: "la France", de: "Frankreich", es: "Francia" },
-  topLevelName: { en: "Paris Stories", nl: "Paris Stories", fr: "Paris Stories", de: "Paris Stories", es: "Paris Stories" },
-  userLevels: [
-    {
-      id: "traveler",
-      icon: "airplane-outline",
-      minPodcasts: 0,
-      name: { en: "Traveler", nl: "Reiziger", fr: "Voyageur", de: "Reisender", es: "Viajero" },
-      description: {
-        en: "Just getting started on your Paris journey",
-        nl: "Net begonnen aan je Parijse reis",
-        fr: "Vous commencez tout juste votre voyage parisien",
-        de: "Gerade am Anfang Ihrer Pariser Reise",
-        es: "Acabas de empezar tu viaje por París",
+const CITY_DEFAULTS: Record<string, CityConfig> = {
+  paris: {
+    id: "paris",
+    name: "Paris",
+    country: "France",
+    appName: "Paris Stories",
+    bundleId: "app.replit.parisstories",
+    contactEmail: "vragen@greenhome.nl",
+    privacyPolicyDate: "February 20, 2026",
+    localizedNames: { en: "Paris", nl: "Parijs", fr: "Paris", de: "Paris", es: "París" },
+    localizedCountry: { en: "France", nl: "Frankrijk", fr: "la France", de: "Frankreich", es: "Francia" },
+    topLevelName: { en: "Paris Stories", nl: "Paris Stories", fr: "Paris Stories", de: "Paris Stories", es: "Paris Stories" },
+    userLevels: [
+      {
+        id: "traveler",
+        icon: "airplane-outline",
+        minPodcasts: 0,
+        name: { en: "Traveler", nl: "Reiziger", fr: "Voyageur", de: "Reisender", es: "Viajero" },
+        description: {
+          en: "Just getting started on your Paris journey",
+          nl: "Net begonnen aan je Parijse reis",
+          fr: "Vous commencez tout juste votre voyage parisien",
+          de: "Gerade am Anfang Ihrer Pariser Reise",
+          es: "Acabas de empezar tu viaje por París",
+        },
       },
-    },
-    {
-      id: "explorer",
-      icon: "compass-outline",
-      minPodcasts: 5,
-      name: { en: "Explorer", nl: "Ontdekker", fr: "Explorateur", de: "Entdecker", es: "Explorador" },
-      description: {
-        en: "Discovering the hidden stories of Paris",
-        nl: "De verborgen verhalen van Parijs ontdekken",
-        fr: "À la découverte des histoires cachées de Paris",
-        de: "Die verborgenen Geschichten von Paris entdecken",
-        es: "Descubriendo las historias ocultas de París",
+      {
+        id: "explorer",
+        icon: "compass-outline",
+        minPodcasts: 5,
+        name: { en: "Explorer", nl: "Ontdekker", fr: "Explorateur", de: "Entdecker", es: "Explorador" },
+        description: {
+          en: "Discovering the hidden stories of Paris",
+          nl: "De verborgen verhalen van Parijs ontdekken",
+          fr: "À la découverte des histoires cachées de Paris",
+          de: "Die verborgenen Geschichten von Paris entdecken",
+          es: "Descubriendo las historias ocultas de París",
+        },
       },
-    },
-    {
-      id: "connoisseur",
-      icon: "wine-outline",
-      minPodcasts: 15,
-      name: { en: "Connoisseur", nl: "Kenner", fr: "Connaisseur", de: "Kenner", es: "Conocedor" },
-      description: {
-        en: "A true connoisseur of Parisian culture",
-        nl: "Een echte kenner van de Parijse cultuur",
-        fr: "Un vrai connaisseur de la culture parisienne",
-        de: "Ein wahrer Kenner der Pariser Kultur",
-        es: "Un verdadero conocedor de la cultura parisina",
+      {
+        id: "connoisseur",
+        icon: "wine-outline",
+        minPodcasts: 15,
+        name: { en: "Connoisseur", nl: "Kenner", fr: "Connaisseur", de: "Kenner", es: "Conocedor" },
+        description: {
+          en: "A true connoisseur of Parisian culture",
+          nl: "Een echte kenner van de Parijse cultuur",
+          fr: "Un vrai connaisseur de la culture parisienne",
+          de: "Ein wahrer Kenner der Pariser Kultur",
+          es: "Un verdadero conocedor de la cultura parisina",
+        },
       },
-    },
-    {
-      id: "parisien",
-      icon: "star-outline",
-      minPodcasts: 30,
-      name: { en: "Parisien", nl: "Parisien", fr: "Parisien", de: "Parisien", es: "Parisien" },
-      description: {
-        en: "You know Paris like a true local",
-        nl: "Je kent Parijs als een echte local",
-        fr: "Vous connaissez Paris comme un vrai local",
-        de: "Sie kennen Paris wie ein wahrer Einheimischer",
-        es: "Conoces París como un verdadero local",
+      {
+        id: "parisien",
+        icon: "star-outline",
+        minPodcasts: 30,
+        name: { en: "Parisien", nl: "Parisien", fr: "Parisien", de: "Parisien", es: "Parisien" },
+        description: {
+          en: "You know Paris like a true local",
+          nl: "Je kent Parijs als een echte local",
+          fr: "Vous connaissez Paris comme un vrai local",
+          de: "Sie kennen Paris wie ein wahrer Einheimischer",
+          es: "Conoces París como un verdadero local",
+        },
       },
-    },
-  ],
+    ],
+  },
+  amsterdam: {
+    id: "amsterdam",
+    name: "Amsterdam",
+    country: "Netherlands",
+    appName: "Amsterdam Stories",
+    bundleId: "app.replit.amsterdamstories",
+    contactEmail: "vragen@greenhome.nl",
+    privacyPolicyDate: "March 29, 2026",
+    localizedNames: { en: "Amsterdam", nl: "Amsterdam", fr: "Amsterdam", de: "Amsterdam", es: "Ámsterdam" },
+    localizedCountry: { en: "the Netherlands", nl: "Nederland", fr: "les Pays-Bas", de: "die Niederlande", es: "los Países Bajos" },
+    topLevelName: { en: "Amsterdam Stories", nl: "Amsterdam Stories", fr: "Amsterdam Stories", de: "Amsterdam Stories", es: "Amsterdam Stories" },
+    userLevels: [
+      {
+        id: "toerist",
+        icon: "airplane-outline",
+        minPodcasts: 0,
+        name: { en: "Tourist", nl: "Toerist", fr: "Touriste", de: "Tourist", es: "Turista" },
+        description: {
+          en: "Just getting started on your Amsterdam journey",
+          nl: "Net begonnen aan je Amsterdamse reis",
+          fr: "Vous commencez tout juste votre voyage à Amsterdam",
+          de: "Gerade am Anfang Ihrer Amsterdam-Reise",
+          es: "Acabas de empezar tu viaje por Ámsterdam",
+        },
+      },
+      {
+        id: "ontdekker",
+        icon: "compass-outline",
+        minPodcasts: 5,
+        name: { en: "Explorer", nl: "Ontdekker", fr: "Explorateur", de: "Entdecker", es: "Explorador" },
+        description: {
+          en: "Discovering the hidden stories of Amsterdam",
+          nl: "De verborgen verhalen van Amsterdam ontdekken",
+          fr: "À la découverte des histoires cachées d'Amsterdam",
+          de: "Die verborgenen Geschichten von Amsterdam entdecken",
+          es: "Descubriendo las historias ocultas de Ámsterdam",
+        },
+      },
+      {
+        id: "kenner",
+        icon: "wine-outline",
+        minPodcasts: 15,
+        name: { en: "Connoisseur", nl: "Kenner", fr: "Connaisseur", de: "Kenner", es: "Conocedor" },
+        description: {
+          en: "A true connoisseur of Amsterdam culture",
+          nl: "Een echte kenner van de Amsterdamse cultuur",
+          fr: "Un vrai connaisseur de la culture amsterdamoise",
+          de: "Ein wahrer Kenner der Amsterdamer Kultur",
+          es: "Un verdadero conocedor de la cultura de Ámsterdam",
+        },
+      },
+      {
+        id: "amsterdammer",
+        icon: "star-outline",
+        minPodcasts: 30,
+        name: { en: "Amsterdammer", nl: "Amsterdammer", fr: "Amsterdamois", de: "Amsterdamer", es: "Amsterdamés" },
+        description: {
+          en: "You know Amsterdam like a true local",
+          nl: "Je kent Amsterdam als een echte local",
+          fr: "Vous connaissez Amsterdam comme un vrai local",
+          de: "Sie kennen Amsterdam wie ein wahrer Einheimischer",
+          es: "Conoces Ámsterdam como un verdadero local",
+        },
+      },
+    ],
+  },
 };
+
+const cityId = extra.cityId || "paris";
+const DEFAULT_CITY: CityConfig = CITY_DEFAULTS[cityId] || CITY_DEFAULTS.paris;
 
 export async function fetchCityConfig(): Promise<CityConfig> {
   if (_cityConfig) return _cityConfig;

@@ -37,7 +37,7 @@ export default {
     female: "Vrouw",
     about: "Over",
     appName: "%{appName}",
-    appVersion: "Versie 1.0.0",
+    appVersion: "Versie %{version}",
     appDescription: "Ontdek de verborgen verhalen van %{city} via AI-gestuurde audiotours. Van %{cityHighlight} tot verborgen wijken, elk verhaal is met zorg gemaakt.",
     rateApp: "Beoordeel deze app",
     legal: "Juridisch",

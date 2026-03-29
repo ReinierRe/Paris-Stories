@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import Constants from "expo-constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCityConfig } from "@/contexts/CityConfigContext";
 import i18n from "./index";
@@ -55,7 +56,8 @@ export function useTranslation() {
       const cityId = cityConfig.id || "paris";
       const cityHighlight = cityHighlights[cityId]?.[locale] || cityHighlights.paris[locale] || cityHighlights.paris.en;
       const thanks = cityThanks[cityId] || cityThanks.paris;
-      return i18n.t(key, { city: cityName, appName, cityHighlight, thanks, ...options });
+      const version = Constants.expoConfig?.version || "1.0.0";
+      return i18n.t(key, { city: cityName, appName, cityHighlight, thanks, version, ...options });
     },
     [locale, cityConfig],
   );

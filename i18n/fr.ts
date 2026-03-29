@@ -37,7 +37,7 @@ export default {
     female: "Femme",
     about: "À propos",
     appName: "%{appName}",
-    appVersion: "Version 1.0.0",
+    appVersion: "Version %{version}",
     appDescription: "Découvrez les histoires cachées de %{city} grâce à des audioguides alimentés par l'IA. De %{cityHighlight} aux quartiers secrets, chaque histoire est soigneusement créée.",
     rateApp: "Évaluer cette app",
     legal: "Mentions légales",

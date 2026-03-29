@@ -21,6 +21,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePodcasts } from "@/contexts/PodcastContext";
 import { getApiUrl, getCityHeaders } from "@/lib/query-client";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useCityConfig } from "@/contexts/CityConfigContext";
+
+const cityIcons: Record<string, any> = {
+  paris: require("@/assets/images/icon.png"),
+  amsterdam: require("@/assets/images/icon-amsterdam.png"),
+};
 
 const LANGUAGES = [
   { id: "en", flag: "EN" },
@@ -101,6 +107,7 @@ export default function ProfileScreen() {
   const { podcasts } = usePodcasts();
   const [isDeleting, setIsDeleting] = useState(false);
   const { t, locale } = useTranslation();
+  const { cityConfig } = useCityConfig();
 
   const totalPodcasts = podcasts.filter((p) => p.status === "ready").length;
   const standardPodcasts = podcasts.filter((p) => p.status === "ready" && !p.isCustom).length;
@@ -270,7 +277,7 @@ export default function ProfileScreen() {
           <View style={styles.menuCard}>
             <View style={styles.aboutRow}>
               <Image
-                source={require("@/assets/images/icon.png")}
+                source={cityIcons[cityConfig.id] || cityIcons.paris}
                 style={styles.aboutIcon}
               />
               <View style={styles.aboutText}>

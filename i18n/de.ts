@@ -37,7 +37,7 @@ export default {
     female: "Weiblich",
     about: "Über",
     appName: "%{appName}",
-    appVersion: "Version 1.0.0",
+    appVersion: "Version %{version}",
     appDescription: "Entdecke die verborgenen Geschichten von %{city} durch KI-gestützte Audiotouren. Von %{cityHighlight} bis zu versteckten Vierteln, jede Geschichte ist mit Sorgfalt gestaltet.",
     rateApp: "App bewerten",
     legal: "Rechtliches",

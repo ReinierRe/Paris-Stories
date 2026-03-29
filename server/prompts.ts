@@ -7,9 +7,16 @@ export interface SiblingAngle {
   description: string;
 }
 
-export function getLanguageKey(language: string): "en" | "nl" | "fr" | "de" | "es" {
-  if (["nl", "fr", "de", "es"].includes(language)) return language as any;
-  return "en";
+export type LangKey = "en" | "nl" | "fr" | "de" | "es";
+
+export function getLanguageKey(language: string): LangKey {
+  switch (language) {
+    case "nl": return "nl";
+    case "fr": return "fr";
+    case "de": return "de";
+    case "es": return "es";
+    default: return "en";
+  }
 }
 
 function getChirp3Instructions(language: string, _city?: City): string {

@@ -3,6 +3,19 @@ import admin from "firebase-admin";
 import { getUserByFirebaseUid, getUserByEmail, createFirebaseUser, deleteUserAndData, getUserCustomPodcastAudioFiles, updateUserPreferences, countUserCityAccounts } from "./storage";
 import { getCityFromRequest } from "./city-middleware";
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  firebaseUid: string;
+  firstName: string | null;
+  preferredLanguage: string | null;
+  preferredVoice: string | null;
+}
+
+export interface AuthenticatedRequest extends Request {
+  user: AuthUser;
+}
+
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is required. Add your Firebase service account JSON to secrets.");
 }
@@ -46,7 +59,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ error: "User not found" });
     }
 
-    (req as any).user = { id: user.id, email: user.email, firebaseUid: user.firebaseUid, firstName: user.firstName, preferredLanguage: user.preferredLanguage, preferredVoice: user.preferredVoice };
+    (req as AuthenticatedRequest).user = { id: user.id, email: user.email, firebaseUid: user.firebaseUid!, firstName: user.firstName, preferredLanguage: user.preferredLanguage, preferredVoice: user.preferredVoice };
     return next();
   } catch (err) {
     console.error("Auth verification error:", err);
@@ -94,7 +107,7 @@ export async function setupAuth(app: Express): Promise<void> {
   });
 
   app.get("/api/auth/me", requireAuth, (req: Request, res: Response) => {
-    return res.json({ user: (req as any).user });
+    return res.json({ user: (req as AuthenticatedRequest).user });
   });
 
   app.post("/api/auth/logout", (_req: Request, res: Response) => {
@@ -103,7 +116,7 @@ export async function setupAuth(app: Express): Promise<void> {
 
   app.patch("/api/auth/preferences", requireAuth, async (req: Request, res: Response) => {
     try {
-      const user = (req as any).user;
+      const user = (req as AuthenticatedRequest).user;
       const { preferredLanguage, preferredVoice } = req.body;
 
       const validLanguages = ["nl", "en", "fr", "de", "es"];
@@ -128,7 +141,7 @@ export async function setupAuth(app: Express): Promise<void> {
 
   app.delete("/api/auth/account", requireAuth, async (req: Request, res: Response) => {
     try {
-      const user = (req as any).user;
+      const user = (req as AuthenticatedRequest).user;
 
       const { cityId } = getCityFromRequest(req);
       const audioFiles = await getUserCustomPodcastAudioFiles(user.id);

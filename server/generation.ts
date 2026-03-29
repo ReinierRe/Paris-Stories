@@ -135,6 +135,17 @@ export async function generateScriptAndAudio(params: {
   return { script: displayScript, filename, durationSeconds, combinedAudio };
 }
 
+export async function moderateContent(prompt: string): Promise<"ALLOW" | "REJECT"> {
+  const moderationResponse = await anthropic.messages.create({
+    model: "claude-sonnet-4-5",
+    max_tokens: 20,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const firstBlock = moderationResponse.content[0];
+  const result = firstBlock?.type === "text" ? firstBlock.text.trim().toUpperCase() : "";
+  return result === "ALLOW" ? "ALLOW" : "REJECT";
+}
+
 export async function generatePodcastTitle(subject: string, language: string): Promise<string> {
   const titlePrompts: Record<string, string> = {
     nl: `Genereer een korte, pakkende podcast titel (maximaal 6 woorden) voor een podcast over: "${subject}". Geef ALLEEN de titel terug, zonder aanhalingstekens, zonder uitleg.`,
@@ -150,8 +161,11 @@ export async function generatePodcastTitle(subject: string, language: string): P
     messages: [{ role: "user", content: titlePrompt }],
   });
 
-  const titleText = (titleResponse.content[0] as any)?.text?.trim().replace(/^["'""]|["'""]$/g, "");
-  if (titleText && titleText.length > 0 && titleText.length <= 80) {
+  const firstBlock = titleResponse.content[0];
+  const titleText = firstBlock?.type === "text"
+    ? firstBlock.text.trim().replace(/^["'""]|["'""]$/g, "")
+    : "";
+  if (titleText.length > 0 && titleText.length <= 80) {
     return titleText;
   }
   return subject.length > 60 ? subject.substring(0, 57) + "..." : subject;

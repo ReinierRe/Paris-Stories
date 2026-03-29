@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import { getGoogleVoiceType } from "./google-tts";
-import { requireAuth } from "./auth";
+import { requireAuth, type AuthenticatedRequest } from "./auth";
 import * as fs from "fs";
 import * as path from "path";
 import express from "express";
@@ -33,7 +33,7 @@ import {
   resolvePerspectiveText,
   getCustomSiblingAngles,
 } from "./prompts";
-import { generateScriptAndAudio, generatePodcastTitle, anthropic } from "./generation";
+import { generateScriptAndAudio, generatePodcastTitle, moderateContent } from "./generation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/city/config", (req: Request, res: Response) => {
@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
-    const userId = (req as any).user?.id;
+    const userId = (req as AuthenticatedRequest).user?.id;
     const { cityId } = getCityFromRequest(req);
     if (job.userId !== userId || job.cityId !== cityId) {
       return res.status(404).json({ error: "Job not found" });
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/podcast/generate", requireAuth, async (req: Request, res: Response) => {
     try {
       const { topicId, topicName, topicNameNl, themeName, themeNameNl, perspective, voice, language, wordCount, lengthId } = req.body;
-      const userId = (req as any).user?.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
       const { cityId, cityConfig } = getCityFromRequest(req);
 
       if (!topicName || !voice || !language) {
@@ -261,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/podcast/generate-custom", requireAuth, async (req: Request, res: Response) => {
     try {
       const { subject, angle, voice, language, wordCount, lengthId } = req.body;
-      const userId = (req as any).user?.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
       const { cityId, cityConfig } = getCityFromRequest(req);
 
       if (!subject || !angle || !voice || !language || !userId) {
@@ -282,15 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        const moderationResponse = await anthropic.messages.create({
-          model: "claude-sonnet-4-5",
-          max_tokens: 20,
-          messages: [{
-            role: "user",
-            content: getModerationPrompt(cityConfig, subject),
-          }],
-        });
-        const moderationResult = (moderationResponse.content[0] as any)?.text?.trim().toUpperCase();
+        const moderationResult = await moderateContent(getModerationPrompt(cityConfig, subject));
         if (moderationResult !== "ALLOW") {
           return res.status(400).json({ error: getModerationRejectMessage(cityConfig) });
         }
@@ -403,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/podcast/custom-limit", requireAuth, async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
       const { cityId } = getCityFromRequest(req);
 
@@ -425,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/podcast/custom", requireAuth, async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
       const { cityId } = getCityFromRequest(req);
       const results = await db
         .select()
@@ -469,7 +461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/podcast/history", requireAuth, async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
       const { cityId } = getCityFromRequest(req);
 
       const genericResults = await db
@@ -539,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/podcast/custom/:id", requireAuth, async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
       const podcastId = req.params.id as string;
       const { cityId } = getCityFromRequest(req);
 

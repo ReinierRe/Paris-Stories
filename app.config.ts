@@ -10,6 +10,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const apiDomain = process.env.EXPO_PUBLIC_API_DOMAIN || config.extra?.apiDomain || "paris-stories.replit.app";
   const easProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID || config.extra?.eas?.projectId || "68998269-2bf6-4afa-8d80-56df617ea768";
 
+  const cityIcons: Record<string, string> = {
+    paris: "./assets/images/icon.png",
+    amsterdam: "./assets/images/icon-amsterdam.png",
+  };
+
   return {
     ...config,
     name: appName,
@@ -17,7 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     version: config.version || "1.0.4",
     runtimeVersion: "exposdk:54.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: cityIcons[cityId] || cityIcons.paris,
     scheme,
     userInterfaceStyle: "automatic",
     newArchEnabled: true,

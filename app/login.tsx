@@ -74,9 +74,11 @@ const categoryImageMap: Record<string, any> = {
   "category-golden-age": require("@/assets/images/category-history.png"),
   "category-museums": require("@/assets/images/category-museums.png"),
   "category-epic-buildings": require("@/assets/images/category-epic-buildings.png"),
+  "category-epic-buildings-amsterdam": require("@/assets/images/category-epic-buildings-amsterdam.png"),
   "category-modern-history": require("@/assets/images/category-modern-history.png"),
   "category-culinary": require("@/assets/images/category-culinary.png"),
   "category-neighborhoods": require("@/assets/images/category-neighborhoods.png"),
+  "category-neighborhoods-amsterdam": require("@/assets/images/category-neighborhoods-amsterdam.png"),
 };
 
 function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number }) {

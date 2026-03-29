@@ -35,10 +35,10 @@ const amsterdamOnboardingCategories: OnboardingCategory[] = [
   { name: "History", imageKey: "category-history" },
   { name: "Golden Age", imageKey: "category-golden-age" },
   { name: "Museums", imageKey: "category-museums" },
-  { name: "Buildings", imageKey: "category-epic-buildings" },
+  { name: "Buildings", imageKey: "category-epic-buildings-amsterdam" },
   { name: "Modern", imageKey: "category-modern-history" },
   { name: "Culinary", imageKey: "category-culinary" },
-  { name: "Neighborhoods", imageKey: "category-neighborhoods" },
+  { name: "Neighborhoods", imageKey: "category-neighborhoods-amsterdam" },
 ];
 
 const parisPodcastExamples: OnboardingPodcastExample[] = [

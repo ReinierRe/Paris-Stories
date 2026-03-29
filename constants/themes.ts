@@ -1443,7 +1443,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Edificios y Monumentos",
     icon: "business",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-epic-buildings.png"),
+    iconImage: require("@/assets/images/category-epic-buildings-amsterdam.png"),
     color: "#7A8B9A",
     topics: [
       {
@@ -1679,7 +1679,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Feather",
-    iconImage: require("@/assets/images/category-neighborhoods.png"),
+    iconImage: require("@/assets/images/category-neighborhoods-amsterdam.png"),
     color: "#27AE60",
     angles: [
       {

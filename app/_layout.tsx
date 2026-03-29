@@ -25,9 +25,11 @@ const loginImages = [
   require("@/assets/images/category-french-revolution.png"),
   require("@/assets/images/category-museums.png"),
   require("@/assets/images/category-epic-buildings.png"),
+  require("@/assets/images/category-epic-buildings-amsterdam.png"),
   require("@/assets/images/category-modern-history.png"),
   require("@/assets/images/category-culinary.png"),
   require("@/assets/images/category-neighborhoods.png"),
+  require("@/assets/images/category-neighborhoods-amsterdam.png"),
 ];
 
 SplashScreen.preventAutoHideAsync();

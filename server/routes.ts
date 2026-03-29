@@ -50,6 +50,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       localizedCountry: cityConfig.localizedCountry,
       topLevelName: cityConfig.topLevelName,
       userLevels: cityConfig.userLevels,
+      cityHighlights: cityConfig.cityHighlights,
+      thankYouWord: cityConfig.thankYouWord,
     });
   });
 

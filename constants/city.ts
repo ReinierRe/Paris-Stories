@@ -40,6 +40,15 @@ export interface CityConfig {
     name: { en: string; nl: string; fr: string; de: string; es: string };
     description: { en: string; nl: string; fr: string; de: string; es: string };
   }[];
+
+  cityHighlights?: {
+    en: string;
+    nl: string;
+    fr: string;
+    de: string;
+    es: string;
+  };
+  thankYouWord?: string;
 }
 
 const extra = Constants.expoConfig?.extra ?? {};
@@ -59,6 +68,8 @@ const CITY_DEFAULTS: Record<string, CityConfig> = {
     localizedNames: { en: "Paris", nl: "Parijs", fr: "Paris", de: "Paris", es: "París" },
     localizedCountry: { en: "France", nl: "Frankrijk", fr: "la France", de: "Frankreich", es: "Francia" },
     topLevelName: { en: "Paris Stories", nl: "Paris Stories", fr: "Paris Stories", de: "Paris Stories", es: "Paris Stories" },
+    cityHighlights: { en: "the French Revolution", nl: "de Franse Revolutie", fr: "la Révolution française", de: "der Französischen Revolution", es: "la Revolución Francesa" },
+    thankYouWord: "Merci!",
     userLevels: [
       {
         id: "traveler",
@@ -125,6 +136,8 @@ const CITY_DEFAULTS: Record<string, CityConfig> = {
     localizedNames: { en: "Amsterdam", nl: "Amsterdam", fr: "Amsterdam", de: "Amsterdam", es: "Ámsterdam" },
     localizedCountry: { en: "the Netherlands", nl: "Nederland", fr: "les Pays-Bas", de: "die Niederlande", es: "los Países Bajos" },
     topLevelName: { en: "Amsterdam Stories", nl: "Amsterdam Stories", fr: "Amsterdam Stories", de: "Amsterdam Stories", es: "Amsterdam Stories" },
+    cityHighlights: { en: "the Golden Age", nl: "de Gouden Eeuw", fr: "l'Âge d'or", de: "dem Goldenen Zeitalter", es: "la Edad de Oro" },
+    thankYouWord: "Dankjewel!",
     userLevels: [
       {
         id: "toerist",

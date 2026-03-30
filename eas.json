@@ -53,7 +53,8 @@
         "EXPO_PUBLIC_APP_SLUG": "amsterdam-stories",
         "EXPO_PUBLIC_BUNDLE_ID": "app.replit.amsterdamstories",
         "EXPO_PUBLIC_SCHEME": "amsterdamstories",
-        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories"
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories",
+        "EXPO_PUBLIC_EAS_PROJECT_ID": "8bba9b9e-d635-4276-b8b6-1d36877f1dc3"
       }
     },
     "preview:amsterdam": {
@@ -64,7 +65,8 @@
         "EXPO_PUBLIC_APP_SLUG": "amsterdam-stories",
         "EXPO_PUBLIC_BUNDLE_ID": "app.replit.amsterdamstories",
         "EXPO_PUBLIC_SCHEME": "amsterdamstories",
-        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories"
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories",
+        "EXPO_PUBLIC_EAS_PROJECT_ID": "8bba9b9e-d635-4276-b8b6-1d36877f1dc3"
       }
     },
     "production:amsterdam": {
@@ -75,7 +77,8 @@
         "EXPO_PUBLIC_APP_SLUG": "amsterdam-stories",
         "EXPO_PUBLIC_BUNDLE_ID": "app.replit.amsterdamstories",
         "EXPO_PUBLIC_SCHEME": "amsterdamstories",
-        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories"
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.greenhome.amsterdamstories",
+        "EXPO_PUBLIC_EAS_PROJECT_ID": "8bba9b9e-d635-4276-b8b6-1d36877f1dc3"
       }
     }
   },

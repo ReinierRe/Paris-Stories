@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as StoreReview from "expo-store-review";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest, getApiUrl, getCityHeaders } from "@/lib/query-client";
 
@@ -165,6 +166,19 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
       savePodcasts(updated);
       return updated;
     });
+
+    try {
+      const countStr = await AsyncStorage.getItem("createdPodcastCount");
+      const count = (parseInt(countStr || "0", 10) || 0) + 1;
+      await AsyncStorage.setItem("createdPodcastCount", String(count));
+
+      if (count === 5) {
+        const isAvailable = await StoreReview.isAvailableAsync();
+        if (isAvailable) {
+          await StoreReview.requestReview();
+        }
+      }
+    } catch {}
   }, []);
 
   const updatePodcast = useCallback(async (id: string, updates: Partial<Podcast>) => {

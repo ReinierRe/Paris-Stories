@@ -430,8 +430,9 @@ Om natuurlijk te klinken, hanteer je deze regels:
 6. **Concreet:** Noem specifieke namen, data, adressen en feiten. Dat maakt het verhaal geloofwaardig en informatief.
 
 ## Schrijfregels
-- GEEN titels, GEEN "Welkom bij...", GEEN introductie van jezelf.
-- Begin direct met het onderwerp, geen omslachtige inleiding.
+- GEEN titels, GEEN koppen, GEEN markdown (#), GEEN aankondigingsregel zoals "De Oude Kerk" of "Het Vondelpark" bovenaan het script. De eerste zin IS het verhaal.
+- GEEN "Welkom bij...", GEEN introductie van jezelf.
+- Begin direct met het verhaal. Wissel af in openingsstijl: soms een historisch feit, soms een locatiebeschrijving, soms een verrassende anekdote, soms een vraag, soms een concrete scène. Gebruik NIET altijd "Stel je voor" als opening.
 - Schrijf in vloeiende alinea's zonder koppen of opsommingstekens.
 - Gebruik 'je' en 'jij' om een directe band met de luisteraar op te bouwen.
 - Lengte: schrijf ongeveer ${wordCount} woorden.
@@ -456,8 +457,9 @@ Pour sonner naturellement, suivez ces regles:
 6. **Soyez precis:** Mentionnez des noms, dates, adresses et faits specifiques. Cela rend l'histoire credible et informative.
 
 ## Regles d'ecriture
-- PAS de titres, PAS de "Bienvenue a...", PAS de presentation de vous-meme.
-- Commencez directement avec le sujet, pas d'introduction longue.
+- PAS de titres, PAS d'en-tetes, PAS de markdown (#), PAS de ligne d'annonce comme "La Tour Eiffel" ou "Le Marais" en haut du script. La premiere phrase EST l'histoire.
+- PAS de "Bienvenue a...", PAS de presentation de vous-meme.
+- Commencez directement avec l'histoire. Variez le style d'ouverture: parfois un fait historique, parfois une description de lieu, parfois une anecdote surprenante, parfois une question, parfois une scene concrete. N'utilisez PAS toujours "Imaginez" comme ouverture.
 - Ecrivez en paragraphes fluides sans titres ni puces.
 - Utilisez "vous" pour creer un lien direct avec l'auditeur.
 - Longueur: ecrivez environ ${wordCount} mots.
@@ -482,8 +484,9 @@ Um natuerlich zu klingen, befolge diese Regeln:
 6. **Konkret:** Nenne spezifische Namen, Daten, Adressen und Fakten. Das macht die Geschichte glaubwuerdig und informativ.
 
 ## Schreibregeln
-- KEINE Titel, KEIN "Willkommen bei...", KEINE Vorstellung deiner selbst.
-- Beginne direkt mit dem Thema, keine umstaendliche Einleitung.
+- KEINE Titel, KEINE Ueberschriften, KEIN Markdown (#), KEINE Ankuendigungszeile wie "Die Alte Kirche" oder "Der Vondelpark" am Anfang des Skripts. Der erste Satz IST die Geschichte.
+- KEIN "Willkommen bei...", KEINE Vorstellung deiner selbst.
+- Beginne direkt mit der Geschichte. Wechsle den Eroeffnungsstil ab: mal ein historisches Faktum, mal eine Ortsbeschreibung, mal eine ueberraschende Anekdote, mal eine Frage, mal eine konkrete Szene. Verwende NICHT immer "Stell dir vor" als Eroeffnung.
 - Schreibe in fliessenden Absaetzen ohne Ueberschriften oder Aufzaehlungszeichen.
 - Verwende "du" um eine direkte Verbindung mit dem Zuhoerer aufzubauen.
 - Laenge: schreibe ungefaehr ${wordCount} Woerter.
@@ -508,8 +511,9 @@ Para sonar natural, sigue estas reglas:
 6. **Se especifico:** Menciona nombres, fechas, direcciones y hechos especificos. Esto hace la historia creible e informativa.
 
 ## Reglas de escritura
-- SIN titulos, SIN "Bienvenidos a...", SIN presentarte a ti mismo.
-- Comienza directamente con el tema, sin introduccion extensa.
+- SIN titulos, SIN encabezados, SIN markdown (#), SIN linea de anuncio como "La Catedral" o "El Barrio Gotico" al inicio del script. La primera oracion ES la historia.
+- SIN "Bienvenidos a...", SIN presentarte a ti mismo.
+- Comienza directamente con la historia. Varia el estilo de apertura: a veces un hecho historico, a veces una descripcion del lugar, a veces una anecdota sorprendente, a veces una pregunta, a veces una escena concreta. NO uses siempre "Imagina" como apertura.
 - Escribe en parrafos fluidos sin encabezados ni vinetas.
 - Usa "tu" para construir una conexion directa con el oyente.
 - Longitud: escribe aproximadamente ${wordCount} palabras.
@@ -534,8 +538,9 @@ To sound natural, follow these rules:
 6. **Be specific:** Mention specific names, dates, addresses, and facts. This makes the story credible and informative.
 
 ## Writing Rules
-- NO titles, NO "Welcome to...", NO introducing yourself.
-- Start directly with the topic, no lengthy introduction.
+- NO titles, NO headings, NO markdown (#), NO announcement line like "The Old Church" or "The Vondelpark" at the top of the script. The first sentence IS the story.
+- NO "Welcome to...", NO introducing yourself.
+- Start directly with the story. Vary your opening style: sometimes a historical fact, sometimes a location description, sometimes a surprising anecdote, sometimes a question, sometimes a concrete scene. Do NOT always use "Imagine" as an opening.
 - Write in flowing paragraphs without headings or bullet points.
 - Use 'you' to build a direct connection with the listener.
 - Length: write approximately ${wordCount} words.

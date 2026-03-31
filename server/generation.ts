@@ -39,6 +39,8 @@ export async function generateScriptAndAudio(params: {
 
   rawScript = rawScript.replace(/^```(?:xml|ssml|html)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 
+  rawScript = rawScript.replace(/^#{1,6}\s+.+\n+/, "").trim();
+
   console.log(`Script generated (${rawScript.length} chars). Generating audio...`);
 
   if (job) job.progress = "Generating audio...";

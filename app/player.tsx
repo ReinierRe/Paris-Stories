@@ -77,6 +77,17 @@ export default function PlayerScreen() {
     );
   }
 
+  if (!podcast.audioUrl) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>{t("player.audioUnavailable")}</Text>
+        <Pressable onPress={() => router.back()}>
+          <Text style={styles.backLinkText}>{t("player.goBack")}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   const isCurrentPodcast = currentPodcast?.id === podcast.id;
   const displayPosition = isSeeking ? seekPosition : (isCurrentPodcast ? position : 0);
   const displayDuration = isCurrentPodcast ? duration : 0;

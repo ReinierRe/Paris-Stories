@@ -1,10 +1,12 @@
 import { Tabs } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet, useColorScheme, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import Colors from "@/constants/colors";
 import { useTranslation } from "@/i18n/useTranslation";
+import MiniPlayer from "@/components/MiniPlayer";
 
 let liquidGlassAvailable = false;
 if (Platform.OS !== "web") {
@@ -120,9 +122,20 @@ function ClassicTabLayout() {
   );
 }
 
+function TabLayoutWithMiniPlayer({ children }: { children: React.ReactNode }) {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = Platform.OS === "web" ? 84 : (49 + insets.bottom);
+  return (
+    <View style={{ flex: 1 }}>
+      {children}
+      <View style={{ position: "absolute", left: 0, right: 0, bottom: tabBarHeight }}>
+        <MiniPlayer />
+      </View>
+    </View>
+  );
+}
+
 export default function TabLayout() {
-  if (liquidGlassAvailable) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
+  const layout = liquidGlassAvailable ? <NativeTabLayout /> : <ClassicTabLayout />;
+  return <TabLayoutWithMiniPlayer>{layout}</TabLayoutWithMiniPlayer>;
 }

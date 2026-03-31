@@ -7,6 +7,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { PodcastProvider } from "@/contexts/PodcastContext";
+import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CityConfigProvider } from "@/contexts/CityConfigContext";
 import LoginScreen from "@/app/login";
@@ -126,11 +127,13 @@ export default function RootLayout() {
         <CityConfigProvider>
           <AuthProvider>
             <PodcastProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <KeyboardProvider>
-                  <AuthGate />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
+              <AudioPlayerProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <KeyboardProvider>
+                    <AuthGate />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </AudioPlayerProvider>
             </PodcastProvider>
           </AuthProvider>
         </CityConfigProvider>

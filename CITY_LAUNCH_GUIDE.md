@@ -136,8 +136,9 @@
 eas build --platform ios --profile production:<stad>
 ```
 
-- Bij eerste build: **Reuse distribution certificate** → Yes (zelfde Team cert)
+- Bij eerste build: **Reuse distribution certificate** → Yes (zelfde Team cert voor alle apps)
 - Bij eerste build: **Generate new provisioning profile** → Yes (elke app heeft eigen profiel)
+- Bij eerste build: **Select App Store Connect API Key** → Kies de bestaande key (Key ID: `9HL9J9S224`, Team: GreenHome B.V.)
 
 ---
 
@@ -145,9 +146,27 @@ eas build --platform ios --profile production:<stad>
 
 **Wie: Jij in terminal**
 
+**Belangrijk:** Je moet de env vars meegeven zodat EAS CLI de juiste project-context gebruikt (anders valt hij terug op Paris).
+
 ```bash
+EXPO_PUBLIC_CITY_ID=<stad> \
+EXPO_PUBLIC_APP_SLUG=<stad>-stories \
+EXPO_PUBLIC_BUNDLE_ID=app.replit.<stadstories> \
+EXPO_PUBLIC_EAS_PROJECT_ID=<eas-project-id> \
 eas submit --platform ios --profile production:<stad>
 ```
+
+Of direct met de build URL (kopieer uit de build output):
+
+```bash
+EXPO_PUBLIC_CITY_ID=<stad> \
+EXPO_PUBLIC_APP_SLUG=<stad>-stories \
+EXPO_PUBLIC_BUNDLE_ID=app.replit.<stadstories> \
+EXPO_PUBLIC_EAS_PROJECT_ID=<eas-project-id> \
+eas submit --platform ios --profile production:<stad> --url <build-artifact-url>
+```
+
+- Selecteer de **bestaande App Store Connect API Key** (Key ID: `9HL9J9S224`)
 
 ---
 

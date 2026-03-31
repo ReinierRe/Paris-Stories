@@ -13,12 +13,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
-import * as StoreReview from "expo-store-review";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { usePodcasts, resolveAudioUrl } from "@/contexts/PodcastContext";
+import { usePodcasts } from "@/contexts/PodcastContext";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useTranslation } from "@/i18n/useTranslation";
 
 function formatTime(millis: number): string {
@@ -34,113 +32,38 @@ export default function PlayerScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { t } = useTranslation();
+  const {
+    currentPodcast,
+    isPlaying,
+    isLoading,
+    audioError,
+    position,
+    duration,
+    loadAndPlay,
+    togglePlay,
+    seekForward,
+    seekBackward,
+    seekTo,
+    retry,
+  } = useAudioPlayer();
 
   const podcast = podcasts.find((p) => p.id === podcastId);
 
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [audioError, setAudioError] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [showScript, setShowScript] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekPosition, setSeekPosition] = useState(0);
   const progressBarWidth = useRef(0);
+  const progressBarRef = useRef<View>(null);
 
   useEffect(() => {
-    if (podcast?.audioUrl) {
-      loadAudio();
-    } else if (podcast) {
-      setIsLoading(false);
-      setAudioError(true);
+    if (podcast?.audioUrl && currentPodcast?.id !== podcast.id) {
+      loadAndPlay(podcast);
     }
-    return () => {
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
-      }
-    };
-  }, [podcast?.audioUrl]);
+  }, [podcast?.id]);
 
-  const loadAudio = async () => {
-    setAudioError(false);
-    setIsLoading(true);
-    try {
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-      });
-
-      const fullAudioUrl = resolveAudioUrl(podcast!.audioUrl);
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: fullAudioUrl },
-        { shouldPlay: false },
-        onPlaybackStatusUpdate,
-      );
-      soundRef.current = sound;
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Failed to load audio:", error);
-      setIsLoading(false);
-      setAudioError(true);
-    }
-  };
-
-  const onPlaybackStatusUpdate = (status: any) => {
-    if (status.isLoaded) {
-      setPosition(status.positionMillis || 0);
-      setDuration(status.durationMillis || 0);
-      setIsPlaying(status.isPlaying || false);
-
-      if (status.didJustFinish) {
-        setIsPlaying(false);
-        soundRef.current?.setPositionAsync(0);
-
-        (async () => {
-          try {
-            const countStr = await AsyncStorage.getItem("completedPodcastCount");
-            const count = (parseInt(countStr || "0", 10) || 0) + 1;
-            await AsyncStorage.setItem("completedPodcastCount", String(count));
-
-            if (count === 1 || count === 10) {
-              const isAvailable = await StoreReview.isAvailableAsync();
-              if (isAvailable) {
-                await StoreReview.requestReview();
-              }
-            }
-          } catch {}
-        })();
-      }
-    } else if (status.error) {
-      console.error("Playback error:", status.error);
-      setAudioError(true);
-      setIsPlaying(false);
-    }
-  };
-
-  const togglePlay = async () => {
-    if (!soundRef.current) return;
+  const handleTogglePlay = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    if (isPlaying) {
-      await soundRef.current.pauseAsync();
-    } else {
-      await soundRef.current.playAsync();
-    }
-  };
-
-  const seekForward = async () => {
-    if (!soundRef.current) return;
-    const newPos = Math.min(position + 15000, duration);
-    await soundRef.current.setPositionAsync(newPos);
-  };
-
-  const seekBackward = async () => {
-    if (!soundRef.current) return;
-    const newPos = Math.max(position - 15000, 0);
-    await soundRef.current.setPositionAsync(newPos);
+    await togglePlay();
   };
 
   if (!podcast) {
@@ -154,25 +77,28 @@ export default function PlayerScreen() {
     );
   }
 
-  const displayPosition = isSeeking ? seekPosition : position;
-  const progress = duration > 0 ? displayPosition / duration : 0;
+  const isCurrentPodcast = currentPodcast?.id === podcast.id;
+  const displayPosition = isSeeking ? seekPosition : (isCurrentPodcast ? position : 0);
+  const displayDuration = isCurrentPodcast ? duration : 0;
+  const progress = displayDuration > 0 ? displayPosition / displayDuration : 0;
+  const currentIsPlaying = isCurrentPodcast ? isPlaying : false;
+  const currentIsLoading = isCurrentPodcast ? isLoading : (!isCurrentPodcast && podcast.audioUrl ? true : false);
+  const currentAudioError = isCurrentPodcast ? audioError : false;
 
   const onProgressBarLayout = (e: LayoutChangeEvent) => {
     progressBarWidth.current = e.nativeEvent.layout.width;
   };
 
   const seekToPosition = async (pageX: number, barRef: View | null) => {
-    if (!soundRef.current || duration <= 0 || !barRef) return;
+    if (displayDuration <= 0 || !barRef) return;
     barRef.measure((_x, _y, width, _height, pageXOffset) => {
       const relativeX = Math.max(0, Math.min(pageX - pageXOffset, width));
       const ratio = relativeX / width;
-      const newPos = Math.floor(ratio * duration);
+      const newPos = Math.floor(ratio * displayDuration);
       setSeekPosition(newPos);
-      soundRef.current?.setPositionAsync(newPos);
+      seekTo(newPos);
     });
   };
-
-  const progressBarRef = useRef<View>(null);
 
   const handleProgressTouchStart = (e: GestureResponderEvent) => {
     setIsSeeking(true);
@@ -218,7 +144,7 @@ export default function PlayerScreen() {
         </ScrollView>
       ) : (
         <View style={styles.artworkContainer}>
-          {audioError ? (
+          {currentAudioError ? (
             <View style={styles.errorCard}>
               <View style={styles.errorIconCircle}>
                 <Ionicons name="cloud-offline-outline" size={40} color={Colors.light.accent} />
@@ -229,7 +155,7 @@ export default function PlayerScreen() {
               </Text>
               <Pressable
                 style={({ pressed }) => [styles.retryButton, pressed && { opacity: 0.8 }]}
-                onPress={loadAudio}
+                onPress={retry}
               >
                 <Ionicons name="refresh" size={16} color="#FFFFFF" />
                 <Text style={styles.retryButtonText}>{t("player.tryAgain")}</Text>
@@ -286,7 +212,7 @@ export default function PlayerScreen() {
           </View>
           <View style={styles.timeRow}>
             <Text style={styles.timeText}>{formatTime(displayPosition)}</Text>
-            <Text style={styles.timeText}>{formatTime(duration)}</Text>
+            <Text style={styles.timeText}>{formatTime(displayDuration)}</Text>
           </View>
         </View>
 
@@ -297,21 +223,21 @@ export default function PlayerScreen() {
           </Pressable>
 
           <Pressable
-            onPress={togglePlay}
+            onPress={handleTogglePlay}
             style={({ pressed }) => [
               styles.playPauseButton,
               pressed && styles.playPausePressed,
             ]}
-            disabled={isLoading}
+            disabled={currentIsLoading}
           >
-            {isLoading ? (
+            {currentIsLoading ? (
               <ActivityIndicator size="large" color="#FFFFFF" />
             ) : (
               <Ionicons
-                name={isPlaying ? "pause" : "play"}
+                name={currentIsPlaying ? "pause" : "play"}
                 size={36}
                 color="#FFFFFF"
-                style={!isPlaying ? { marginLeft: 4 } : undefined}
+                style={!currentIsPlaying ? { marginLeft: 4 } : undefined}
               />
             )}
           </Pressable>

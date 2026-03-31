@@ -34,7 +34,7 @@ const parisOnboardingCategories: OnboardingCategory[] = [
 const amsterdamOnboardingCategories: OnboardingCategory[] = [
   { name: "History", imageKey: "category-history" },
   { name: "Golden Age", imageKey: "category-golden-age" },
-  { name: "Museums", imageKey: "category-museums" },
+  { name: "Museums", imageKey: "category-museums-amsterdam" },
   { name: "Buildings", imageKey: "category-epic-buildings-amsterdam" },
   { name: "Modern", imageKey: "category-modern-history" },
   { name: "Culinary", imageKey: "category-culinary" },

@@ -1281,7 +1281,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Museos",
     icon: "museum",
     iconFamily: "MaterialIcons",
-    iconImage: require("@/assets/images/category-museums.png"),
+    iconImage: require("@/assets/images/category-museums-amsterdam.png"),
     color: "#2980B9",
     angles: [
       {

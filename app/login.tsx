@@ -73,6 +73,7 @@ const categoryImageMap: Record<string, any> = {
   "category-french-revolution": require("@/assets/images/category-french-revolution.png"),
   "category-golden-age": require("@/assets/images/category-history.png"),
   "category-museums": require("@/assets/images/category-museums.png"),
+  "category-museums-amsterdam": require("@/assets/images/category-museums-amsterdam.png"),
   "category-epic-buildings": require("@/assets/images/category-epic-buildings.png"),
   "category-epic-buildings-amsterdam": require("@/assets/images/category-epic-buildings-amsterdam.png"),
   "category-modern-history": require("@/assets/images/category-modern-history.png"),

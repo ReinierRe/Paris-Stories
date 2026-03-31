@@ -48,8 +48,20 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       }));
 
       if (status.didJustFinish) {
-        soundRef.current?.setPositionAsync(0).catch(() => {});
-        setState((prev) => ({ ...prev, isPlaying: false }));
+        if (soundRef.current) {
+          soundRef.current.unloadAsync().catch(() => {});
+          soundRef.current = null;
+        }
+        currentPodcastRef.current = null;
+        loadTokenRef.current += 1;
+        setState({
+          currentPodcast: null,
+          isPlaying: false,
+          isLoading: false,
+          audioError: false,
+          position: 0,
+          duration: 0,
+        });
 
         (async () => {
           try {

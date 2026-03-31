@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useMemo, useEffect, ReactNode } from "react";
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid, AVPlaybackStatus } from "expo-av";
 import * as StoreReview from "expo-store-review";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { resolveAudioUrl, Podcast } from "@/contexts/PodcastContext";
@@ -38,7 +38,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     duration: 0,
   });
 
-  const onPlaybackStatusUpdate = useCallback((status: any) => {
+  const onPlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
     if (status.isLoaded) {
       setState((prev) => ({
         ...prev,

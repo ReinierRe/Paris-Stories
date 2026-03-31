@@ -63,7 +63,11 @@ export default function PlayerScreen() {
 
   const handleTogglePlay = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await togglePlay();
+    if (currentPodcast?.id === podcast?.id) {
+      await togglePlay();
+    } else if (podcast) {
+      await loadAndPlay(podcast);
+    }
   };
 
   if (!podcast) {
@@ -93,7 +97,7 @@ export default function PlayerScreen() {
   const displayDuration = isCurrentPodcast ? duration : 0;
   const progress = displayDuration > 0 ? displayPosition / displayDuration : 0;
   const currentIsPlaying = isCurrentPodcast ? isPlaying : false;
-  const currentIsLoading = isCurrentPodcast ? isLoading : (!isCurrentPodcast && podcast.audioUrl ? true : false);
+  const currentIsLoading = isCurrentPodcast ? isLoading : false;
   const currentAudioError = isCurrentPodcast ? audioError : false;
 
   const onProgressBarLayout = (e: LayoutChangeEvent) => {

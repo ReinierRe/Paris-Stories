@@ -301,9 +301,13 @@ function configureStaticAndLanding(app: express.Application) {
 
   app.get("/.well-known/apple-app-site-association", (_req: Request, res: Response) => {
     res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "public, max-age=86400");
     res.json({
       webcredentials: {
-        apps: ["L9BR52LZ5P.app.replit.parisstories"]
+        apps: [
+          "L9BR52LZ5P.app.replit.parisstories",
+          "L9BR52LZ5P.app.replit.amsterdamstories",
+        ]
       }
     });
   });

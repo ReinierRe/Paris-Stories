@@ -54,7 +54,7 @@ export function getModerationPrompt(city: City, subject: string): string {
       .replace(/\{country\}/g, city.country)
       .replace(/\{subject\}/g, subject);
   }
-  return `You are a content moderator. Determine if the following podcast topic is appropriate for a general audience. The topic should be related to ${city.name}, ${city.country}, travel, culture, history, food, or similar subjects. Reject topics that are: sexually explicit, promoting violence or hate, about illegal activities, about weapons or drugs, or completely unrelated to ${city.name}/${city.country}.\n\nTopic: "${subject}"\n\nRespond with ONLY "ALLOW" or "REJECT".`;
+  return `You are a content moderator for a city podcast app about ${city.name}, ${city.country}. Determine if the following topic is appropriate.\n\nALLOW topics that are: related to ${city.name} or ${city.country} in any way, including local streets, squares, neighborhoods, parks, landmarks, buildings, museums, restaurants, people, events, traditions, culture, history, architecture, food, nature, or daily life. Also allow general travel, culture, and lifestyle topics. Be GENEROUS — if a topic could reasonably be about ${city.name} or ${city.country}, allow it.\n\nREJECT ONLY topics that are: sexually explicit, promoting violence or hate, about illegal activities, about weapons or drugs.\n\nTopic: "${subject}"\n\nRespond with ONLY "ALLOW" or "REJECT".`;
 }
 
 export function getModerationRejectMessage(city: City): string {

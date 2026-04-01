@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
+  Keyboard,
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -72,6 +73,20 @@ export default function CustomCreateScreen() {
 
   const voice = (user?.preferredVoice || "female") as "male" | "female";
   const language = (user?.preferredLanguage || "nl") as "nl" | "en" | "fr" | "de";
+  const scrollRef = useRef<ScrollView>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardVisible(false)
+    );
+    return () => { showSub.remove(); hideSub.remove(); };
+  }, []);
 
   const steps: Step[] = ["subject", "angle", "length", "confirm"];
 
@@ -309,6 +324,8 @@ export default function CustomCreateScreen() {
                 maxLength={200}
                 autoFocus
                 textAlignVertical="top"
+                returnKeyType="done"
+                blurOnSubmit
               />
               <Text style={styles.charCount}>{subject.length}/200</Text>
             </View>
@@ -318,6 +335,21 @@ export default function CustomCreateScreen() {
             <Text style={styles.aiDisclosure}>
               {t("customize.aiDisclosure")}
             </Text>
+            {keyboardVisible && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextButton,
+                  pressed && styles.buttonPressed,
+                  !canProceed && styles.buttonDisabled,
+                  { marginTop: 8 },
+                ]}
+                onPress={handleNext}
+                disabled={!canProceed}
+              >
+                <Text style={styles.nextButtonText}>{t("customize.continue")}</Text>
+                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+              </Pressable>
+            )}
           </View>
         );
 
@@ -471,9 +503,11 @@ export default function CustomCreateScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
         <View style={styles.stepHeader}>
           <View style={styles.customBadge}>

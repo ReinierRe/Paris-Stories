@@ -103,7 +103,7 @@ export function getPrivacyPolicyHtml(city: City): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy Policy - ${city.appName}</title>
+<title>Privacy Policy - City Stories</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F6F1; color: #1A1A2E; line-height: 1.7; padding: 20px; }
@@ -118,10 +118,10 @@ export function getPrivacyPolicyHtml(city: City): string {
 </head>
 <body>
 <div class="container">
-<h1>Privacy Policy</h1>
+<h1>Privacy Policy — City Stories</h1>
 <p class="date">Last updated: ${city.privacyPolicyDate}</p>
 
-<p>${city.appName} ("we", "our", or "the app") is committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
+<p>City Stories ("we", "our") is committed to protecting your privacy. This privacy policy applies to all apps published under the City Stories brand, including but not limited to <strong>Paris Stories</strong> and <strong>Amsterdam Stories</strong>. All these apps share the same infrastructure and are governed by this single policy. This document explains what data we collect, how we use it, and your rights.</p>
 
 <h2>1. Data We Collect</h2>
 <ul>
@@ -138,7 +138,7 @@ export function getPrivacyPolicyHtml(city: City): string {
 </ul>
 
 <h2>3. AI-Generated Content</h2>
-<p>${city.appName} uses artificial intelligence to create podcast scripts. When you request a podcast, your chosen topic is sent to <strong>Anthropic Claude</strong>, a third-party AI service, which generates the script. The generated script is then converted to audio using <strong>Google Cloud Text-to-Speech</strong>.</p>
+<p>City Stories apps use artificial intelligence to create podcast scripts. When you request a podcast, your chosen topic is sent to <strong>Anthropic Claude</strong>, a third-party AI service, which generates the script. The generated script is then converted to audio using <strong>Google Cloud Text-to-Speech</strong>.</p>
 <p>Your topic input is processed by these AI services solely for the purpose of generating your podcast. We do not use your input to train AI models. Anthropic and Google process this data according to their own privacy policies.</p>
 
 <h2>4. Third-Party Services</h2>
@@ -161,7 +161,7 @@ export function getPrivacyPolicyHtml(city: City): string {
 </ul>
 
 <h2>7. Children's Privacy</h2>
-<p>${city.appName} is not intended for children under 13. We do not knowingly collect data from children.</p>
+<p>City Stories apps are not intended for children under 13. We do not knowingly collect data from children.</p>
 
 <h2>8. Changes to This Policy</h2>
 <p>We may update this policy from time to time. We will notify users of significant changes through the app.</p>

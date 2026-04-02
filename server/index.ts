@@ -8,6 +8,7 @@ import * as path from "path";
 import * as net from "net";
 import { spawn, execSync, type ChildProcess } from "child_process";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import { seedCitiesIfEmpty } from "./seed-cities";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -362,6 +363,7 @@ function setupErrorHandler(app: express.Application) {
 
   app.use("/api", cityMiddleware);
 
+  await seedCitiesIfEmpty();
   await setupAuth(app);
 
   setupMetroProxy(app);

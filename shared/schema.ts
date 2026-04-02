@@ -41,7 +41,7 @@ export const users = pgTable("users", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
+  cityId: varchar("city_id").notNull().default("paris"),
   email: text("email").notNull(),
   password: text("password"),
   firstName: text("first_name"),
@@ -68,7 +68,7 @@ export const cachedPodcasts = pgTable("cached_podcasts", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
+  cityId: varchar("city_id").notNull().default("paris"),
   topicId: text("topic_id").notNull(),
   angle: text("angle").notNull().default(""),
   voice: text("voice").notNull(),
@@ -95,7 +95,7 @@ export const customPodcasts = pgTable("custom_podcasts", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
+  cityId: varchar("city_id").notNull().default("paris"),
   userId: text("user_id").notNull(),
   subject: text("subject").notNull(),
   title: text("title").notNull().default(""),
@@ -115,7 +115,7 @@ export const userPodcasts = pgTable("user_podcasts", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  cityId: varchar("city_id").notNull().default("paris").references(() => cities.id),
+  cityId: varchar("city_id").notNull().default("paris"),
   userId: text("user_id").notNull(),
   cachedPodcastId: text("cached_podcast_id").notNull(),
   topicName: text("topic_name").notNull(),

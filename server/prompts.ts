@@ -32,6 +32,7 @@ Regels:
 3. **Geen stopwoordjes:** Vermijd woorden als "Tja,", "Hè,", "Kijk,", "Hoor je dat?", "Weet je wat?", "Echt waar,". Vertel gewoon het verhaal zonder dit soort vulwoorden.
 4. **Geen streepjes of drie puntjes:** Gebruik GEEN liggende streepjes (—), GEEN drie puntjes (...). Gebruik gewone komma's en punten voor ritme en pauzes.
 5. **Fonetisch helder:** Schrijf woorden die goed uitspreekbaar zijn voor text-to-speech. Vermijd moeilijke woordcombinaties, tongbrekers en ongebruikelijke leenwoorden. Gebruik eenvoudige, heldere Nederlandse woorden.
+6. **Één versus een:** Wanneer je het telwoord 1 bedoelt, schrijf ALTIJD "één" met accenten (bijvoorbeeld "één keer", "één van de mooiste", "één man"). Gebruik "een" alleen als onbepaald lidwoord ("een huis", "een verhaal"). Dit is cruciaal, anders spreekt de stem het telwoord verkeerd uit.
 
 BELANGRIJK:
 - Schrijf in platte tekst, GEEN SSML-tags, GEEN markers tussen haken.

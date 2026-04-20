@@ -41,9 +41,9 @@ Explora temas en siete categorías ricas:
 - Gaudí y Modernismo — Sagrada Família, Park Güell, Casa Batlló, La Pedrera y el genio de Antoni Gaudí
 - Museos — Museu Picasso, MNAC, Fundació Miró, MACBA y más
 - Edificios y Monumentos — La Catedral, Santa Maria del Mar, Palau de la Música, Camp Nou
-- Historia Moderna — Los Juegos Olímpicos del 92, la transición, las superilles y los castellers
+- Historia Moderna — El FC Barcelona y Cruyff (més que un club), la transición, las superilles y los castellers
 - Barrios — Gòtic, El Born, El Raval, Gràcia, Barceloneta, Poble Sec y Poblenou
-- Gastronomía — Tapas, pa amb tomàquet, vermut, paella, cava y crema catalana
+- Gastronomía — Tapas, pa amb tomàquet, vermut, mariscos de la Barceloneta, cava y crema catalana
 
 PODCASTS PERSONALIZADOS
 ¿Quieres aprender sobre algo específico? Crea tu propio podcast sobre cualquier tema relacionado con Barcelona. Ingresa tu tema, elige un ángulo narrativo y recibe un episodio único en minutos.
@@ -101,9 +101,9 @@ Explore topics across seven rich categories:
 - Gaudí & Modernism — Sagrada Família, Park Güell, Casa Batlló, La Pedrera, and the genius of Antoni Gaudí
 - Museums — Museu Picasso, MNAC, Fundació Miró, MACBA, and more
 - Buildings & Monuments — The Cathedral, Santa Maria del Mar, Palau de la Música, Camp Nou
-- Modern History — The 1992 Olympics, the transition, the superblocks, and castellers
+- Modern History — FC Barcelona & Cruyff (més que un club), the transition, the superblocks, and castellers
 - Neighborhoods — Gòtic, El Born, El Raval, Gràcia, Barceloneta, Poble Sec, and Poblenou
-- Culinary — Tapas, pa amb tomàquet, vermut, paella, cava, and crema catalana
+- Culinary — Tapas, pa amb tomàquet, vermut, Barceloneta seafood, cava, and crema catalana
 
 CUSTOM PODCASTS
 Want to learn about something specific? Create your own podcast about any Barcelona-related topic. Enter your subject, pick a storytelling angle, and get a unique episode in minutes.
@@ -161,9 +161,9 @@ Verken onderwerpen in zeven rijke categorieën:
 - Gaudí & Modernisme — Sagrada Família, Park Güell, Casa Batlló, La Pedrera en het genie Antoni Gaudí
 - Musea — Museu Picasso, MNAC, Fundació Miró, MACBA en meer
 - Gebouwen & Monumenten — De Kathedraal, Santa Maria del Mar, Palau de la Música, Camp Nou
-- Moderne Geschiedenis — De Olympische Spelen van 1992, de transitie, superilles en castellers
+- Moderne Geschiedenis — FC Barcelona & Cruyff (més que un club), de transitie, superilles en castellers
 - Buurten — Gòtic, El Born, El Raval, Gràcia, Barceloneta, Poble Sec en Poblenou
-- Culinair — Tapas, pa amb tomàquet, vermut, paella, cava en crema catalana
+- Culinair — Tapas, pa amb tomàquet, vermut, zeevruchten uit de Barceloneta, cava en crema catalana
 
 EIGEN PODCASTS
 Wil je meer weten over een specifiek onderwerp? Maak je eigen podcast over elk Barcelona-gerelateerd thema. Voer je onderwerp in, kies een invalshoek en ontvang een unieke aflevering binnen enkele minuten.
@@ -221,9 +221,9 @@ Explorez des sujets dans sept catégories riches :
 - Gaudí & Modernisme — Sagrada Família, Park Güell, Casa Batlló, La Pedrera et le génie d'Antoni Gaudí
 - Musées — Museu Picasso, MNAC, Fondation Miró, MACBA et plus
 - Bâtiments & Monuments — La Cathédrale, Santa Maria del Mar, Palau de la Música, Camp Nou
-- Histoire moderne — Les JO de 1992, la transition, les superblocs et les castellers
+- Histoire moderne — Le FC Barcelone et Cruyff (més que un club), la transition, les superblocs et les castellers
 - Quartiers — Gòtic, El Born, El Raval, Gràcia, Barceloneta, Poble Sec et Poblenou
-- Gastronomie — Tapas, pa amb tomàquet, vermut, paella, cava et crema catalana
+- Gastronomie — Tapas, pa amb tomàquet, vermut, fruits de mer de la Barceloneta, cava et crema catalana
 
 PODCASTS PERSONNALISÉS
 Envie d'en savoir plus sur un sujet précis ? Créez votre propre podcast sur n'importe quel thème lié à Barcelone. Entrez votre sujet, choisissez un angle narratif et recevez un épisode unique en quelques minutes.
@@ -281,9 +281,9 @@ Entdecke Themen in sieben reichhaltigen Kategorien:
 - Gaudí & Modernismus — Sagrada Família, Park Güell, Casa Batlló, La Pedrera und das Genie Antoni Gaudí
 - Museen — Museu Picasso, MNAC, Fundació Miró, MACBA und mehr
 - Gebäude & Denkmäler — Die Kathedrale, Santa Maria del Mar, Palau de la Música, Camp Nou
-- Moderne Geschichte — Die Olympischen Spiele 1992, der Übergang, die Superblocks und die Castellers
+- Moderne Geschichte — Der FC Barcelona und Cruyff (més que un club), der Übergang, die Superblocks und die Castellers
 - Viertel — Gòtic, El Born, El Raval, Gràcia, Barceloneta, Poble Sec und Poblenou
-- Kulinarik — Tapas, pa amb tomàquet, Vermut, Paella, Cava und Crema Catalana
+- Kulinarik — Tapas, pa amb tomàquet, Vermut, Meeresfrüchte aus der Barceloneta, Cava und Crema Catalana
 
 EIGENE PODCASTS
 Möchtest du mehr über ein bestimmtes Thema erfahren? Erstelle deinen eigenen Podcast zu jedem Barcelona-Thema. Gib dein Thema ein, wähle einen Erzählwinkel und erhalte eine einzigartige Folge in wenigen Minuten.

@@ -13,11 +13,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const cityIcons: Record<string, string> = {
     paris: "./assets/images/icon.png",
     amsterdam: "./assets/images/icon-amsterdam.png",
+    barcelona: "./assets/images/icon-barcelona.png",
   };
 
   const citySplashIcons: Record<string, string> = {
     paris: "./assets/images/splash-icon.png",
     amsterdam: "./assets/images/splash-icon-amsterdam.png",
+    barcelona: "./assets/images/splash-icon-barcelona.png",
   };
 
   return {

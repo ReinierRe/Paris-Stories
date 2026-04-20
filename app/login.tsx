@@ -80,6 +80,11 @@ const categoryImageMap: Record<string, any> = {
   "category-culinary": require("@/assets/images/category-culinary.png"),
   "category-neighborhoods": require("@/assets/images/category-neighborhoods.png"),
   "category-neighborhoods-amsterdam": require("@/assets/images/category-neighborhoods-amsterdam.png"),
+  "category-gaudi-barcelona": require("@/assets/images/category-gaudi-barcelona.png"),
+  "category-museums-barcelona": require("@/assets/images/category-museums-barcelona.png"),
+  "category-epic-buildings-barcelona": require("@/assets/images/category-epic-buildings-barcelona.png"),
+  "category-culinary-barcelona": require("@/assets/images/category-culinary-barcelona.png"),
+  "category-neighborhoods-barcelona": require("@/assets/images/category-neighborhoods-barcelona.png"),
 };
 
 function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number }) {

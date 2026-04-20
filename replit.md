@@ -1,7 +1,7 @@
 # Paris Stories (Multi-Tenant)
 
 ## Overview
-Paris Stories is an Expo React Native mobile application with an Express.js backend designed to generate AI-powered podcast stories. The project aims to provide a multi-tenant platform where a single backend infrastructure can serve multiple city-specific applications, each with its own App Store listing. The core capability involves generating engaging, localized audio stories using advanced AI and text-to-speech technologies. The long-term vision is to expand to numerous cities, offering personalized historical and cultural narratives to users worldwide.
+Paris Stories is an Expo React Native mobile application with an Express.js backend designed to generate AI-powered podcast stories. The project aims to provide a multi-tenant platform where a single backend infrastructure can serve multiple city-specific applications, each with its own App Store listing. Currently supports Paris Stories, Amsterdam Stories, and Barcelona Stories. The core capability involves generating engaging, localized audio stories using advanced AI and text-to-speech technologies. The long-term vision is to expand to numerous cities, offering personalized historical and cultural narratives to users worldwide.
 
 ## User Preferences
 I prefer detailed explanations and iterative development. Ask before making major changes.

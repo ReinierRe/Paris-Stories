@@ -1,0 +1,44 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "qzx4zC0mLPM_hvZOoGUno"
+uri = "file://assets/images/icon-barcelona.png"
+type = "image"
+title = "barcelona app icon"
+
+[[generated]]
+id = "t2WVBNRahHeajgmsdJQrH"
+uri = "file://assets/images/splash-icon-barcelona.png"
+type = "image"
+title = "barcelona splash icon"
+
+[[generated]]
+id = "4JJebMfsA4M0fkDXF0RsS"
+uri = "file://assets/images/category-gaudi-barcelona.png"
+type = "image"
+title = "gaudi barcelona category"
+
+[[generated]]
+id = "v5SCTpR0ZL-9IdDfawBIL"
+uri = "file://assets/images/category-neighborhoods-barcelona.png"
+type = "image"
+title = "neighborhoods barcelona category"
+
+[[generated]]
+id = "RDPK3o9z9UhLNsdrxVw_0"
+uri = "file://assets/images/category-culinary-barcelona.png"
+type = "image"
+title = "culinary barcelona category"
+
+[[generated]]
+id = "RqKVLjonhE7l5KLXokQjt"
+uri = "file://assets/images/category-epic-buildings-barcelona.png"
+type = "image"
+title = "epic buildings barcelona"
+
+[[generated]]
+id = "NvjyaukVRFeNek4gJaBWi"
+uri = "file://assets/images/category-museums-barcelona.png"
+type = "image"
+title = "museums barcelona category"

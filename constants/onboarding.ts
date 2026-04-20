@@ -58,8 +58,28 @@ const amsterdamPodcastExamples: OnboardingPodcastExample[] = [
 const parisCategoryTopicCounts = [8, 6, 10, 8, 7];
 const amsterdamCategoryTopicCounts = [8, 8, 8, 8, 8, 8, 8];
 
+const barcelonaOnboardingCategories: OnboardingCategory[] = [
+  { name: "History", imageKey: "category-history" },
+  { name: "Gaudí", imageKey: "category-gaudi-barcelona" },
+  { name: "Museums", imageKey: "category-museums-barcelona" },
+  { name: "Buildings", imageKey: "category-epic-buildings-barcelona" },
+  { name: "Modern", imageKey: "category-modern-history" },
+  { name: "Culinary", imageKey: "category-culinary-barcelona" },
+  { name: "Neighborhoods", imageKey: "category-neighborhoods-barcelona" },
+];
+
+const barcelonaPodcastExamples: OnboardingPodcastExample[] = [
+  { category: "GAUDÍ", title: "La Sagrada Família", voice: "Male", duration: "3:24", lang: "ES", color: "#E07A1F" },
+  { category: "NEIGHBORHOODS", title: "El Barrio Gótico", voice: "Female", duration: "4:02", lang: "ES", color: "#27AE60" },
+  { category: "MUSEUMS", title: "Museu Picasso", voice: "Male", duration: "2:48", lang: "EN", color: "#5B9BD5" },
+  { category: "CULINARY", title: "Tapas & Vermut", voice: "Female", duration: "2:36", lang: "ES", color: "#E0A040" },
+];
+
+const barcelonaCategoryTopicCounts = [8, 8, 8, 8, 8, 8, 8];
+
 const parisCustomSubjectExample = `I am visiting Montmartre, tell me about Picasso's life here`;
 const amsterdamCustomSubjectExample = `I am visiting the Jordaan, tell me about the history of the canals`;
+const barcelonaCustomSubjectExample = `I am visiting Park Güell, tell me about Gaudí's vision for this place`;
 
 interface CityOnboardingContent {
   categories: OnboardingCategory[];
@@ -83,6 +103,13 @@ const cityOnboardingMap: Record<string, CityOnboardingContent> = {
     categoryTopicCounts: amsterdamCategoryTopicCounts,
     customSubjectExample: amsterdamCustomSubjectExample,
     slidesSubtitle: "Explore the Golden Age, hidden neighborhoods, iconic canals, and centuries of fascinating history.",
+  },
+  barcelona: {
+    categories: barcelonaOnboardingCategories,
+    podcastExamples: barcelonaPodcastExamples,
+    categoryTopicCounts: barcelonaCategoryTopicCounts,
+    customSubjectExample: barcelonaCustomSubjectExample,
+    slidesSubtitle: "Explore Gaudí's modernist masterpieces, the Gothic Quarter, Mediterranean culture, and centuries of Catalan history.",
   },
 };
 

@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as StoreReview from "expo-store-review";
+import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { getUserLevel, getNextLevel, getLocalizedName } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,10 +23,13 @@ import { usePodcasts } from "@/contexts/PodcastContext";
 import { getApiUrl, getCityHeaders } from "@/lib/query-client";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useCityConfig } from "@/contexts/CityConfigContext";
+import { flagEmoji, getRegistryEntry } from "@/constants/cityRegistry";
+import { getCityConfigSync } from "@/constants/city";
 
 const cityIcons: Record<string, any> = {
   paris: require("@/assets/images/icon.png"),
   amsterdam: require("@/assets/images/icon-amsterdam.png"),
+  barcelona: require("@/assets/images/icon-barcelona.png"),
 };
 
 const LANGUAGES = [
@@ -100,6 +104,116 @@ function MenuItem({ icon, label, onPress, destructive }: { icon: string; label: 
   );
 }
 
+function MyCitiesSection({ t, locale }: { t: (key: string, options?: Record<string, any>) => string; locale: string }) {
+  const { activeCityIds, currentCityId, setCurrentCity, removeCity } = useCityConfig();
+  const [editing, setEditing] = useState(false);
+
+  const handleTap = async (cityId: string) => {
+    if (cityId === currentCityId) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await setCurrentCity(cityId);
+  };
+
+  const handleRemove = async (cityId: string) => {
+    if (activeCityIds.length <= 1) {
+      Alert.alert(t("common.error"), t("cities.cannotRemoveLast"));
+      return;
+    }
+    const cityName = getLocalizedName(getCityConfigSync(cityId), locale);
+    Alert.alert(
+      t("cities.removeTitle", { city: cityName }),
+      t("cities.removeMessage", { city: cityName }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("cities.remove"),
+          style: "destructive",
+          onPress: async () => {
+            await removeCity(cityId);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ],
+    );
+  };
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>{t("cities.sectionTitle")}</Text>
+        {activeCityIds.length > 0 && (
+          <Pressable onPress={() => setEditing((v) => !v)} hitSlop={8}>
+            <Text style={styles.sectionAction}>{editing ? t("cities.done") : t("cities.edit")}</Text>
+          </Pressable>
+        )}
+      </View>
+      <View style={styles.menuCard}>
+        {activeCityIds.map((cityId, idx) => {
+          const entry = getRegistryEntry(cityId);
+          if (!entry) return null;
+          const config = getCityConfigSync(cityId);
+          const cityName = getLocalizedName(config, locale);
+          const isActive = cityId === currentCityId;
+          return (
+            <React.Fragment key={cityId}>
+              {idx > 0 && <View style={styles.menuDivider} />}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.cityRow,
+                  isActive && styles.cityRowActive,
+                  pressed && !editing && styles.menuItemPressed,
+                ]}
+                onPress={() => (editing ? null : handleTap(cityId))}
+                disabled={editing}
+              >
+                <Text style={styles.cityFlag}>{flagEmoji(entry.countryCode)}</Text>
+                <View style={styles.cityRowText}>
+                  <Text style={styles.cityRowName}>{cityName}</Text>
+                  {isActive && (
+                    <Text style={styles.cityRowActiveLabel}>{t("cities.activeBadge")}</Text>
+                  )}
+                </View>
+                {editing ? (
+                  <Pressable
+                    onPress={() => handleRemove(cityId)}
+                    style={styles.removeIconButton}
+                    hitSlop={8}
+                    disabled={activeCityIds.length <= 1}
+                  >
+                    <Ionicons
+                      name="remove-circle"
+                      size={22}
+                      color={activeCityIds.length <= 1 ? Colors.light.textTertiary : Colors.light.error}
+                    />
+                  </Pressable>
+                ) : isActive ? (
+                  <Ionicons name="checkmark-circle" size={20} color={Colors.light.accent} />
+                ) : (
+                  <Ionicons name="chevron-forward" size={16} color={Colors.light.textTertiary} />
+                )}
+              </Pressable>
+            </React.Fragment>
+          );
+        })}
+        <View style={styles.menuDivider} />
+        <Pressable
+          style={({ pressed }) => [styles.addCityRow, pressed && styles.menuItemPressed]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push("/city-picker");
+          }}
+        >
+          <View style={styles.addCityIcon}>
+            <Ionicons name="add" size={20} color={Colors.light.accent} />
+          </View>
+          <Text style={styles.addCityText}>{t("cities.addCity")}</Text>
+          <Ionicons name="chevron-forward" size={16} color={Colors.light.textTertiary} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
@@ -107,7 +221,7 @@ export default function ProfileScreen() {
   const { podcasts } = usePodcasts();
   const [isDeleting, setIsDeleting] = useState(false);
   const { t, locale } = useTranslation();
-  const { cityConfig } = useCityConfig();
+  const { cityConfig, currentCityId } = useCityConfig();
 
   const totalPodcasts = podcasts.filter((p) => p.status === "ready").length;
   const standardPodcasts = podcasts.filter((p) => p.status === "ready" && !p.isCustom).length;
@@ -167,7 +281,7 @@ export default function ProfileScreen() {
 
   const openPrivacyPolicy = () => {
     const baseUrl = getApiUrl();
-    const cityId = getCityHeaders()["X-City-Id"] || "paris";
+    const cityId = getCityHeaders()["X-City-Id"] || currentCityId;
     Linking.openURL(`${baseUrl}/privacy-policy?city=${cityId}`);
   };
 
@@ -196,6 +310,8 @@ export default function ProfileScreen() {
           <StatCard icon="headset" value={standardPodcasts} label={t("profile.standard")} />
           <StatCard icon="create-outline" value={customPodcasts} label={t("profile.custom")} />
         </View>
+
+        <MyCitiesSection t={t} locale={locale} />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t("profile.podcastPreferences")}</Text>
@@ -389,6 +505,13 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
   sectionTitle: {
     fontSize: 13,
     fontFamily: "DMSans_600SemiBold",
@@ -397,6 +520,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 8,
     paddingLeft: 4,
+  },
+  sectionAction: {
+    fontSize: 13,
+    fontFamily: "DMSans_600SemiBold",
+    color: Colors.light.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   menuCard: {
     backgroundColor: Colors.light.card,
@@ -422,6 +552,62 @@ const styles = StyleSheet.create({
   },
   menuItemLabelDestructive: {
     color: Colors.light.error,
+  },
+  cityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  cityRowActive: {
+    backgroundColor: "#FFFCF5",
+  },
+  cityFlag: {
+    fontSize: 28,
+  },
+  cityRowText: {
+    flex: 1,
+  },
+  cityRowName: {
+    fontSize: 16,
+    fontFamily: "DMSans_600SemiBold",
+    color: Colors.light.text,
+  },
+  cityRowActiveLabel: {
+    fontSize: 11,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.accent,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginTop: 2,
+  },
+  removeIconButton: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addCityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  addCityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "rgba(196, 162, 101, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addCityText: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.accent,
   },
   aboutRow: {
     flexDirection: "row",

@@ -24,7 +24,7 @@ import { getApiUrl, getCityHeaders } from "@/lib/query-client";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useCityConfig } from "@/contexts/CityConfigContext";
 import { flagEmoji, getRegistryEntry } from "@/constants/cityRegistry";
-import { getCityConfigSync } from "@/constants/city";
+import { getCityConfigSync, getLocalizedCityName } from "@/constants/city";
 
 const cityIcons: Record<string, any> = {
   paris: require("@/assets/images/icon.png"),
@@ -119,7 +119,7 @@ function MyCitiesSection({ t, locale }: { t: (key: string, options?: Record<stri
       Alert.alert(t("common.error"), t("cities.cannotRemoveLast"));
       return;
     }
-    const cityName = getLocalizedName(getCityConfigSync(cityId), locale);
+    const cityName = getLocalizedCityName(getCityConfigSync(cityId), locale);
     Alert.alert(
       t("cities.removeTitle", { city: cityName }),
       t("cities.removeMessage", { city: cityName }),
@@ -152,7 +152,7 @@ function MyCitiesSection({ t, locale }: { t: (key: string, options?: Record<stri
           const entry = getRegistryEntry(cityId);
           if (!entry) return null;
           const config = getCityConfigSync(cityId);
-          const cityName = getLocalizedName(config, locale);
+          const cityName = getLocalizedCityName(config, locale);
           const isActive = cityId === currentCityId;
           return (
             <React.Fragment key={cityId}>
@@ -200,7 +200,7 @@ function MyCitiesSection({ t, locale }: { t: (key: string, options?: Record<stri
           style={({ pressed }) => [styles.addCityRow, pressed && styles.menuItemPressed]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push("/city-picker");
+            router.push("/city-picker" as any);
           }}
         >
           <View style={styles.addCityIcon}>

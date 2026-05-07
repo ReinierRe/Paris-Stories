@@ -17,8 +17,7 @@ import Colors from "@/constants/colors";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useCityConfig } from "@/contexts/CityConfigContext";
 import { CITY_REGISTRY, flagEmoji, getRegistryEntry } from "@/constants/cityRegistry";
-import { getCityConfigSync } from "@/constants/city";
-import { getLocalizedName } from "@/constants/themes";
+import { getCityConfigSync, getLocalizedCityName } from "@/constants/city";
 
 type DownloadState = "idle" | "downloading" | "error";
 
@@ -66,7 +65,7 @@ export default function CityPickerScreen() {
         return;
       }
       const entry = getRegistryEntry(cityId);
-      const cityName = entry ? getLocalizedName(getCityConfigSync(cityId), locale) : cityId;
+      const cityName = entry ? getLocalizedCityName(getCityConfigSync(cityId), locale) : cityId;
       Alert.alert(
         t("cities.removeTitle", { city: cityName }),
         t("cities.removeMessage", { city: cityName }),
@@ -115,7 +114,7 @@ export default function CityPickerScreen() {
             <View style={styles.menuCard}>
               {activeEntries.map((entry, idx) => {
                 const config = getCityConfigSync(entry.id);
-                const cityName = getLocalizedName(config, locale);
+                const cityName = getLocalizedCityName(config, locale);
                 return (
                   <React.Fragment key={entry.id}>
                     {idx > 0 && <View style={styles.divider} />}
@@ -154,7 +153,7 @@ export default function CityPickerScreen() {
             <View style={styles.menuCard}>
               {availableEntries.map((entry, idx) => {
                 const config = getCityConfigSync(entry.id);
-                const cityName = getLocalizedName(config, locale);
+                const cityName = getLocalizedCityName(config, locale);
                 const downloadState = downloads[entry.id];
                 const isDownloading = downloadState === "downloading";
                 return (

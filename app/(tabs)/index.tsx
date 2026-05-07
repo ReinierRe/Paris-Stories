@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -13,20 +13,37 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { getThemes, type Theme, type Topic, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useCityConfig } from "@/contexts/CityConfigContext";
+import { getCityConfigSync, getLocalizedCityName } from "@/constants/city";
+import { flagEmoji, getRegistryEntry } from "@/constants/cityRegistry";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-function TopicRow({ topic, theme, locale }: { topic: Topic; theme: Theme; locale: string }) {
+function TopicRow({
+  topic,
+  theme,
+  locale,
+  cityId,
+  onPressBeforeNav,
+}: {
+  topic: Topic;
+  theme: Theme;
+  locale: string;
+  cityId: string;
+  onPressBeforeNav: () => Promise<void>;
+}) {
   return (
     <Pressable
       style={({ pressed }) => [styles.topicRow, pressed && styles.topicRowPressed]}
-      onPress={() =>
+      onPress={async () => {
+        await onPressBeforeNav();
         router.push({
           pathname: "/customize",
           params: {
@@ -37,8 +54,8 @@ function TopicRow({ topic, theme, locale }: { topic: Topic; theme: Theme; locale
             themeName: theme.name,
             themeNameNl: theme.nameNl,
           },
-        })
-      }
+        });
+      }}
     >
       <View style={styles.topicContent}>
         <Text style={styles.topicName}>{getLocalizedName(topic, locale)}</Text>
@@ -51,7 +68,19 @@ function TopicRow({ topic, theme, locale }: { topic: Topic; theme: Theme; locale
   );
 }
 
-function ThemeCard({ theme, locale, t }: { theme: Theme; locale: string; t: (key: string, options?: Record<string, any>) => string }) {
+function ThemeCard({
+  theme,
+  locale,
+  cityId,
+  t,
+  onActivate,
+}: {
+  theme: Theme;
+  locale: string;
+  cityId: string;
+  t: (key: string, options?: Record<string, any>) => string;
+  onActivate: () => Promise<void>;
+}) {
   const [expanded, setExpanded] = useState(false);
 
   const toggleExpand = () => {
@@ -104,13 +133,16 @@ function ThemeCard({ theme, locale, t }: { theme: Theme; locale: string; t: (key
           {theme.topics.map((topic, index) => (
             <React.Fragment key={topic.id}>
               {index > 0 && <View style={styles.topicDivider} />}
-              <TopicRow topic={topic} theme={theme} locale={locale} />
+              <TopicRow topic={topic} theme={theme} locale={locale} cityId={cityId} onPressBeforeNav={onActivate} />
             </React.Fragment>
           ))}
           <View style={styles.topicDivider} />
           <Pressable
             style={({ pressed }) => [styles.addOwnRow, pressed && styles.topicRowPressed]}
-            onPress={() => router.push("/custom-create")}
+            onPress={async () => {
+              await onActivate();
+              router.push("/custom-create");
+            }}
           >
             <View style={styles.addOwnIcon}>
               <Ionicons name="add" size={18} color={Colors.light.accent} />
@@ -124,11 +156,104 @@ function ThemeCard({ theme, locale, t }: { theme: Theme; locale: string; t: (key
   );
 }
 
+function CitySection({
+  cityId,
+  expanded,
+  onToggle,
+  onActivate,
+  locale,
+  t,
+}: {
+  cityId: string;
+  expanded: boolean;
+  onToggle: () => void;
+  onActivate: () => Promise<void>;
+  locale: string;
+  t: (key: string, options?: Record<string, any>) => string;
+}) {
+  const entry = getRegistryEntry(cityId);
+  if (!entry) return null;
+  const config = getCityConfigSync(cityId);
+  const cityName = getLocalizedCityName(config, locale);
+  const themes = getThemes(cityId);
+  const totalTopics = themes.reduce((sum, t) => sum + t.topics.length, 0);
+
+  return (
+    <View style={styles.citySection}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.cityHeader,
+          expanded && styles.cityHeaderExpanded,
+          pressed && styles.cityHeaderPressed,
+        ]}
+        onPress={onToggle}
+      >
+        <Text style={styles.cityFlag}>{flagEmoji(entry.countryCode)}</Text>
+        <View style={styles.cityHeaderText}>
+          <Text style={styles.cityHeaderName}>{cityName}</Text>
+          <Text style={styles.cityHeaderMeta}>
+            {t("library.topicCount", { count: totalTopics })}
+          </Text>
+        </View>
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={Colors.light.textSecondary}
+        />
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.themesContainer}>
+          {themes.map((theme) => (
+            <ThemeCard
+              key={theme.id}
+              theme={theme}
+              locale={locale}
+              cityId={cityId}
+              t={t}
+              onActivate={onActivate}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function LibraryScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { user } = useAuth();
   const { t, locale } = useTranslation();
+  const { activeCityIds, currentCityId, setCurrentCity } = useCityConfig();
+
+  // Track which cities are expanded. Default = currentCityId is expanded.
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(
+    () => new Set([currentCityId]),
+  );
+
+  // When the user changes currentCity (e.g. via Profile), reflect it here
+  useEffect(() => {
+    setExpandedCities(new Set([currentCityId]));
+  }, [currentCityId]);
+
+  const toggleCity = async (cityId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedCities((prev) => {
+      const next = new Set(prev);
+      if (next.has(cityId)) {
+        next.delete(cityId);
+      } else {
+        next.add(cityId);
+        // When expanding a non-current city, also focus it for new podcasts
+        if (cityId !== currentCityId) {
+          setCurrentCity(cityId);
+        }
+      }
+      return next;
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -142,16 +267,28 @@ export default function LibraryScreen() {
       >
         <View style={styles.headerSection}>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>{t("library.title")}</Text>
+            <Text style={styles.headerTitle}>{t("tabs.library")}</Text>
             <Text style={styles.headerSubtitle}>
-              {user?.firstName ? t("library.welcome", { name: user.firstName }) : t("library.discover")}
+              {user?.firstName
+                ? t("library.welcome", { name: user.firstName })
+                : t("cities.libraryHeader")}
             </Text>
           </View>
         </View>
 
-        <View style={styles.themesContainer}>
-          {getThemes().map((theme) => (
-            <ThemeCard key={theme.id} theme={theme} locale={locale} t={t} />
+        <View style={styles.cityList}>
+          {activeCityIds.map((cityId) => (
+            <CitySection
+              key={cityId}
+              cityId={cityId}
+              expanded={expandedCities.has(cityId)}
+              onToggle={() => toggleCity(cityId)}
+              onActivate={async () => {
+                if (cityId !== currentCityId) await setCurrentCity(cityId);
+              }}
+              locale={locale}
+              t={t}
+            />
           ))}
         </View>
 
@@ -170,13 +307,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerSection: {
-    marginBottom: 28,
+    marginBottom: 24,
     paddingTop: 8,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
   },
   headerTextContainer: {
     flex: 1,
@@ -195,8 +327,51 @@ const styles = StyleSheet.create({
     marginTop: 6,
     lineHeight: 21,
   },
-  themesContainer: {
+  cityList: {
     gap: 14,
+  },
+  citySection: {
+    gap: 10,
+  },
+  cityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 14,
+    backgroundColor: Colors.light.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.cardBorder,
+  },
+  cityHeaderExpanded: {
+    borderColor: Colors.light.accent,
+    backgroundColor: "#FFFCF5",
+  },
+  cityHeaderPressed: {
+    opacity: 0.7,
+  },
+  cityFlag: {
+    fontSize: 28,
+  },
+  cityHeaderText: {
+    flex: 1,
+  },
+  cityHeaderName: {
+    fontSize: 18,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.text,
+    letterSpacing: -0.3,
+  },
+  cityHeaderMeta: {
+    fontSize: 12,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  themesContainer: {
+    gap: 10,
+    paddingLeft: 8,
   },
   themeCard: {
     backgroundColor: Colors.light.card,

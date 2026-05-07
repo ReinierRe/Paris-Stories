@@ -5,6 +5,13 @@ export default {
     myProfile: "Mein Profil",
   },
   cities: {
+    libraryHeader: "Entdecke Geschichten aus deinen Städten",
+    podcastCountEmpty: "Noch keine Podcasts",
+    emptyForCity: "Tippe in dieser Stadt auf ein Thema, um deinen ersten Podcast zu erstellen",
+    podcastCountLabel: {
+      one: "%{count} Podcast",
+      other: "%{count} Podcasts",
+    },
     sectionTitle: "Meine Städte",
     activeBadge: "Aktiv",
     tapToSwitch: "Tippen zum Wechseln",

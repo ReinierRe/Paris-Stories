@@ -1,14 +1,17 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
   View,
-  FlatList,
+  ScrollView,
+  Pressable,
   TouchableOpacity,
   Platform,
   ActivityIndicator,
   Alert,
   Dimensions,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -18,7 +21,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
   runOnJS,
   interpolate,
   Extrapolation,
@@ -28,6 +30,13 @@ import Colors from "@/constants/colors";
 import { usePodcasts, type Podcast } from "@/contexts/PodcastContext";
 import { apiRequest } from "@/lib/query-client";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useCityConfig } from "@/contexts/CityConfigContext";
+import { getCityConfigSync, getLocalizedCityName } from "@/constants/city";
+import { flagEmoji, getRegistryEntry } from "@/constants/cityRegistry";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const DELETE_THRESHOLD = -80;
 const SNAP_OPEN = -88;
@@ -79,7 +88,7 @@ function SwipeablePodcastCard({
       const newX = base + e.translationX;
       translateX.value = Math.min(0, Math.max(newX, -SCREEN_WIDTH * 0.4));
     })
-    .onEnd((e) => {
+    .onEnd(() => {
       if (translateX.value < DELETE_THRESHOLD) {
         translateX.value = withSpring(SNAP_OPEN, { damping: 20 });
         isOpen.value = true;
@@ -212,7 +221,82 @@ function SwipeablePodcastCard({
   );
 }
 
-function EmptyState({ t }: { t: (key: string) => string }) {
+function CityPodcastSection({
+  cityId,
+  podcasts,
+  expanded,
+  onToggle,
+  onDelete,
+  locale,
+  t,
+}: {
+  cityId: string;
+  podcasts: Podcast[];
+  expanded: boolean;
+  onToggle: () => void;
+  onDelete: (id: string) => void;
+  locale: string;
+  t: (key: string, options?: Record<string, any>) => string;
+}) {
+  const entry = getRegistryEntry(cityId);
+  if (!entry) return null;
+  const config = getCityConfigSync(cityId);
+  const cityName = getLocalizedCityName(config, locale);
+  const readyCount = podcasts.filter((p) => p.status === "ready").length;
+  const generatingCount = podcasts.filter((p) => p.status === "generating").length;
+  const totalCount = podcasts.length;
+
+  return (
+    <View style={styles.citySection}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.cityHeader,
+          expanded && styles.cityHeaderExpanded,
+          pressed && styles.cityHeaderPressed,
+        ]}
+        onPress={onToggle}
+      >
+        <Text style={styles.cityFlag}>{flagEmoji(entry.countryCode)}</Text>
+        <View style={styles.cityHeaderText}>
+          <Text style={styles.cityHeaderName}>{cityName}</Text>
+          <Text style={styles.cityHeaderMeta}>
+            {totalCount === 0
+              ? t("cities.podcastCountEmpty")
+              : t("cities.podcastCountLabel", { count: readyCount }) +
+                (generatingCount > 0 ? ` · ${t("podcasts.generating", { count: generatingCount })}` : "")}
+          </Text>
+        </View>
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={Colors.light.textSecondary}
+        />
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.podcastList}>
+          {podcasts.length === 0 ? (
+            <View style={styles.cityEmptyState}>
+              <Ionicons name="headset-outline" size={28} color={Colors.light.textTertiary} />
+              <Text style={styles.cityEmptyText}>{t("cities.emptyForCity")}</Text>
+            </View>
+          ) : (
+            podcasts.map((podcast) => (
+              <SwipeablePodcastCard
+                key={podcast.id}
+                podcast={podcast}
+                onDelete={onDelete}
+                t={t}
+              />
+            ))
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function GlobalEmptyState({ t }: { t: (key: string) => string }) {
   return (
     <View style={styles.emptyState}>
       <Ionicons name="headset-outline" size={48} color={Colors.light.textTertiary} />
@@ -225,23 +309,58 @@ function EmptyState({ t }: { t: (key: string) => string }) {
 }
 
 export default function PodcastsScreen() {
-  const { podcasts, isLoading, removePodcast } = usePodcasts();
+  const { podcastsByCity, isLoading, removePodcast } = usePodcasts();
+  const { activeCityIds, currentCityId } = useCityConfig();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
-  const handleDelete = useCallback(async (id: string) => {
-    const podcast = podcasts.find((p) => p.id === id);
-    if (podcast?.isCustom && podcast?.customDbId) {
-      try {
-        await apiRequest("DELETE", `/api/podcast/custom/${podcast.customDbId}`);
-      } catch (e) {
-        console.error("Failed to delete custom podcast from server:", e);
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(
+    () => new Set([currentCityId]),
+  );
+
+  useEffect(() => {
+    setExpandedCities(new Set([currentCityId]));
+  }, [currentCityId]);
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const allPodcasts = Object.values(podcastsByCity).flat();
+      const podcast = allPodcasts.find((p) => p.id === id);
+      if (podcast?.isCustom && podcast?.customDbId) {
+        try {
+          await apiRequest("DELETE", `/api/podcast/custom/${podcast.customDbId}`, undefined, {
+            cityId: podcast.cityId,
+          });
+        } catch (e) {
+          console.error("Failed to delete custom podcast from server:", e);
+        }
       }
-    }
-    await removePodcast(id);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [removePodcast, podcasts]);
+      await removePodcast(id);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    [removePodcast, podcastsByCity],
+  );
+
+  const toggleCity = (cityId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedCities((prev) => {
+      const next = new Set(prev);
+      if (next.has(cityId)) next.delete(cityId);
+      else next.add(cityId);
+      return next;
+    });
+  };
+
+  const totals = useMemo(() => {
+    const allPodcasts = Object.values(podcastsByCity).flat();
+    return {
+      ready: allPodcasts.filter((p) => p.status === "ready").length,
+      generating: allPodcasts.filter((p) => p.status === "generating").length,
+      total: allPodcasts.length,
+    };
+  }, [podcastsByCity]);
 
   if (isLoading) {
     return (
@@ -251,37 +370,47 @@ export default function PodcastsScreen() {
     );
   }
 
-  const readyCount = podcasts.filter((p) => p.status === "ready").length;
-  const generatingCount = podcasts.filter((p) => p.status === "generating").length;
+  const allEmpty = totals.total === 0;
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <FlatList
-        data={podcasts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <SwipeablePodcastCard podcast={item} onDelete={handleDelete} t={t} />
-        )}
+      <ScrollView
         contentContainerStyle={[
           styles.listContent,
-          { paddingTop: insets.top + 16 + webTopInset },
-          podcasts.length === 0 && styles.emptyListContent,
+          { paddingTop: insets.top + 16 + webTopInset, paddingBottom: insets.bottom + 120 },
+          allEmpty && styles.emptyListContent,
         ]}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          podcasts.length > 0 ? (
+      >
+        {allEmpty ? (
+          <GlobalEmptyState t={t} />
+        ) : (
+          <>
             <View style={styles.headerSection}>
               <Text style={styles.headerTitle}>{t("podcasts.title")}</Text>
               <Text style={styles.headerSubtitle}>
-                {t("podcasts.ready", { count: readyCount })}
-                {generatingCount > 0 && ` | ${t("podcasts.generating", { count: generatingCount })}`}
+                {t("podcasts.ready", { count: totals.ready })}
+                {totals.generating > 0 && ` | ${t("podcasts.generating", { count: totals.generating })}`}
               </Text>
             </View>
-          ) : null
-        }
-        ListEmptyComponent={<EmptyState t={t} />}
-        scrollEnabled={podcasts.length > 0}
-      />
+
+            <View style={styles.cityList}>
+              {activeCityIds.map((cityId) => (
+                <CityPodcastSection
+                  key={cityId}
+                  cityId={cityId}
+                  podcasts={podcastsByCity[cityId] ?? []}
+                  expanded={expandedCities.has(cityId)}
+                  onToggle={() => toggleCity(cityId)}
+                  onDelete={handleDelete}
+                  locale={locale}
+                  t={t}
+                />
+              ))}
+            </View>
+          </>
+        )}
+      </ScrollView>
     </GestureHandlerRootView>
   );
 }
@@ -297,7 +426,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 120,
   },
   emptyListContent: {
     flex: 1,
@@ -319,8 +447,67 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
     marginTop: 4,
   },
+  cityList: {
+    gap: 14,
+  },
+  citySection: {
+    gap: 10,
+  },
+  cityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 14,
+    backgroundColor: Colors.light.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.cardBorder,
+  },
+  cityHeaderExpanded: {
+    borderColor: Colors.light.accent,
+    backgroundColor: "#FFFCF5",
+  },
+  cityHeaderPressed: {
+    opacity: 0.7,
+  },
+  cityFlag: {
+    fontSize: 28,
+  },
+  cityHeaderText: {
+    flex: 1,
+  },
+  cityHeaderName: {
+    fontSize: 18,
+    fontFamily: "DMSans_700Bold",
+    color: Colors.light.text,
+    letterSpacing: -0.3,
+  },
+  cityHeaderMeta: {
+    fontSize: 12,
+    fontFamily: "DMSans_500Medium",
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  podcastList: {
+    gap: 12,
+    paddingLeft: 8,
+  },
+  cityEmptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  cityEmptyText: {
+    fontSize: 13,
+    fontFamily: "DMSans_400Regular",
+    color: Colors.light.textSecondary,
+    textAlign: "center",
+    lineHeight: 18,
+  },
   swipeContainer: {
-    marginBottom: 12,
     borderRadius: 16,
     overflow: "hidden",
   },

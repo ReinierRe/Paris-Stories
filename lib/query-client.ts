@@ -2,6 +2,7 @@ import { fetch } from "expo/fetch";
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { auth } from "@/lib/firebase";
 import Constants from "expo-constants";
+import { DEFAULT_CURRENT_CITY_ID } from "@/constants/cityRegistry";
 
 let onUnauthorizedCallback: (() => void) | null = null;
 
@@ -22,9 +23,24 @@ export function getApiUrl(): string {
   return url.href.replace(/\/$/, "");
 }
 
+/**
+ * Currently active city for outgoing API calls. Set by CityConfigContext when
+ * the user switches cities. Falls back to env var, then DEFAULT_CURRENT_CITY_ID.
+ */
+let _currentCityId: string | null = null;
+
+/**
+ * Set by CityConfigContext when the user switches the active city.
+ * All subsequent API calls will include this cityId in the X-City-Id header.
+ */
+export function setActiveCityId(cityId: string): void {
+  _currentCityId = cityId;
+}
+
 export function getCityId(): string {
+  if (_currentCityId) return _currentCityId;
   const extra = Constants.expoConfig?.extra ?? {};
-  return process.env.EXPO_PUBLIC_CITY_ID || extra.cityId || "paris";
+  return process.env.EXPO_PUBLIC_CITY_ID || extra.cityId || DEFAULT_CURRENT_CITY_ID;
 }
 
 async function getAuthHeaders(forceRefresh = false): Promise<Record<string, string>> {
@@ -42,6 +58,15 @@ export function getCityHeaders(): Record<string, string> {
   return { "X-City-Id": getCityId() };
 }
 
+/**
+ * Build city headers for a specific city (used when calling the API on behalf
+ * of a non-current city — e.g. registering a new city for the user, or fetching
+ * its config without changing the current focus).
+ */
+export function buildCityHeaders(cityId: string): Record<string, string> {
+  return { "X-City-Id": cityId };
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     if (res.status === 401 && onUnauthorizedCallback) {
@@ -56,13 +81,15 @@ export async function apiRequest(
   method: string,
   route: string,
   data?: unknown | undefined,
+  options?: { cityId?: string },
 ): Promise<Response> {
   const baseUrl = getApiUrl();
   const url = new URL(route, baseUrl);
   const authHeaders = await getAuthHeaders();
+  const cityHeaders = options?.cityId ? buildCityHeaders(options.cityId) : getCityHeaders();
 
   const headers: Record<string, string> = {
-    ...getCityHeaders(),
+    ...cityHeaders,
     ...authHeaders,
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
@@ -79,7 +106,7 @@ export async function apiRequest(
     if (refreshedHeaders.Authorization) {
       const retryRes = await fetch(url.toString(), {
         method,
-        headers: { ...getCityHeaders(), ...refreshedHeaders, ...(data ? { "Content-Type": "application/json" } : {}) },
+        headers: { ...cityHeaders, ...refreshedHeaders, ...(data ? { "Content-Type": "application/json" } : {}) },
         body: data ? JSON.stringify(data) : undefined,
         credentials: "include",
       });

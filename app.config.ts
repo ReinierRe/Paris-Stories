@@ -11,7 +11,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
  * point at staging/prod variants.
  */
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const appName = "City Stories";
+  const appName = "City Stories Podcasts";
   const appSlug = "city-stories";
   const bundleId = "nl.greenhome.citystories";
   const scheme = "citystories";

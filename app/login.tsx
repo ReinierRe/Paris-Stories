@@ -30,7 +30,6 @@ import {
   getOnboardingCategoryTopicCounts,
   getOnboardingCustomSubjectExample,
 } from "@/constants/onboarding";
-import { getCityConfigSync } from "@/constants/city";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -126,7 +125,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
     return (
       <View style={slideStyles.visualContainer}>
         <PhoneMockup>
-          <Text style={mockupStyles.screenTitle}>{getCityConfigSync().appName}</Text>
+          <Text style={mockupStyles.screenTitle}>City Stories</Text>
           <Text style={mockupStyles.screenSubtitle}>Explore categories</Text>
           <View style={mockupStyles.categoryList}>
             {categoryIcons.slice(0, 5).map((cat, i) => (
@@ -156,7 +155,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
                 <Text style={mockupStyles.customLabel}>CUSTOM PODCAST</Text>
               </View>
               <Text style={mockupStyles.customTitle}>Your subject</Text>
-              <Text style={mockupStyles.customSubtitle}>What {getCityConfigSync().name} story would you like?</Text>
+              <Text style={mockupStyles.customSubtitle}>What story would you like to hear?</Text>
               <View style={mockupStyles.textareaBox}>
                 <Text style={mockupStyles.textareaText}>{getOnboardingCustomSubjectExample()}</Text>
               </View>
@@ -411,7 +410,7 @@ export default function LoginScreen() {
 
                 {mode === "register" && (
                   <Pressable
-                    onPress={() => { const cityId = getCityHeaders()["X-City-Id"] || "paris"; Linking.openURL(`${getApiUrl()}/privacy-policy?city=${cityId}`); }}
+                    onPress={() => { const cityId = getCityHeaders()["X-City-Id"] || "amsterdam"; Linking.openURL(`${getApiUrl()}/privacy-policy?city=${cityId}`); }}
                     style={formStyles.privacyContainer}
                   >
                     <Text style={formStyles.privacyText}>

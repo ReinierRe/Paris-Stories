@@ -1,40 +1,38 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
+/**
+ * City Stories — unified multi-city app identity.
+ *
+ * Bundle ID, app name, scheme and icon are all single values now. The app
+ * supports multiple cities at runtime via the CityConfigContext; the bundled
+ * cities are configured in constants/cityRegistry.ts.
+ *
+ * EAS project ID, Firebase config and API domain remain env-driven so we can
+ * point at staging/prod variants.
+ */
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const cityId = process.env.EXPO_PUBLIC_CITY_ID || "paris";
-  const appName = process.env.EXPO_PUBLIC_APP_NAME || "Paris Stories";
-  const appSlug = process.env.EXPO_PUBLIC_APP_SLUG || "paris-stories";
-  const bundleId = process.env.EXPO_PUBLIC_BUNDLE_ID || "app.replit.parisstories";
-  const scheme = process.env.EXPO_PUBLIC_SCHEME || "parisstories";
-  const androidPackage = process.env.EXPO_PUBLIC_ANDROID_PACKAGE || "com.greenhome.parisstories";
+  const appName = "City Stories";
+  const appSlug = "city-stories";
+  const bundleId = "nl.greenhome.citystories";
+  const scheme = "citystories";
+  const androidPackage = "nl.greenhome.citystories";
+
   const apiDomain = process.env.EXPO_PUBLIC_API_DOMAIN || config.extra?.apiDomain || "paris-stories.replit.app";
   const easProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID || config.extra?.eas?.projectId || "68998269-2bf6-4afa-8d80-56df617ea768";
-
-  const cityIcons: Record<string, string> = {
-    paris: "./assets/images/icon.png",
-    amsterdam: "./assets/images/icon-amsterdam.png",
-    barcelona: "./assets/images/icon-barcelona.png",
-  };
-
-  const citySplashIcons: Record<string, string> = {
-    paris: "./assets/images/splash-icon.png",
-    amsterdam: "./assets/images/splash-icon-amsterdam.png",
-    barcelona: "./assets/images/splash-icon-barcelona.png",
-  };
 
   return {
     ...config,
     name: appName,
     slug: appSlug,
-    version: config.version || "1.0.4",
+    version: config.version || "1.0.0",
     runtimeVersion: "exposdk:54.0.0",
     orientation: "portrait",
-    icon: cityIcons[cityId] || cityIcons.paris,
+    icon: "./assets/images/icon.png",
     scheme,
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
-      image: citySplashIcons[cityId] || citySplashIcons.paris,
+      image: "./assets/images/splash-icon.png",
       resizeMode: "contain",
       backgroundColor: "#0B1628",
     },
@@ -74,7 +72,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     extra: {
       router: { origin: "https://replit.com/" },
       eas: { projectId: easProjectId },
-      cityId,
       apiDomain,
       firebaseApiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || config.extra?.firebaseApiKey || "",
       firebaseProjectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || config.extra?.firebaseProjectId || "",

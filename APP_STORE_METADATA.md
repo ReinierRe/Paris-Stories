@@ -1,527 +1,236 @@
-# App Store Connect Metadata — Paris Stories
+# City Stories — App Store Metadata
 
-Kopieer onderstaande teksten naar de juiste velden in App Store Connect.
-Alle secties zijn klaar om in te vullen.
+> **Status:** Drafted for first submission of "City Stories - Personal Podcasts" (multi-city). Replaces the per-city Paris/Amsterdam/Barcelona listings.
 
----
-
-## 1. App Information (General)
-
-**App Name**: Paris Stories
-**Bundle ID**: com.greenhome.parisstories
-**Primary Language**: English (U.K.)
-**Category**: Education
-**Secondary Category**: Travel
+**Bundle ID:** `nl.greenhome.citystories`
+**SKU:** `city-stories-001`
+**Category (primary):** Travel
+**Category (secondary):** Education
+**Age Rating:** 4+
+**Pricing:** Free, no IAP
 
 ---
 
-## 2. Localized Metadata (per language)
+## App Name (max 30 chars)
 
-Voeg in App Store Connect elke taal toe via "Localizations" en kopieer de bijbehorende teksten.
+| Locale | Value |
+|---|---|
+| en-US | `City Stories: Audio Guides` (27) |
+| nl-NL | `City Stories: Audiogidsen` (26) |
+| fr-FR | `City Stories: Guides Audio` (26) |
+| de-DE | `City Stories: Audio-Guides` (26) |
+| es-ES | `City Stories: Guías de Audio` (28) |
 
----
+## Subtitle (max 30 chars)
 
-### 🇬🇧 English (U.K.) — Primary
+| Locale | Value |
+|---|---|
+| en-US | `AI-powered city podcasts` (24) |
+| nl-NL | `AI-podcasts over je stad` (24) |
+| fr-FR | `Podcasts urbains par IA` (23) |
+| de-DE | `KI-Podcasts über Städte` (23) |
+| es-ES | `Podcasts urbanos con IA` (23) |
 
-**Subtitle** (max 30 tekens):
-```
-Personalized Paris Podcasts
-```
+## Promotional Text (max 170 chars)
 
-**Description** (max 4000 tekens):
-```
-Discover the real Paris through AI-powered podcast stories. Paris Stories creates personalized audio guides about the history, culture, food, art, and hidden gems of the City of Light — generated just for you.
+| Locale | Value |
+|---|---|
+| en-US | Discover Amsterdam, Paris and Barcelona through AI-generated audio stories you can listen to on the go. Custom topics in 5 languages. |
+| nl-NL | Ontdek Amsterdam, Parijs en Barcelona via AI-gegenereerde audioverhalen die je onderweg kunt beluisteren. Eigen onderwerpen in 5 talen. |
+| fr-FR | Découvrez Amsterdam, Paris et Barcelone à travers des récits audio générés par IA. Sujets personnalisés en 5 langues. |
+| de-DE | Entdecke Amsterdam, Paris und Barcelona durch KI-generierte Audiogeschichten. Eigene Themen in 5 Sprachen. |
+| es-ES | Descubre Ámsterdam, París y Barcelona mediante audiohistorias generadas por IA. Temas personalizados en 5 idiomas. |
 
-HOW IT WORKS
-Browse our curated library of Paris topics — from the founding of Lutetia to the secrets of Montmartre, from classic French cuisine to the art of the Belle Époque. Pick a topic, choose your preferred storytelling angle, and Paris Stories generates a unique, factual podcast episode tailored to your interests.
+## Keywords (max 100 chars, comma-separated)
 
-CURATED LIBRARY
-Explore topics across six rich categories:
-• History — From Roman Lutetia to Haussmann's grand boulevards
-• Food & Drink — Parisian bistros, patisseries, and wine culture
-• Art & Culture — The Louvre, Impressionism, and literary Paris
-• Architecture — Gothic cathedrals, Art Nouveau, and modern landmarks
-• Hidden Gems — Secret passages, underground Paris, and local favorites
-• Daily Life — Café culture, markets, neighborhoods, and Parisian style
-
-CUSTOM PODCASTS
-Want to learn about something specific? Create your own podcast about any Paris-related topic. Enter your subject, pick a storytelling angle, and get a unique episode in minutes.
-
-MULTIPLE LANGUAGES & VOICES
-Listen in English, Dutch, French, German, or Spanish. Choose between a male or female voice. Set your preferences once in your profile — every podcast adapts automatically.
-
-KEY FEATURES
-• AI-generated scripts with factual, well-researched content
-• Natural-sounding audio powered by Google Cloud Text-to-Speech
-• Interactive player with seekable progress bar
-• Save and replay your favorite episodes
-• Clean, intuitive interface designed for discovery
-• Content moderation ensures appropriate topics
-
-Paris Stories is perfect for travelers preparing a trip to Paris, history enthusiasts, Francophiles, language learners, or anyone curious about one of the world's most fascinating cities.
-
-All content is generated using artificial intelligence and converted to natural-sounding speech. While we strive for accuracy, AI-generated content may occasionally contain inaccuracies.
-```
-
-**Promotional Text** (max 170 tekens):
-```
-Explore Paris like never before. AI-powered podcast stories about history, food, art, and hidden gems — in your language, your voice.
-```
-
-**Keywords** (max 100 tekens):
-```
-paris,podcast,travel,audio guide,history,france,AI,stories,culture,food,art
-```
-
-**What's New**:
-```
-Welcome to Paris Stories! Discover the real Paris through AI-powered podcast stories about history, culture, food, art, and hidden gems.
-```
+| Locale | Value |
+|---|---|
+| en-US | `audio tour,city guide,podcast,travel,paris,amsterdam,barcelona,history,museum,ai,culture` (97) |
+| nl-NL | `audiotour,stadsgids,podcast,reizen,parijs,amsterdam,barcelona,geschiedenis,museum,ai,cultuur` (98) |
+| fr-FR | `audioguide,visite,podcast,voyage,paris,amsterdam,barcelone,histoire,musée,ia,culture` (88) |
+| de-DE | `audioguide,stadt,podcast,reise,paris,amsterdam,barcelona,geschichte,museum,ki,kultur` (87) |
+| es-ES | `audioguía,ciudad,podcast,viaje,parís,ámsterdam,barcelona,historia,museo,ia,cultura` (84) |
 
 ---
 
-### 🇳🇱 Dutch (Nederlands)
+## Description (per locale, max 4000 chars)
 
-**Subtitle**:
+### English (en-US)
+
 ```
-Jouw Parijs Podcastgids
-```
+City Stories turns every city into your private podcast — generated for you, narrated like a friend who happens to know everything.
 
-**Description**:
-```
-Ontdek het echte Parijs met AI-podcastverhalen. Paris Stories maakt persoonlijke audiogidsen over de geschiedenis, cultuur, het eten, de kunst en de verborgen parels van de Lichtstad — speciaal voor jou gemaakt.
+Wandering through Amsterdam? Tap a topic and a 3 to 8-minute audio story is ready to play in seconds. Curious about the French Revolution in Paris? Want to hear how Gaudí reshaped Barcelona? It's all here, and it's all unique to you.
 
-HOE HET WERKT
-Blader door onze bibliotheek met Parijse onderwerpen — van de stichting van Lutetia tot de geheimen van Montmartre, van de klassieke Franse keuken tot de kunst van de Belle Époque. Kies een onderwerp, selecteer je favoriete invalshoek, en Paris Stories genereert een unieke, feitelijke podcastaflevering op maat.
+**Start with three cities, add more anytime**
 
-BIBLIOTHEEK
-Verken onderwerpen in zes rijke categorieën:
-• Geschiedenis — Van Romeins Lutetia tot Haussmanns grote boulevards
-• Eten & Drinken — Parijse bistro's, patisseries en wijncultuur
-• Kunst & Cultuur — Het Louvre, Impressionisme en literair Parijs
-• Architectuur — Gotische kathedralen, Art Nouveau en moderne monumenten
-• Verborgen Parels — Geheime passages, ondergronds Parijs en lokale favorieten
-• Dagelijks Leven — Cafécultuur, markten, buurten en Parijse stijl
+— 🇳🇱 Amsterdam: Golden Age, Anne Frank, canals, modern culture
+— 🇫🇷 Paris: French Revolution, Notre-Dame, Haussmann, hidden neighborhoods
+— 🇪🇸 Barcelona: Gaudí, Catalan culture, Gothic Quarter, Barceloneta
 
-EIGEN PODCASTS
-Wil je meer weten over een specifiek onderwerp? Maak je eigen podcast over elk Parijs-gerelateerd thema. Voer je onderwerp in, kies een invalshoek en ontvang een unieke aflevering binnen enkele minuten.
+**How it works**
 
-MEERDERE TALEN & STEMMEN
-Luister in het Engels, Nederlands, Frans, Duits of Spaans. Kies tussen een mannelijke of vrouwelijke stem. Stel je voorkeuren eenmalig in via je profiel — elke podcast past zich automatisch aan.
+1. Pick a city in your library
+2. Choose a theme — history, museums, food, modern culture, neighborhoods
+3. Pick an angle (historical, modern, personal) and length (3 or 8 minutes)
+4. Listen — at home, on the train, walking through the city
 
-BELANGRIJKSTE FUNCTIES
-• AI-gegenereerde scripts met feitelijke, goed onderzochte inhoud
-• Natuurlijk klinkende audio via Google Cloud Text-to-Speech
-• Interactieve speler met versleepbare voortgangsbalk
-• Bewaar en herbeluister je favoriete afleveringen
-• Overzichtelijke, intuïtieve interface ontworpen voor ontdekking
-• Inhoudsmoderatie zorgt voor gepaste onderwerpen
+Or write your own subject and we'll generate a podcast about it. Up to 5 custom podcasts per account, unlimited from the curated library.
 
-Paris Stories is perfect voor reizigers die een trip naar Parijs voorbereiden, geschiedenisliefhebbers, francofielen, taalleerders of iedereen die nieuwsgierig is naar een van de meest fascinerende steden ter wereld.
+**Features**
 
-Alle inhoud wordt gegenereerd met kunstmatige intelligentie en omgezet naar natuurlijk klinkende spraak. Hoewel we streven naar nauwkeurigheid, kan AI-gegenereerde inhoud af en toe onjuistheden bevatten.
-```
+✦ AI-generated audio podcasts, fresh every time
+✦ 5 languages: English, Dutch, French, German, Spanish
+✦ Male or female narrator
+✦ Background playback — keep listening with your screen off
+✦ Read-along transcripts
+✦ Skip forward / backward in 15-second steps
+✦ Track your progress: Traveler → Explorer → Connoisseur → Local
+✦ Add or remove cities anytime from your profile
+✦ No ads. No subscription. Free.
 
-**Promotional Text**:
-```
-Ontdek Parijs zoals nooit tevoren. AI-podcastverhalen over geschiedenis, eten, kunst en verborgen parels — in jouw taal, met jouw stem.
+**Built with care**
+
+Stories are crafted by Anthropic's Claude AI and narrated by Google's neural TTS voices. Every script is reviewed by our content moderation pipeline before it reaches you.
+
+Privacy-first: we don't sell your data, and we don't show ads. Your podcasts stay associated only with your account.
+
+Made in the Netherlands by an indie developer who wants to make cities easier to love.
 ```
 
-**Keywords**:
+### Dutch (nl-NL)
+
 ```
-parijs,podcast,reisgids,audiogids,geschiedenis,frankrijk,verhalen,cultuur,eten,kunst
+City Stories verandert elke stad in jouw persoonlijke podcast — gemaakt voor jou, verteld als door een vriend die toevallig alles weet.
+
+Loop je door Amsterdam? Tik een onderwerp aan en binnen seconden staat er een audio-verhaal van 3 tot 8 minuten klaar. Benieuwd naar de Franse Revolutie in Parijs? Wil je horen hoe Gaudí Barcelona heeft vormgegeven? Het zit er allemaal in, en alles is uniek voor jou.
+
+**Begin met drie steden, voeg er meer toe**
+
+— 🇳🇱 Amsterdam: Gouden Eeuw, Anne Frank, grachten, moderne cultuur
+— 🇫🇷 Parijs: Franse Revolutie, Notre-Dame, Haussmann, verborgen wijken
+— 🇪🇸 Barcelona: Gaudí, Catalaanse cultuur, Gotische Wijk, Barceloneta
+
+**Hoe het werkt**
+
+1. Kies een stad in je bibliotheek
+2. Kies een thema — geschiedenis, musea, eten, moderne cultuur, wijken
+3. Pak een invalshoek (historisch, modern, persoonlijk) en lengte (3 of 8 minuten)
+4. Luister — thuis, in de trein, of al wandelend door de stad
+
+Of typ je eigen onderwerp in en wij maken een podcast erover. Tot 5 eigen podcasts per account, onbeperkt uit de gecureerde bibliotheek.
+
+**Functies**
+
+✦ AI-gegenereerde audio-podcasts, telkens vers
+✦ 5 talen: Engels, Nederlands, Frans, Duits, Spaans
+✦ Mannelijke of vrouwelijke verteller
+✦ Achtergrond-afspelen — luister verder met je scherm uit
+✦ Mee-lezen via transcript
+✦ Vooruit en terug in 15 seconden
+✦ Volg je voortgang: Reiziger → Ontdekker → Kenner → Local
+✦ Voeg steden toe of verwijder ze via je profiel
+✦ Geen reclame. Geen abonnement. Gratis.
+
+**Met zorg gemaakt**
+
+Verhalen zijn geschreven door Claude AI van Anthropic en verteld door de neurale stemmen van Google. Elk script gaat door onze contentmoderatie voor het bij jou aankomt.
+
+Privacy voorop: we verkopen je gegevens niet en tonen geen advertenties. Je podcasts horen alleen bij jouw account.
+
+Gemaakt in Nederland door een indie-ontwikkelaar die steden makkelijker wil laten houden van.
 ```
 
-**What's New**:
-```
-Welkom bij Paris Stories! Ontdek het echte Parijs met AI-podcastverhalen over geschiedenis, cultuur, eten, kunst en verborgen parels.
-```
+### French (fr-FR), German (de-DE), Spanish (es-ES)
+
+> **TODO:** Vertaal de bovenstaande EN-versie naar FR/DE/ES vóór submission. Houd dezelfde structuur, lengte en bullets aan. Voorgestelde aanpak: gebruik de skill `app-store-submission` om de andere 3 versies te genereren in één pass.
 
 ---
 
-### 🇫🇷 French (Français)
+## What's New (per release, max 4000 chars)
 
-**Subtitle**:
+### v1.0.0 — First release
+
 ```
-Podcasts Paris Personnalisés
-```
-
-**Description**:
-```
-Découvrez le vrai Paris à travers des podcasts générés par intelligence artificielle. Paris Stories crée des guides audio personnalisés sur l'histoire, la culture, la gastronomie, l'art et les trésors cachés de la Ville Lumière — créés spécialement pour vous.
-
-COMMENT ÇA MARCHE
-Parcourez notre bibliothèque de sujets parisiens — de la fondation de Lutèce aux secrets de Montmartre, de la cuisine française classique à l'art de la Belle Époque. Choisissez un sujet, sélectionnez votre angle narratif préféré, et Paris Stories génère un épisode de podcast unique et factuel, adapté à vos centres d'intérêt.
-
-BIBLIOTHÈQUE
-Explorez des sujets dans six catégories riches :
-• Histoire — De la Lutèce romaine aux grands boulevards d'Haussmann
-• Gastronomie — Bistros parisiens, pâtisseries et culture du vin
-• Art & Culture — Le Louvre, l'Impressionnisme et le Paris littéraire
-• Architecture — Cathédrales gothiques, Art Nouveau et monuments modernes
-• Trésors cachés — Passages secrets, Paris souterrain et adresses locales
-• Vie quotidienne — Culture des cafés, marchés, quartiers et style parisien
-
-PODCASTS PERSONNALISÉS
-Envie d'en savoir plus sur un sujet précis ? Créez votre propre podcast sur n'importe quel thème lié à Paris. Entrez votre sujet, choisissez un angle narratif et recevez un épisode unique en quelques minutes.
-
-PLUSIEURS LANGUES & VOIX
-Écoutez en anglais, néerlandais, français, allemand ou espagnol. Choisissez entre une voix masculine ou féminine. Réglez vos préférences une fois dans votre profil — chaque podcast s'adapte automatiquement.
-
-FONCTIONNALITÉS CLÉS
-• Scripts générés par IA avec un contenu factuel et bien documenté
-• Audio au son naturel grâce à Google Cloud Text-to-Speech
-• Lecteur interactif avec barre de progression
-• Sauvegardez et réécoutez vos épisodes favoris
-• Interface claire et intuitive conçue pour l'exploration
-• Modération du contenu pour garantir des sujets appropriés
-
-Paris Stories est parfait pour les voyageurs préparant un séjour à Paris, les passionnés d'histoire, les francophiles, les apprenants en langues ou toute personne curieuse de découvrir l'une des villes les plus fascinantes du monde.
-
-Tout le contenu est généré par intelligence artificielle et converti en parole au son naturel. Bien que nous visions la précision, le contenu généré par IA peut occasionnellement contenir des inexactitudes.
-```
-
-**Promotional Text**:
-```
-Explorez Paris comme jamais. Des podcasts générés par IA sur l'histoire, la gastronomie, l'art et les trésors cachés — dans votre langue, avec votre voix.
-```
-
-**Keywords**:
-```
-paris,podcast,voyage,guide audio,histoire,france,IA,culture,gastronomie,art,visite
-```
-
-**What's New**:
-```
-Bienvenue dans Paris Stories ! Découvrez le vrai Paris à travers des podcasts générés par IA sur l'histoire, la culture, la gastronomie, l'art et les trésors cachés.
+Welcome to City Stories! Discover Amsterdam, Paris and Barcelona through AI-generated audio podcasts crafted just for you. Pick a topic, pick a language, and start listening. Add more cities anytime.
 ```
 
 ---
 
-### 🇩🇪 German (Deutsch)
+## App Review Notes (max 4000 chars)
 
-**Subtitle**:
 ```
-Dein Paris-Podcast Erlebnis
-```
+City Stories is an AI-powered audio podcast app for travelers and culture enthusiasts. The app supports three cities in this release: Amsterdam, Paris, and Barcelona.
 
-**Description**:
-```
-Entdecke das echte Paris mit KI-generierten Podcast-Geschichten. Paris Stories erstellt personalisierte Audio-Guides über die Geschichte, Kultur, Küche, Kunst und verborgenen Schätze der Stadt des Lichts — speziell für dich gemacht.
+User flow:
+1. New users land on the Profile tab where Amsterdam and Paris are pre-activated. They can add Barcelona via the city picker (network call to fetch city content).
+2. From the Library tab, users tap any topic to generate a personalized podcast. Standard topics are unlimited; custom user-typed topics are capped at 5 per account.
+3. Generated podcasts appear in the My Podcasts tab, grouped per city.
 
-SO FUNKTIONIERT ES
-Durchstöbere unsere Bibliothek mit Pariser Themen — von der Gründung von Lutetia bis zu den Geheimnissen von Montmartre, von der klassischen französischen Küche bis zur Kunst der Belle Époque. Wähle ein Thema, suche dir deinen bevorzugten Erzählwinkel aus, und Paris Stories generiert eine einzigartige, faktenbasierte Podcast-Folge nach deinem Geschmack.
+External services used:
+- Firebase Authentication: user accounts (email/password)
+- PostgreSQL (via our backend at https://paris-stories.replit.app): podcast history, custom podcasts, city configs
+- Anthropic Claude API: script generation
+- Google Cloud Text-to-Speech: audio generation
+- Content moderation: Claude AI checks every user-supplied topic before generation
 
-BIBLIOTHEK
-Entdecke Themen in sechs reichhaltigen Kategorien:
-• Geschichte — Vom römischen Lutetia bis zu Haussmanns großen Boulevards
-• Essen & Trinken — Pariser Bistros, Patisserien und Weinkultur
-• Kunst & Kultur — Der Louvre, Impressionismus und das literarische Paris
-• Architektur — Gotische Kathedralen, Jugendstil und moderne Wahrzeichen
-• Verborgene Schätze — Geheime Passagen, unterirdisches Paris und Geheimtipps
-• Alltag — Cafékultur, Märkte, Viertel und Pariser Stil
+Demo account for App Review:
+- Email: reviewer@city-stories.replit.app
+- Password: TesterCityStories2026!
+- This account has Amsterdam, Paris, and Barcelona activated and a few sample podcasts in each.
 
-EIGENE PODCASTS
-Möchtest du mehr über ein bestimmtes Thema erfahren? Erstelle deinen eigenen Podcast zu jedem Paris-Thema. Gib dein Thema ein, wähle einen Erzählwinkel und erhalte eine einzigartige Folge in wenigen Minuten.
+Privacy policy:
+https://paris-stories.replit.app/privacy-policy
 
-MEHRERE SPRACHEN & STIMMEN
-Höre auf Englisch, Niederländisch, Französisch, Deutsch oder Spanisch. Wähle zwischen einer männlichen oder weiblichen Stimme. Lege deine Vorlieben einmal in deinem Profil fest — jeder Podcast passt sich automatisch an.
-
-HAUPTFUNKTIONEN
-• KI-generierte Skripte mit faktenbasiertem, gut recherchiertem Inhalt
-• Natürlich klingendes Audio mit Google Cloud Text-to-Speech
-• Interaktiver Player mit verschiebbarem Fortschrittsbalken
-• Speichere und höre deine Lieblingsfolgen erneut
-• Übersichtliche, intuitive Oberfläche zum Entdecken
-• Inhaltsmoderation sorgt für angemessene Themen
-
-Paris Stories ist perfekt für Reisende, die eine Paris-Reise planen, Geschichtsbegeisterte, Frankreich-Fans, Sprachlerner oder alle, die neugierig auf eine der faszinierendsten Städte der Welt sind.
-
-Alle Inhalte werden mit künstlicher Intelligenz generiert und in natürlich klingende Sprache umgewandelt. Obwohl wir Genauigkeit anstreben, können KI-generierte Inhalte gelegentlich Ungenauigkeiten enthalten.
-```
-
-**Promotional Text**:
-```
-Entdecke Paris wie nie zuvor. KI-generierte Podcast-Geschichten über Geschichte, Küche, Kunst und verborgene Schätze — in deiner Sprache, mit deiner Stimme.
-```
-
-**Keywords**:
-```
-paris,podcast,reise,reiseführer,geschichte,frankreich,KI,kultur,essen,kunst,audio
-```
-
-**What's New**:
-```
-Willkommen bei Paris Stories! Entdecke das echte Paris mit KI-generierten Podcast-Geschichten über Geschichte, Kultur, Küche, Kunst und verborgene Schätze.
+Notes:
+- Custom podcast generation: enter any city-related subject in the "Add your own" flow. Content moderation rejects sexually explicit, violent, or illegal content.
+- The app uses location permission only if the user opts in to map features (currently not in v1; reserved for future release).
+- No third-party IP is used. All audio is AI-generated by neural voices owned by Google. All script content is original.
+- DSA: registered as trader.
 ```
 
 ---
 
-### 🇪🇸 Spanish (Español)
+## Screenshot Plan
 
-**Subtitle**:
-```
-Podcasts de París a tu medida
-```
+Four screenshots per locale (5 locales × 4 screens = 20 screenshots).
 
-**Description**:
-```
-Descubre el verdadero París a través de podcasts generados por inteligencia artificial. Paris Stories crea guías de audio personalizadas sobre la historia, cultura, gastronomía, arte y tesoros ocultos de la Ciudad de la Luz — creadas especialmente para ti.
+| # | Topic | Visual |
+|---|---|---|
+| 1 | Multi-city library | Amsterdam expanded with themes visible, Paris collapsed, Barcelona collapsed |
+| 2 | Topic detail (Paris example) | "The French Revolution" theme expanded with 5 topic rows |
+| 3 | Player screen | Audio playback with transcript visible |
+| 4 | City picker | Modal showing "Your cities" + "Available cities" with Barcelona download button |
 
-CÓMO FUNCIONA
-Explora nuestra biblioteca de temas parisinos — desde la fundación de Lutecia hasta los secretos de Montmartre, desde la cocina francesa clásica hasta el arte de la Belle Époque. Elige un tema, selecciona tu ángulo narrativo favorito y Paris Stories genera un episodio de podcast único y basado en hechos, adaptado a tus intereses.
+**Style guidelines:** dark navy background (`#0D1B2E`), gold accent line-art illustrations of city landmarks (Eiffel Tower for Paris, Anne Frank House for Amsterdam, Sagrada Família for Barcelona).
 
-BIBLIOTECA
-Explora temas en seis categorías ricas:
-• Historia — Desde la Lutecia romana hasta los grandes bulevares de Haussmann
-• Gastronomía — Bistros parisinos, pastelerías y cultura del vino
-• Arte y Cultura — El Louvre, el Impresionismo y el París literario
-• Arquitectura — Catedrales góticas, Art Nouveau y monumentos modernos
-• Tesoros ocultos — Pasajes secretos, París subterráneo y favoritos locales
-• Vida cotidiana — Cultura de café, mercados, barrios y estilo parisino
-
-PODCASTS PERSONALIZADOS
-¿Quieres aprender sobre algo específico? Crea tu propio podcast sobre cualquier tema relacionado con París. Ingresa tu tema, elige un ángulo narrativo y recibe un episodio único en minutos.
-
-MÚLTIPLES IDIOMAS Y VOCES
-Escucha en inglés, neerlandés, francés, alemán o español. Elige entre una voz masculina o femenina. Configura tus preferencias una vez en tu perfil — cada podcast se adapta automáticamente.
-
-CARACTERÍSTICAS PRINCIPALES
-• Guiones generados por IA con contenido factual y bien investigado
-• Audio de sonido natural con Google Cloud Text-to-Speech
-• Reproductor interactivo con barra de progreso deslizable
-• Guarda y vuelve a escuchar tus episodios favoritos
-• Interfaz limpia e intuitiva diseñada para descubrir
-• Moderación de contenido que garantiza temas apropiados
-
-Paris Stories es perfecto para viajeros que preparan un viaje a París, entusiastas de la historia, francófilos, estudiantes de idiomas o cualquier persona curiosa por una de las ciudades más fascinantes del mundo.
-
-Todo el contenido se genera mediante inteligencia artificial y se convierte en voz de sonido natural. Aunque nos esforzamos por la precisión, el contenido generado por IA puede contener ocasionalmente inexactitudes.
-```
-
-**Promotional Text**:
-```
-Explora París como nunca antes. Podcasts generados por IA sobre historia, gastronomía, arte y tesoros ocultos — en tu idioma, con tu voz.
-```
-
-**Keywords**:
-```
-paris,podcast,viaje,guía audio,historia,francia,IA,cultura,gastronomía,arte,turismo
-```
-
-**What's New**:
-```
-¡Bienvenido a Paris Stories! Descubre el verdadero París a través de podcasts generados por IA sobre historia, cultura, gastronomía, arte y tesoros ocultos.
-```
+> **TODO:** generate screenshots via the AI Studio prompts referenced in `ai-studio-screenshot-prompts.md` — but adapted for multi-city framing. Use the `app-store-submission` skill for copy on each screenshot.
 
 ---
 
-## 3. Non-Localized Sections
+## App Icon
 
-De volgende secties zijn niet taalafhankelijk en gelden voor alle localizations.
-
-### Support URL
-
-```
-https://YOUR-REPLIT-APP-URL/privacy-policy
-```
-(Vervang met je gepubliceerde URL. De privacy policy pagina dient ook als contactpunt.)
-
-### Privacy Policy URL
-
-```
-https://YOUR-REPLIT-APP-URL/privacy-policy
-```
+Use the existing Paris Stories icon at `assets/images/icon.png` — gold waveform on deep navy. This becomes the single City Stories app icon for v1. Per the agreed direction, no separate per-city icons.
 
 ---
 
-## 4. Age Rating Questionnaire
+## Localized App Store Connect Fields
 
-Beantwoord alle vragen in App Store Connect als volgt:
-
-| Vraag | Antwoord |
-|-------|----------|
-| Cartoon or Fantasy Violence | None |
-| Realistic Violence | None |
-| Prolonged Graphic or Sadistic Realistic Violence | None |
-| Profanity or Crude Humor | None |
-| Mature/Suggestive Themes | None |
-| Horror/Fear Themes | None |
-| Medical/Treatment Information | None |
-| Alcohol, Tobacco, or Drug Use or References | Infrequent/Mild |
-| Simulated Gambling | None |
-| Sexual Content or Nudity | None |
-| Contests | None |
-| Unrestricted Web Access | No |
-| Gambling with Real Currency | No |
-
-**Resultaat**: 4+ (Geschikt voor alle leeftijden)
-
-**Toelichting**: "Infrequent/Mild" bij alcohol omdat podcasts over Parijse eetcultuur mogelijk wijn en bistro-cultuur bespreken. Dit verandert de rating niet naar 12+, maar is eerlijker richting Apple.
+Set the primary language to `English (UK)` or `English (US)`. The other 4 locales need parallel entries (Name, Subtitle, Description, Keywords, What's New, Promotional Text) using the tables above.
 
 ---
 
-## 5. App Privacy (Privacy Labels)
+## Submission Checklist
 
-Ga naar App Store Connect > App Privacy en configureer het volgende:
-
-### Data Types to Declare:
-
-#### A. Contact Info — Email Address
-- **Collected**: Yes
-- **Linked to User**: Yes
-- **Used for Tracking**: No
-- **Purposes**: App Functionality (account creation and login)
-
-#### B. User Content
-- **Collected**: Yes (custom podcast topics entered by users)
-- **Linked to User**: Yes
-- **Used for Tracking**: No
-- **Purposes**: App Functionality (topics are sent to AI to generate podcast scripts)
-
-#### C. Identifiers — User ID
-- **Collected**: Yes (Firebase Authentication UID)
-- **Linked to User**: Yes
-- **Used for Tracking**: No
-- **Purposes**: App Functionality (user account management)
-
-#### D. Usage Data — Product Interaction
-- **Collected**: Yes (podcast generation history)
-- **Linked to User**: Yes
-- **Used for Tracking**: No
-- **Purposes**: App Functionality (saving user's podcast library)
-
-### Third-Party Data Processing
-De app stuurt data naar externe diensten. Dit valt onder de privacy labels hierboven:
-- **Anthropic Claude** — Ontvangt podcast-onderwerpen (User Content) voor scriptgeneratie
-- **Google Cloud Text-to-Speech** — Ontvangt gegenereerde scripts voor audio-omzetting
-- **Firebase Authentication** — Beheert login/registratie (Email, User ID)
-
-Geen van deze diensten wordt gebruikt voor tracking of advertenties.
-
-### Data Used to Track You
-**No** — De app gebruikt geen data om je te volgen over andere apps of websites.
-
-### Data NOT Collected:
-- Location
-- Financial Info
-- Health & Fitness
-- Browsing History
-- Search History
-- Contacts
-- Diagnostics
-- Photos or Videos
-- Sensitive Info
-- Other Data
-
----
-
-## 6. App Review Information
-
-### Sign-in Required
-**Yes** — De app vereist een account om podcasts te genereren en te beluisteren.
-
-### Demo Account
-Maak een testaccount aan in Firebase Console voordat je de app indient:
-- **Email**: reviewer@parisstories.app (of een ander emailadres)
-- **Password**: TestReview2026!
-
-Vul deze gegevens in bij App Store Connect > App Review Information > Sign-in Information.
-
-### Contact Information (Review Team)
-Vul je eigen contactgegevens in zodat Apple je kan bereiken als er vragen zijn tijdens de review.
-
-### App Review Notes (kopieer dit naar het Notes-veld)
-
-```
-Paris Stories generates AI-powered podcast stories about Paris. The app uses Anthropic Claude (AI) to create factual scripts and Google Cloud Text-to-Speech to convert them to audio.
-
-TO TEST THE APP:
-1. Log in with the provided demo account credentials
-2. Go to the "Library" tab to browse curated Paris topics
-3. Select any topic (e.g., "Lutetia: The Birth of Paris" under History)
-4. Choose a storytelling angle (e.g., "Historical") and tap "Generate Podcast"
-5. Wait approximately 30-60 seconds for AI generation
-6. The podcast will appear in "My Podcasts" — tap to play
-
-TO TEST CUSTOM PODCASTS:
-1. Go to "My Podcasts" tab and tap "Create Custom Podcast"
-2. Enter a Paris-related topic (e.g., "The history of croissants in Paris")
-3. Choose a storytelling angle and generate
-4. Custom topics are moderated by AI — inappropriate subjects are rejected
-
-ADDITIONAL FEATURES:
-- Profile tab: Change language (EN/NL/FR/DE/ES) and voice (male/female) preferences
-- Player: Interactive seekable progress bar, read-along script
-- Delete Account: Available in Profile > Delete Account (Apple requirement)
-- Privacy Policy: Accessible from Profile and Login screens
-
-Note: Podcast generation requires an active internet connection and takes 30-60 seconds per episode. All content is AI-generated and moderated.
-```
-
----
-
-## 7. Screenshots
-
-Je hebt screenshots nodig voor iPhone (6.7" en 6.5") en optioneel iPad.
-
-### Aanbevolen screenshots (5-8 stuks, in deze volgorde):
-
-1. **Library** — Het hoofdscherm met categorieën (History, Food, Art, etc.)
-2. **Topic keuze** — Een uitgeklapte categorie met topics
-3. **Podcast speler** — De player met een afspelend verhaal en script
-4. **Custom podcast** — Het scherm om een eigen onderwerp in te voeren
-5. **My Podcasts** — De lijst met opgeslagen podcasts
-6. **Profile** — Het profielscherm met taal- en stemkeuze
-7. **Login** — Het welkomstscherm met de onboarding slides
-
-### Screenshot specificaties:
-- **iPhone 6.7"** (verplicht): 1290 × 2796 px (iPhone 15 Pro Max / 16 Plus)
-- **iPhone 6.5"** (verplicht): 1284 × 2778 px (iPhone 14 Plus / 13 Pro Max)
-- **iPad 12.9"** (optioneel): 2048 × 2732 px
-
-**Tip**: Gebruik een iPhone simulator in Xcode of een fysiek toestel om screenshots te maken. Cmd+S in de Simulator maakt een screenshot.
-
----
-
-## 8. Export Compliance
-
-Bij het uploaden van een build vraagt Apple naar export compliance:
-
-**Does your app use encryption?** → **Yes**
-(De app gebruikt HTTPS voor API-communicatie en Firebase Auth.)
-
-**Does your app qualify for any of the exemptions?** → **Yes**
-(De app gebruikt alleen standaard HTTPS/TLS, geen custom encryptie.)
-
-Selecteer: "Your app uses standard encryption exempt from EAR regulations."
-
----
-
-## 9. Copyright
-
-```
-© 2026 GreenHome
-```
-
----
-
-## 10. Build & Submission Checklist
-
-- [ ] App icon (1024×1024 px, geen transparantie, geen afgeronde hoeken)
-- [ ] Screenshots voor alle vereiste schermformaten (6.7" en 6.5")
-- [ ] Demo account aangemaakt in Firebase Console
-- [ ] Privacy Policy URL live en bereikbaar
-- [ ] Support URL ingevuld
-- [ ] Copyright ingevuld (© 2026 GreenHome)
-- [ ] Leeftijdsclassificatie vragenlijst ingevuld
-- [ ] Privacy labels geconfigureerd (alle 4 data types + tracking = No)
-- [ ] App Review Notes ingevuld met demo credentials en testinstructies
-- [ ] Contact information ingevuld voor Review team
-- [ ] Sign-in Required = Yes aangevinkt
-- [ ] Export Compliance beantwoord (HTTPS exemption)
-- [ ] EAS Build gemaakt en geüpload naar App Store Connect
-- [ ] Versienummer en buildnummer correct
-- [ ] App description, subtitle, keywords ingevuld (alle 5 talen)
-- [ ] Promotional text ingevuld (alle 5 talen)
-- [ ] Localisaties toegevoegd: NL, FR, DE, ES
+- [ ] Create new App Store Connect entry "City Stories" with bundle ID `nl.greenhome.citystories`
+- [ ] Update `eas.json` submit profile with the new ASC App ID (`REPLACE_WITH_NEW_CITY_STORIES_ASC_APP_ID`)
+- [ ] Set category: Travel (primary), Education (secondary)
+- [ ] Age rating: 4+
+- [ ] Privacy policy URL: `https://paris-stories.replit.app/privacy-policy`
+- [ ] Add screenshots (4 × 5 locales = 20)
+- [ ] App icon (single, Paris waveform)
+- [ ] Demo account credentials in App Review Notes
+- [ ] Translate FR/DE/ES description bodies (currently EN/NL only)
+- [ ] Run `eas build --platform ios --profile production`
+- [ ] Run `eas submit --platform ios --profile production`
+- [ ] Reject the old Paris Stories submission via App Store Connect → Reject Binary

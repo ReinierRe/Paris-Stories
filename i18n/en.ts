@@ -67,7 +67,7 @@ export default {
     male: "Male",
     female: "Female",
     about: "About",
-    appName: "City Stories",
+    appName: "City Stories Podcasts",
     appVersion: "Version %{version}",
     appDescription: "Discover the hidden stories of European cities through AI-powered audio tours. From iconic landmarks to hidden neighborhoods, every story is crafted with care.",
     rateApp: "Rate this App",

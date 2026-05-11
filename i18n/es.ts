@@ -67,7 +67,7 @@ export default {
     male: "Masculina",
     female: "Femenina",
     about: "Acerca de",
-    appName: "City Stories",
+    appName: "City Stories Podcasts",
     appVersion: "Versión %{version}",
     appDescription: "Descubre las historias ocultas de las ciudades europeas con podcasts generados por IA. De monumentos icónicos a barrios secretos — cada historia se crea con cuidado.",
     rateApp: "Valorar esta app",

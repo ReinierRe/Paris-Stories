@@ -121,7 +121,7 @@ export function getPrivacyPolicyHtml(city: City): string {
 <h1>Privacy Policy — City Stories</h1>
 <p class="date">Last updated: ${city.privacyPolicyDate}</p>
 
-<p>City Stories ("we", "our") is committed to protecting your privacy. This privacy policy applies to all apps published under the City Stories brand, including but not limited to <strong>Paris Stories</strong> and <strong>Amsterdam Stories</strong>. All these apps share the same infrastructure and are governed by this single policy. This document explains what data we collect, how we use it, and your rights.</p>
+<p>City Stories ("we", "our") is committed to protecting your privacy. City Stories is a single app that includes content for multiple cities (currently Amsterdam, Paris, and Barcelona). This document explains what data we collect, how we use it, and your rights.</p>
 
 <h2>1. Data We Collect</h2>
 <ul>

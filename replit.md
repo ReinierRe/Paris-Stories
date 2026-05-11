@@ -1,7 +1,7 @@
-# Paris Stories (Multi-Tenant)
+# City Stories
 
 ## Overview
-Paris Stories is an Expo React Native mobile application with an Express.js backend designed to generate AI-powered podcast stories. The project aims to provide a multi-tenant platform where a single backend infrastructure can serve multiple city-specific applications, each with its own App Store listing. Currently supports Paris Stories, Amsterdam Stories, and Barcelona Stories. The core capability involves generating engaging, localized audio stories using advanced AI and text-to-speech technologies. The long-term vision is to expand to numerous cities, offering personalized historical and cultural narratives to users worldwide.
+City Stories is an Expo React Native mobile application with an Express.js backend that generates AI-powered audio podcasts about cities. It is published as a single unified iOS/Android app (`nl.greenhome.citystories`) that bundles multiple cities (currently Amsterdam, Paris, and Barcelona); users add or remove cities from inside the app. The backend serves all cities from one deployment, scoped per request via an `X-City-Id` header. The long-term vision is to expand to many more cities while keeping a single app and backend.
 
 ## User Preferences
 I prefer detailed explanations and iterative development. Ask before making major changes.

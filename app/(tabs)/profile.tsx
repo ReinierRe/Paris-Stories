@@ -26,11 +26,7 @@ import { useCityConfig } from "@/contexts/CityConfigContext";
 import { flagEmoji, getRegistryEntry } from "@/constants/cityRegistry";
 import { getCityConfigSync, getLocalizedCityName } from "@/constants/city";
 
-const cityIcons: Record<string, any> = {
-  paris: require("@/assets/images/icon.png"),
-  amsterdam: require("@/assets/images/icon-amsterdam.png"),
-  barcelona: require("@/assets/images/icon-barcelona.png"),
-};
+const APP_ICON = require("@/assets/images/icon.png");
 
 const LANGUAGES = [
   { id: "en", flag: "EN" },
@@ -393,7 +389,7 @@ export default function ProfileScreen() {
           <View style={styles.menuCard}>
             <View style={styles.aboutRow}>
               <Image
-                source={cityIcons[cityConfig.id] || cityIcons.paris}
+                source={APP_ICON}
                 style={styles.aboutIcon}
               />
               <View style={styles.aboutText}>

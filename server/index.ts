@@ -306,8 +306,7 @@ function configureStaticAndLanding(app: express.Application) {
     res.json({
       webcredentials: {
         apps: [
-          "L9BR52LZ5P.app.replit.parisstories",
-          "L9BR52LZ5P.app.replit.amsterdamstories",
+          "L9BR52LZ5P.nl.greenhome.citystories",
         ]
       }
     });

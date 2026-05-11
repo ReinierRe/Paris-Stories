@@ -210,7 +210,7 @@ Four screenshots per locale (5 locales × 4 screens = 20 screenshots).
 
 ## App Icon
 
-Use the existing Paris Stories icon at `assets/images/icon.png` — gold waveform on deep navy. This becomes the single City Stories app icon for v1. Per the agreed direction, no separate per-city icons.
+Use the City Stories icon at `assets/images/icon.png` — gold waveform on deep navy. Single icon for the unified app, no per-city variants.
 
 ---
 
@@ -222,13 +222,13 @@ Set the primary language to `English (UK)` or `English (US)`. The other 4 locale
 
 ## Submission Checklist
 
-- [ ] Create new App Store Connect entry "City Stories" with bundle ID `nl.greenhome.citystories`
-- [ ] Update `eas.json` submit profile with the new ASC App ID (`REPLACE_WITH_NEW_CITY_STORIES_ASC_APP_ID`)
+- [x] Create new App Store Connect entry "City Stories" with bundle ID `nl.greenhome.citystories` (ASC App ID `6768238936`)
+- [x] Update `eas.json` submit profile with the new ASC App ID
 - [ ] Set category: Travel (primary), Education (secondary)
 - [ ] Age rating: 4+
 - [ ] Privacy policy URL: `https://paris-stories.replit.app/privacy-policy`
 - [ ] Add screenshots (4 × 5 locales = 20)
-- [ ] App icon (single, Paris waveform)
+- [ ] App icon (single, City Stories waveform)
 - [ ] Demo account credentials in App Review Notes
 - [ ] Translate FR/DE/ES description bodies (currently EN/NL only)
 - [ ] Run `eas build --platform ios --profile production`

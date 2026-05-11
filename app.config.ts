@@ -11,14 +11,14 @@ import { ExpoConfig, ConfigContext } from "expo/config";
  * point at staging/prod variants.
  */
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const appName = "City Stories Podcasts";
+  const appName = "City Stories";
   const appSlug = "city-stories";
   const bundleId = "nl.greenhome.citystories";
   const scheme = "citystories";
   const androidPackage = "nl.greenhome.citystories";
 
   const apiDomain = process.env.EXPO_PUBLIC_API_DOMAIN || config.extra?.apiDomain || "paris-stories.replit.app";
-  const easProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID || config.extra?.eas?.projectId || "68998269-2bf6-4afa-8d80-56df617ea768";
+  const easProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID || config.extra?.eas?.projectId;
 
   return {
     ...config,

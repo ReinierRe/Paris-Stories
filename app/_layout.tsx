@@ -9,7 +9,7 @@ import { queryClient } from "@/lib/query-client";
 import { PodcastProvider } from "@/contexts/PodcastContext";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { CityConfigProvider } from "@/contexts/CityConfigContext";
+import { CityConfigProvider, useCityConfig } from "@/contexts/CityConfigContext";
 import LoginScreen from "@/app/login";
 import { Asset } from "expo-asset";
 import {
@@ -54,6 +54,13 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="city-picker"
+        options={{
+          presentation: Platform.OS === "web" ? "card" : "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="player"
         options={{
           headerShown: false,
@@ -71,8 +78,11 @@ function RootLayoutNav() {
 
 function AuthGate() {
   const { isAuthenticated, isLoading, isNewUser, clearNewUser } = useAuth();
+  const { isFirstLaunch, isLoaded: cityLoaded, markFirstLaunchDone } = useCityConfig();
   const hasNavigatedNewUser = useRef(false);
+  const hasNavigatedFirstLaunch = useRef(false);
 
+  // New user (just registered): land on Profile so they see their level + city setup
   useEffect(() => {
     if (isAuthenticated && isNewUser && !hasNavigatedNewUser.current) {
       hasNavigatedNewUser.current = true;
@@ -82,6 +92,23 @@ function AuthGate() {
       }, 100);
     }
   }, [isAuthenticated, isNewUser, clearNewUser]);
+
+  // First-launch existing user: also land on Profile (city manager) on first install of multi-city app
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      cityLoaded &&
+      isFirstLaunch &&
+      !isNewUser &&
+      !hasNavigatedFirstLaunch.current
+    ) {
+      hasNavigatedFirstLaunch.current = true;
+      setTimeout(() => {
+        router.replace("/(tabs)/profile");
+        markFirstLaunchDone();
+      }, 100);
+    }
+  }, [isAuthenticated, cityLoaded, isFirstLaunch, isNewUser, markFirstLaunchDone]);
 
   if (isLoading) {
     return (

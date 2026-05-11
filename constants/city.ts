@@ -207,6 +207,19 @@ export function setCityConfigCache(cityId: string, config: CityConfig): void {
 /**
  * Returns the list of all cities for which we have bundled defaults.
  */
+
+/**
+ * Get the city's name in the user's preferred language. Safe for any locale —
+ * falls back to English then to the canonical name.
+ */
+export function getLocalizedCityName(config: CityConfig, locale: string): string {
+  const supported = ["en", "nl", "fr", "de", "es"] as const;
+  const lang = (supported as readonly string[]).includes(locale)
+    ? (locale as "en" | "nl" | "fr" | "de" | "es")
+    : "en";
+  return config.localizedNames[lang] ?? config.name;
+}
+
 export function getAllBundledCityConfigs(): CityConfig[] {
   return Object.values(CITY_DEFAULTS);
 }

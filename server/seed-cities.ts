@@ -1,6 +1,6 @@
 import { db } from "./storage";
 import { cities } from "@shared/schema";
-import { count } from "drizzle-orm";
+import { count, sql } from "drizzle-orm";
 
 const PARIS_CITY = {
   id: "paris",
@@ -179,15 +179,38 @@ const BARCELONA_CITY = {
 export async function seedCitiesIfEmpty(): Promise<void> {
   try {
     const [{ value: cityCount }] = await db.select({ value: count() }).from(cities);
-    if (cityCount > 0) {
-      console.log(`[Seed] Cities table has ${cityCount} rows, ensuring all cities exist...`);
-      await db.insert(cities).values([PARIS_CITY, AMSTERDAM_CITY, BARCELONA_CITY]).onConflictDoNothing();
-      return;
-    }
+    console.log(`[Seed] Cities table has ${cityCount} rows, upserting Paris, Amsterdam, and Barcelona from code...`);
 
-    console.log("[Seed] Cities table is empty, seeding Paris, Amsterdam, and Barcelona...");
-    await db.insert(cities).values([PARIS_CITY, AMSTERDAM_CITY, BARCELONA_CITY]).onConflictDoNothing();
-    console.log("[Seed] Cities seeded successfully.");
+    await db
+      .insert(cities)
+      .values([PARIS_CITY, AMSTERDAM_CITY, BARCELONA_CITY])
+      .onConflictDoUpdate({
+        target: cities.id,
+        set: {
+          name: sql`excluded.name`,
+          country: sql`excluded.country`,
+          appName: sql`excluded.app_name`,
+          bundleId: sql`excluded.bundle_id`,
+          contactEmail: sql`excluded.contact_email`,
+          privacyPolicyDate: sql`excluded.privacy_policy_date`,
+          localizedNames: sql`excluded.localized_names`,
+          localizedCountry: sql`excluded.localized_country`,
+          topLevelName: sql`excluded.top_level_name`,
+          userLevels: sql`excluded.user_levels`,
+          roleDescription: sql`excluded.role_description`,
+          moderationPromptTemplate: sql`excluded.moderation_prompt_template`,
+          moderationRejectTemplate: sql`excluded.moderation_reject_template`,
+          walkingTourPerspective: sql`excluded.walking_tour_perspective`,
+          modernCulturePerspective: sql`excluded.modern_culture_perspective`,
+          cityHighlights: sql`excluded.city_highlights`,
+          thankYouWord: sql`excluded.thank_you_word`,
+          topicThemeMap: sql`excluded.topic_theme_map`,
+          themeAngles: sql`excluded.theme_angles`,
+          perspectivePrompts: sql`excluded.perspective_prompts`,
+        },
+      });
+
+    console.log("[Seed] Cities upserted successfully.");
   } catch (err) {
     console.error("[Seed] Failed to seed cities:", err);
   }

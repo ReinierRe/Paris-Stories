@@ -1,4 +1,4 @@
-import { getCityConfigSync } from "./city";
+import { CITY_REGISTRY } from "./cityRegistry";
 
 export interface OnboardingSlide {
   id: string;
@@ -21,147 +21,77 @@ export interface OnboardingPodcastExample {
   color: string;
 }
 
-const parisOnboardingCategories: OnboardingCategory[] = [
-  { name: "History", imageKey: "category-history" },
-  { name: "Revolution", imageKey: "category-french-revolution" },
-  { name: "Museums", imageKey: "category-museums" },
-  { name: "Buildings", imageKey: "category-epic-buildings" },
-  { name: "Modern", imageKey: "category-modern-history" },
-  { name: "Culinary", imageKey: "category-culinary" },
-  { name: "Neighborhoods", imageKey: "category-neighborhoods" },
-];
+/**
+ * Multi-city onboarding content. Shown on the login/welcome screen.
+ * Mixes examples from all bundled cities so new users see the breadth
+ * of the app, not just one city.
+ */
 
-const amsterdamOnboardingCategories: OnboardingCategory[] = [
+const mixedCategories: OnboardingCategory[] = [
   { name: "History", imageKey: "category-history" },
   { name: "Golden Age", imageKey: "category-golden-age" },
-  { name: "Museums", imageKey: "category-museums-amsterdam" },
-  { name: "Buildings", imageKey: "category-epic-buildings-amsterdam" },
-  { name: "Modern", imageKey: "category-modern-history" },
-  { name: "Culinary", imageKey: "category-culinary" },
-  { name: "Neighborhoods", imageKey: "category-neighborhoods-amsterdam" },
-];
-
-const parisPodcastExamples: OnboardingPodcastExample[] = [
-  { category: "MUSEUMS", title: "Musée d'Orsay", voice: "Male", duration: "2:09", lang: "EN", color: "#5B9BD5" },
-  { category: "FRENCH REVOLUTION", title: "Danton: Stem van het Volk", voice: "Female", duration: "4:16", lang: "NL", color: "#E06060" },
-  { category: "EPIC BUILDINGS", title: "The Panthéon", voice: "Male", duration: "3:09", lang: "EN", color: "#7A8B9A" },
-  { category: "CULINARY", title: "Café Culture", voice: "Female", duration: "2:36", lang: "EN", color: "#E0A040" },
-];
-
-const amsterdamPodcastExamples: OnboardingPodcastExample[] = [
-  { category: "MUSEUMS", title: "Het Rijksmuseum", voice: "Male", duration: "2:09", lang: "NL", color: "#5B9BD5" },
-  { category: "GOLDEN AGE", title: "Rembrandt: Meester van het Licht", voice: "Female", duration: "4:16", lang: "NL", color: "#DAA520" },
-  { category: "NEIGHBORHOODS", title: "De Jordaan", voice: "Male", duration: "3:09", lang: "EN", color: "#27AE60" },
-  { category: "CULINARY", title: "Borrelcultuur & Bitterballen", voice: "Female", duration: "2:36", lang: "NL", color: "#E0A040" },
-];
-
-const parisCategoryTopicCounts = [8, 6, 10, 8, 7];
-const amsterdamCategoryTopicCounts = [8, 8, 8, 8, 8, 8, 8];
-
-const barcelonaOnboardingCategories: OnboardingCategory[] = [
-  { name: "History", imageKey: "category-history" },
   { name: "Gaudí", imageKey: "category-gaudi-barcelona" },
-  { name: "Museums", imageKey: "category-museums-barcelona" },
-  { name: "Buildings", imageKey: "category-epic-buildings-barcelona" },
-  { name: "Modern", imageKey: "category-modern-history" },
-  { name: "Culinary", imageKey: "category-culinary-barcelona" },
-  { name: "Neighborhoods", imageKey: "category-neighborhoods-barcelona" },
+  { name: "Museums", imageKey: "category-museums" },
+  { name: "Revolution", imageKey: "category-french-revolution" },
+  { name: "Buildings", imageKey: "category-epic-buildings" },
+  { name: "Culinary", imageKey: "category-culinary" },
 ];
 
-const barcelonaPodcastExamples: OnboardingPodcastExample[] = [
-  { category: "GAUDÍ", title: "La Sagrada Família", voice: "Male", duration: "3:24", lang: "ES", color: "#E07A1F" },
-  { category: "NEIGHBORHOODS", title: "El Barrio Gótico", voice: "Female", duration: "4:02", lang: "ES", color: "#27AE60" },
-  { category: "MUSEUMS", title: "Museu Picasso", voice: "Male", duration: "2:48", lang: "EN", color: "#5B9BD5" },
-  { category: "CULINARY", title: "Tapas & Vermut", voice: "Female", duration: "2:36", lang: "ES", color: "#E0A040" },
+const mixedPodcastExamples: OnboardingPodcastExample[] = [
+  { category: "AMSTERDAM · GOLDEN AGE", title: "Rembrandt: Meester van het Licht", voice: "Female", duration: "4:16", lang: "NL", color: "#DAA520" },
+  { category: "PARIS · FRENCH REVOLUTION", title: "Danton: Voice of the People", voice: "Male", duration: "4:02", lang: "EN", color: "#E06060" },
+  { category: "BARCELONA · GAUDÍ", title: "La Sagrada Família", voice: "Male", duration: "3:24", lang: "ES", color: "#E07A1F" },
+  { category: "AMSTERDAM · NEIGHBORHOODS", title: "De Jordaan", voice: "Female", duration: "3:09", lang: "EN", color: "#27AE60" },
 ];
 
-const barcelonaCategoryTopicCounts = [8, 8, 8, 8, 8, 8, 8];
+const mixedCategoryTopicCounts = [8, 8, 8, 8, 8, 8, 7];
 
-const parisCustomSubjectExample = `I am visiting Montmartre, tell me about Picasso's life here`;
-const amsterdamCustomSubjectExample = `I am visiting the Jordaan, tell me about the history of the canals`;
-const barcelonaCustomSubjectExample = `I am visiting Park Güell, tell me about Gaudí's vision for this place`;
-
-interface CityOnboardingContent {
-  categories: OnboardingCategory[];
-  podcastExamples: OnboardingPodcastExample[];
-  categoryTopicCounts: number[];
-  customSubjectExample: string;
-  slidesSubtitle: string;
-}
-
-const cityOnboardingMap: Record<string, CityOnboardingContent> = {
-  paris: {
-    categories: parisOnboardingCategories,
-    podcastExamples: parisPodcastExamples,
-    categoryTopicCounts: parisCategoryTopicCounts,
-    customSubjectExample: parisCustomSubjectExample,
-    slidesSubtitle: "Explore the French Revolution, hidden neighborhoods, iconic buildings, and centuries of fascinating history.",
-  },
-  amsterdam: {
-    categories: amsterdamOnboardingCategories,
-    podcastExamples: amsterdamPodcastExamples,
-    categoryTopicCounts: amsterdamCategoryTopicCounts,
-    customSubjectExample: amsterdamCustomSubjectExample,
-    slidesSubtitle: "Explore the Golden Age, hidden neighborhoods, iconic canals, and centuries of fascinating history.",
-  },
-  barcelona: {
-    categories: barcelonaOnboardingCategories,
-    podcastExamples: barcelonaPodcastExamples,
-    categoryTopicCounts: barcelonaCategoryTopicCounts,
-    customSubjectExample: barcelonaCustomSubjectExample,
-    slidesSubtitle: "Explore Gaudí's modernist masterpieces, the Gothic Quarter, Mediterranean culture, and centuries of Catalan history.",
-  },
-};
-
-function getCityOnboarding(): CityOnboardingContent {
-  const cityId = getCityConfigSync().id;
-  return cityOnboardingMap[cityId] || cityOnboardingMap.paris;
-}
+const customSubjectExample = `I am visiting the Jordaan, tell me about the history of the canals`;
 
 export function getOnboardingCategories(): OnboardingCategory[] {
-  return getCityOnboarding().categories;
+  return mixedCategories;
 }
 
 export function getOnboardingPodcastExamples(): OnboardingPodcastExample[] {
-  return getCityOnboarding().podcastExamples;
+  return mixedPodcastExamples;
 }
 
 export function getOnboardingCategoryTopicCounts(): number[] {
-  return getCityOnboarding().categoryTopicCounts;
+  return mixedCategoryTopicCounts;
 }
 
 export function getOnboardingCustomSubjectExample(): string {
-  return getCityOnboarding().customSubjectExample;
+  return customSubjectExample;
 }
 
-export const onboardingCategories = parisOnboardingCategories;
-export const onboardingPodcastExamples = parisPodcastExamples;
-export const onboardingCategoryTopicCounts = parisCategoryTopicCounts;
-export const onboardingCustomSubjectExample = parisCustomSubjectExample;
+// Backwards-compat exports (unchanged shape, multi-city content)
+export const onboardingCategories = mixedCategories;
+export const onboardingPodcastExamples = mixedPodcastExamples;
+export const onboardingCategoryTopicCounts = mixedCategoryTopicCounts;
+export const onboardingCustomSubjectExample = customSubjectExample;
 
 export function getOnboardingSlides(): OnboardingSlide[] {
-  const cityName = getCityConfigSync().name;
-  const content = getCityOnboarding();
+  const cityCount = CITY_REGISTRY.length;
   return [
     {
       id: "welcome",
-      title: `Discover the\nReal ${cityName}`,
-      subtitle: "Tailored history, culture, and local tales — brought to life through immersive audio stories.",
+      title: "Discover Cities\nThrough Stories",
+      subtitle: `${cityCount} European cities. Endless AI-generated audio stories — tailored to your interests, narrated by a friend who happens to know everything.`,
     },
     {
       id: "audio-tours",
       title: "Immersive\nAudio Tours",
-      subtitle: "Expertly crafted podcasts for museums, landmarks, and neighborhoods — available in multiple languages.",
+      subtitle: "Expertly crafted podcasts for museums, landmarks, and neighborhoods — available in 5 languages.",
       features: [
         { icon: "headset", text: "Professional narration" },
-        { icon: "language", text: "Multiple languages" },
+        { icon: "language", text: "5 languages" },
         { icon: "timer", text: "Short & long formats" },
       ],
     },
     {
       id: "stories",
-      title: "Stories That\nCome Alive",
-      subtitle: content.slidesSubtitle,
+      title: "Three Cities,\nThousands of Stories",
+      subtitle: "Amsterdam's Golden Age. Paris and the French Revolution. Gaudí's Barcelona. Each city has its own library — explore them all from one app.",
       features: [
         { icon: "time", text: "Rich historical depth" },
         { icon: "map", text: "Neighborhood guides" },
@@ -171,7 +101,7 @@ export function getOnboardingSlides(): OnboardingSlide[] {
     {
       id: "custom",
       title: "Create Your\nOwn Adventure",
-      subtitle: `Tell the AI your interests and get a personalized story — your own private ${cityName} guide.`,
+      subtitle: "Tell the AI your interests and get a personalized story — your own private city guide, for any city you've added.",
       features: [
         { icon: "sparkles", text: "AI-powered stories" },
         { icon: "create", text: "Choose your angle" },

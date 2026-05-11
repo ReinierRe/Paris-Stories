@@ -87,6 +87,9 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
         const res = await apiRequest("GET", "/api/podcast/history", undefined, { cityId });
         const data = await res.json();
         if (data.podcasts && Array.isArray(data.podcasts)) {
+          // Trust server-returned cityId if present (defensive: handles legacy
+          // rows or edge cases where a podcast lives in a city different from
+          // the request). Falls back to the requested cityId.
           const serverPodcasts: Podcast[] = data.podcasts.map((p: any) => ({
             id: p.id,
             title: p.title || "",
@@ -105,17 +108,44 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
             createdAt: p.createdAt || new Date().toISOString(),
             isCustom: p.isCustom || false,
             customDbId: p.customDbId || undefined,
-            cityId,
+            cityId: typeof p.cityId === "string" && p.cityId.length > 0 ? p.cityId : cityId,
           }));
 
+          // Group server podcasts by their actual cityId — server should only
+          // return podcasts for the requested city, but if a stray podcast
+          // comes through with a different cityId, we route it to its real
+          // bucket instead of forcing it into the requested one.
+          const groupedByCity: Record<string, Podcast[]> = {};
+          for (const p of serverPodcasts) {
+            const cid = p.cityId ?? cityId;
+            (groupedByCity[cid] ??= []).push(p);
+          }
+
           setPodcastsByCity((prev) => {
-            const prevForCity = prev[cityId] ?? [];
-            const inProgress = prevForCity.filter((p) => p.status === "generating");
-            const serverIds = new Set(serverPodcasts.map((p) => p.id));
-            const filteredInProgress = inProgress.filter((p) => !serverIds.has(p.id));
-            const merged = [...filteredInProgress, ...serverPodcasts];
-            savePodcasts(cityId, merged);
-            return { ...prev, [cityId]: merged };
+            const next: Record<string, Podcast[]> = { ...prev };
+            // For the requested city, merge in-progress with server data.
+            const prevForRequested = prev[cityId] ?? [];
+            const inProgress = prevForRequested.filter((p) => p.status === "generating");
+            const serverForRequested = groupedByCity[cityId] ?? [];
+            const serverIdsForRequested = new Set(serverForRequested.map((p) => p.id));
+            const filteredInProgress = inProgress.filter((p) => !serverIdsForRequested.has(p.id));
+            next[cityId] = [...filteredInProgress, ...serverForRequested];
+            savePodcasts(cityId, next[cityId]);
+
+            // For any OTHER city that came back in this response, append
+            // (don't overwrite — we don't have the full picture).
+            for (const [cid, list] of Object.entries(groupedByCity)) {
+              if (cid === cityId) continue;
+              const existing = next[cid] ?? [];
+              const existingIds = new Set(existing.map((p) => p.id));
+              const additions = list.filter((p) => !existingIds.has(p.id));
+              if (additions.length > 0) {
+                next[cid] = [...existing, ...additions];
+                savePodcasts(cid, next[cid]);
+              }
+            }
+
+            return next;
           });
         }
       } catch (e) {

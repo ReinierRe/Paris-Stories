@@ -492,6 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           length: r.cached.length,
           createdAt: r.userPodcast.createdAt?.toISOString() || new Date().toISOString(),
           isCustom: false,
+          cityId: r.userPodcast.cityId,
         }));
 
       const customResults = await db
@@ -518,6 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: p.createdAt?.toISOString() || new Date().toISOString(),
           isCustom: true,
           customDbId: p.id,
+          cityId: p.cityId,
         }));
 
       const allPodcasts = [...genericPodcasts, ...customPodcastsList].sort(

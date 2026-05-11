@@ -17,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const scheme = "citystories";
   const androidPackage = "nl.greenhome.citystories";
 
-  const apiDomain = process.env.EXPO_PUBLIC_API_DOMAIN || config.extra?.apiDomain || "city-stories.replit.app";
+  const apiDomain = process.env.EXPO_PUBLIC_API_DOMAIN || config.extra?.apiDomain || "city-stories-apps.replit.app";
   const easProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID || config.extra?.eas?.projectId;
 
   return {

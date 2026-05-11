@@ -169,18 +169,18 @@ User flow:
 
 External services used:
 - Firebase Authentication: user accounts (email/password)
-- PostgreSQL (via our backend at https://city-stories.replit.app): podcast history, custom podcasts, city configs
+- PostgreSQL (via our backend at https://city-stories-apps.replit.app): podcast history, custom podcasts, city configs
 - Anthropic Claude API: script generation
 - Google Cloud Text-to-Speech: audio generation
 - Content moderation: Claude AI checks every user-supplied topic before generation
 
 Demo account for App Review:
-- Email: reviewer@city-stories.replit.app
+- Email: reviewer@city-stories-apps.replit.app
 - Password: TesterCityStories2026!
 - This account has Amsterdam, Paris, and Barcelona activated and a few sample podcasts in each.
 
 Privacy policy:
-https://city-stories.replit.app/privacy-policy
+https://city-stories-apps.replit.app/privacy-policy
 
 Notes:
 - Custom podcast generation: enter any city-related subject in the "Add your own" flow. Content moderation rejects sexually explicit, violent, or illegal content.
@@ -226,7 +226,7 @@ Set the primary language to `English (UK)` or `English (US)`. The other 4 locale
 - [x] Update `eas.json` submit profile with the new ASC App ID
 - [ ] Set category: Travel (primary), Education (secondary)
 - [ ] Age rating: 4+
-- [ ] Privacy policy URL: `https://city-stories.replit.app/privacy-policy`
+- [ ] Privacy policy URL: `https://city-stories-apps.replit.app/privacy-policy`
 - [ ] Add screenshots (4 × 5 locales = 20)
 - [ ] App icon (single, City Stories waveform)
 - [ ] Demo account credentials in App Review Notes

@@ -1,6 +1,19 @@
 {
   "expo": {
     "name": "City Stories",
-    "slug": "city-stories"
+    "slug": "city-stories",
+    "extra": {
+      "router": {
+        "origin": "https://replit.com/"
+      },
+      "eas": {
+        "projectId": "08c77e48-bcc3-4ae5-9d80-915847768714"
+      },
+      "apiDomain": "city-stories.replit.app",
+      "firebaseApiKey": "${FIREBASE_API_KEY}",
+      "firebaseProjectId": "${FIREBASE_PROJECT_ID}",
+      "firebaseAppId": "${FIREBASE_APP_ID}"
+    },
+    "owner": "reinier255"
   }
 }

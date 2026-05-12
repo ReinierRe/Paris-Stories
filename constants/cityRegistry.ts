@@ -49,6 +49,12 @@ export const CITY_REGISTRY: CityRegistryEntry[] = [
     delivery: "remote",
     defaultActive: true,
   },
+  {
+    id: "berlin",
+    countryCode: "DE",
+    delivery: "remote",
+    defaultActive: false,
+  },
 ];
 
 export const DEFAULT_CURRENT_CITY_ID = "amsterdam";

@@ -55,9 +55,14 @@ export default function PlayerScreen() {
   const progressBarWidth = useRef(0);
   const progressBarRef = useRef<View>(null);
 
+  const { updatePodcast } = usePodcasts();
+
   useEffect(() => {
     if (podcast?.audioUrl && currentPodcast?.id !== podcast.id) {
       loadAndPlay(podcast);
+      if (podcast.status === "ready" && !podcast.played) {
+        updatePodcast(podcast.id, { played: true });
+      }
     }
   }, [podcast?.id]);
 

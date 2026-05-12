@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -13,14 +13,11 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { getThemes, type Theme, type Topic, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useCityConfig } from "@/contexts/CityConfigContext";
-import { getCityConfigSync, getLocalizedCityName } from "@/constants/city";
-import { flagEmoji, getRegistryEntry } from "@/constants/cityRegistry";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -225,35 +222,9 @@ export default function LibraryScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { user } = useAuth();
   const { t, locale } = useTranslation();
-  const { activeCityIds, currentCityId, setCurrentCity } = useCityConfig();
+  const { currentCityId } = useCityConfig();
 
-  // Track which cities are expanded. Default = currentCityId is expanded.
-  const [expandedCities, setExpandedCities] = useState<Set<string>>(
-    () => new Set([currentCityId]),
-  );
-
-  // When the user changes currentCity (e.g. via Profile), reflect it here
-  useEffect(() => {
-    setExpandedCities(new Set([currentCityId]));
-  }, [currentCityId]);
-
-  const toggleCity = async (cityId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedCities((prev) => {
-      const next = new Set(prev);
-      if (next.has(cityId)) {
-        next.delete(cityId);
-      } else {
-        next.add(cityId);
-        // When expanding a non-current city, also focus it for new podcasts
-        if (cityId !== currentCityId) {
-          setCurrentCity(cityId);
-        }
-      }
-      return next;
-    });
-  };
+  const themes = getThemes(currentCityId);
 
   return (
     <View style={styles.container}>
@@ -277,17 +248,14 @@ export default function LibraryScreen() {
         </View>
 
         <View style={styles.cityList}>
-          {activeCityIds.map((cityId) => (
-            <CitySection
-              key={cityId}
-              cityId={cityId}
-              expanded={expandedCities.has(cityId)}
-              onToggle={() => toggleCity(cityId)}
-              onActivate={async () => {
-                if (cityId !== currentCityId) await setCurrentCity(cityId);
-              }}
+          {themes.map((theme) => (
+            <ThemeCard
+              key={theme.id}
+              theme={theme}
               locale={locale}
+              cityId={currentCityId}
               t={t}
+              onActivate={async () => {}}
             />
           ))}
         </View>

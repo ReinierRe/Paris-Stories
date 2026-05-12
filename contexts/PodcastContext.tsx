@@ -44,6 +44,8 @@ export interface Podcast {
   customDbId?: string;
   /** City this podcast belongs to. Stamped at creation time. */
   cityId?: string;
+  /** True once the user has opened this podcast in the player. */
+  played?: boolean;
 }
 
 interface PodcastContextValue {

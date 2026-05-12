@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -47,6 +47,14 @@ function formatDuration(seconds?: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+function PlayedCheckmark() {
+  return (
+    <View style={styles.playedBadge}>
+      <Ionicons name="checkmark-circle" size={16} color="#27AE60" />
+    </View>
+  );
 }
 
 function SwipeablePodcastCard({
@@ -177,7 +185,10 @@ function SwipeablePodcastCard({
         <Animated.View style={[styles.podcastCard, cardStyle]}>
           <View style={styles.podcastCardContent}>
             <View style={styles.podcastInfo}>
-              <Text style={[styles.podcastTheme, podcast.isCustom && styles.podcastThemeCustom]}>{podcast.isCustom ? t("podcasts.custom") : podcast.theme}</Text>
+              <View style={styles.podcastThemeRow}>
+                <Text style={[styles.podcastTheme, podcast.isCustom && styles.podcastThemeCustom]}>{podcast.isCustom ? t("podcasts.custom") : podcast.theme}</Text>
+                {podcast.played && podcast.status === "ready" && <PlayedCheckmark />}
+              </View>
               <Text style={styles.podcastTitle} numberOfLines={2}>
                 {podcast.title}
               </Text>
@@ -310,18 +321,15 @@ function GlobalEmptyState({ t }: { t: (key: string) => string }) {
 
 export default function PodcastsScreen() {
   const { podcastsByCity, isLoading, removePodcast } = usePodcasts();
-  const { activeCityIds, currentCityId } = useCityConfig();
+  const { currentCityId } = useCityConfig();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { t, locale } = useTranslation();
 
-  const [expandedCities, setExpandedCities] = useState<Set<string>>(
-    () => new Set([currentCityId]),
+  const currentPodcasts = useMemo(
+    () => podcastsByCity[currentCityId] ?? [],
+    [podcastsByCity, currentCityId],
   );
-
-  useEffect(() => {
-    setExpandedCities(new Set([currentCityId]));
-  }, [currentCityId]);
 
   const handleDelete = useCallback(
     async (id: string) => {
@@ -342,25 +350,11 @@ export default function PodcastsScreen() {
     [removePodcast, podcastsByCity],
   );
 
-  const toggleCity = (cityId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedCities((prev) => {
-      const next = new Set(prev);
-      if (next.has(cityId)) next.delete(cityId);
-      else next.add(cityId);
-      return next;
-    });
-  };
-
-  const totals = useMemo(() => {
-    const allPodcasts = Object.values(podcastsByCity).flat();
-    return {
-      ready: allPodcasts.filter((p) => p.status === "ready").length,
-      generating: allPodcasts.filter((p) => p.status === "generating").length,
-      total: allPodcasts.length,
-    };
-  }, [podcastsByCity]);
+  const totals = useMemo(() => ({
+    ready: currentPodcasts.filter((p) => p.status === "ready").length,
+    generating: currentPodcasts.filter((p) => p.status === "generating").length,
+    total: currentPodcasts.length,
+  }), [currentPodcasts]);
 
   if (isLoading) {
     return (
@@ -394,16 +388,12 @@ export default function PodcastsScreen() {
               </Text>
             </View>
 
-            <View style={styles.cityList}>
-              {activeCityIds.map((cityId) => (
-                <CityPodcastSection
-                  key={cityId}
-                  cityId={cityId}
-                  podcasts={podcastsByCity[cityId] ?? []}
-                  expanded={expandedCities.has(cityId)}
-                  onToggle={() => toggleCity(cityId)}
+            <View style={styles.podcastList}>
+              {currentPodcasts.map((podcast) => (
+                <SwipeablePodcastCard
+                  key={podcast.id}
+                  podcast={podcast}
                   onDelete={handleDelete}
-                  locale={locale}
                   t={t}
                 />
               ))}
@@ -545,13 +535,21 @@ const styles = StyleSheet.create({
   podcastInfo: {
     flex: 1,
   },
+  podcastThemeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  playedBadge: {
+    opacity: 0.9,
+  },
   podcastTheme: {
     fontSize: 11,
     fontFamily: "DMSans_600SemiBold",
     color: Colors.light.accent,
     textTransform: "uppercase" as const,
     letterSpacing: 0.8,
-    marginBottom: 4,
   },
   podcastThemeCustom: {
     color: "#8E44AD",

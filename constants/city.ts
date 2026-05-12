@@ -153,6 +153,26 @@ const CITY_DEFAULTS: Record<string, CityConfig> = {
       { id: "world-explorer", icon: "earth-outline", minPodcasts: 30, name: { en: "World Explorer", nl: "Wereldreiziger", fr: "Voyageur du Monde", de: "Weltentdecker", es: "Explorador del Mundo" }, description: { en: "A seasoned traveler with cities in your pocket", nl: "Een doorgewinterde reiziger met steden in je broekzak", fr: "Un voyageur aguerri avec les villes en poche", de: "Ein erfahrener Reisender mit Städten in der Tasche", es: "Un viajero experimentado con ciudades en el bolsillo" } },
     ],
   },
+  kotor: {
+    id: "kotor",
+    name: "Kotor",
+    country: "Montenegro",
+    appName: "City Stories",
+    bundleId: "nl.greenhome.citystories",
+    contactEmail: "vragen@greenhome.nl",
+    privacyPolicyDate: "2026-05-12",
+    localizedNames: { en: "Kotor", nl: "Kotor", fr: "Kotor", de: "Kotor", es: "Kotor" },
+    localizedCountry: { en: "Montenegro", nl: "Montenegro", fr: "le Monténégro", de: "Montenegro", es: "Montenegro" },
+    topLevelName: { en: "City Stories", nl: "City Stories", fr: "City Stories", de: "City Stories", es: "City Stories" },
+    cityHighlights: { en: "the walled city of Kotor and the Bay of Kotor", nl: "de ommuurde stad Kotor en de Baai van Kotor", fr: "la ville fortifiée de Kotor et la baie de Kotor", de: "die ummauerte Stadt Kotor und die Bucht von Kotor", es: "la ciudad amurallada de Kotor y la bahía de Kotor" },
+    thankYouWord: "Hvala!",
+    userLevels: [
+      { id: "traveler", icon: "airplane", minPodcasts: 0, name: { en: "Traveler", nl: "Reiziger", fr: "Voyageur", de: "Reisender", es: "Viajero" }, description: { en: "Just getting started exploring Kotor and Montenegro", nl: "Net begonnen met het verkennen van Kotor en Montenegro", fr: "Vous commencez à explorer Kotor et le Monténégro", de: "Du fängst gerade an, Kotor und Montenegro zu erkunden", es: "Acabas de empezar a explorar Kotor y Montenegro" } },
+      { id: "explorer", icon: "compass", minPodcasts: 5, name: { en: "Explorer", nl: "Ontdekker", fr: "Explorateur", de: "Entdecker", es: "Explorador" }, description: { en: "Discovering the hidden stories of the Bay of Kotor", nl: "De verborgen verhalen van de Baai van Kotor ontdekken", fr: "À la découverte des histoires cachées de la baie de Kotor", de: "Die verborgenen Geschichten der Bucht von Kotor entdecken", es: "Descubriendo las historias ocultas de la bahía de Kotor" } },
+      { id: "connoisseur", icon: "star", minPodcasts: 15, name: { en: "Connoisseur", nl: "Kenner", fr: "Connaisseur", de: "Kenner", es: "Conocedor" }, description: { en: "A true connoisseur of Montenegrin culture and history", nl: "Een echte kenner van de Montenegrijnse cultuur en geschiedenis", fr: "Un vrai connaisseur de la culture et de l'histoire monténégrine", de: "Ein wahrer Kenner der montenegrinischen Kultur und Geschichte", es: "Un verdadero conocedor de la cultura e historia montenegrina" } },
+      { id: "world-explorer", icon: "earth", minPodcasts: 30, name: { en: "World Explorer", nl: "Wereldreiziger", fr: "Voyageur du Monde", de: "Weltentdecker", es: "Explorador del Mundo" }, description: { en: "A seasoned traveler with cities in your pocket", nl: "Een doorgewinterde reiziger met steden in je broekzak", fr: "Un voyageur aguerri avec les villes en poche", de: "Ein erfahrener Reisender mit Städten in der Tasche", es: "Un viajero experimentado con ciudades en el bolsillo" } },
+    ],
+  },
 };
 
 /**

@@ -55,6 +55,12 @@ export const CITY_REGISTRY: CityRegistryEntry[] = [
     delivery: "remote",
     defaultActive: false,
   },
+  {
+    id: "kotor",
+    countryCode: "ME",
+    delivery: "remote",
+    defaultActive: false,
+  },
 ];
 
 export const DEFAULT_CURRENT_CITY_ID = "amsterdam";

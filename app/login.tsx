@@ -9,6 +9,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Dimensions,
+  useWindowDimensions,
   FlatList,
   ViewToken,
   Keyboard,
@@ -86,6 +87,14 @@ const categoryImageMap: Record<string, any> = {
 };
 
 function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number }) {
+  const { height: windowHeight } = useWindowDimensions();
+  const isSmall = windowHeight < 700;
+  const isMedium = windowHeight < 820;
+  const iconSize = isSmall ? 46 : isMedium ? 54 : 62;
+  const iconGap = isSmall ? 6 : isMedium ? 8 : 10;
+  const iconItemWidth = isSmall ? 72 : isMedium ? 82 : 90;
+  const gridMarginBottom = isSmall ? 10 : isMedium ? 16 : 22;
+
   const categoryIcons = getOnboardingCategories().map((cat) => ({
     name: cat.name,
     image: categoryImageMap[cat.imageKey],
@@ -93,11 +102,15 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
 
   if (index === 0) {
     return (
-      <View style={slideStyles.visualContainer}>
-        <View style={slideStyles.iconGrid}>
+      <View style={{ marginBottom: gridMarginBottom }}>
+        <View style={[slideStyles.iconGrid, { gap: iconGap }]}>
           {categoryIcons.slice(0, 6).map((cat, i) => (
-            <View key={i} style={slideStyles.iconGridItem}>
-              <Image source={cat.image} style={slideStyles.categoryIcon} cachePolicy="memory-disk" />
+            <View key={i} style={[slideStyles.iconGridItem, { width: iconItemWidth }]}>
+              <Image
+                source={cat.image}
+                style={{ width: iconSize, height: iconSize, borderRadius: iconSize / 2 }}
+                cachePolicy="memory-disk"
+              />
               <Text style={slideStyles.iconLabel}>{cat.name}</Text>
             </View>
           ))}
@@ -189,6 +202,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const { login, register, isLoading, resetPassword } = useAuth();
   const flatListRef = useRef<FlatList>(null);
   const slides = getOnboardingSlides();
@@ -267,21 +281,38 @@ export default function LoginScreen() {
     setResetSent(false);
   };
 
+  const isSmallScreen = windowHeight < 700;
+  const isMediumScreen = windowHeight < 820;
+
   const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => {
+    const textMargin = isSmallScreen ? 10 : isMediumScreen ? 16 : 24;
+    const titleFontSize = isSmallScreen ? 32 : 38;
+    const titleLineHeight = isSmallScreen ? 38 : 44;
+
     return (
       <View style={[slideStyles.slide, { width: SCREEN_WIDTH }]}>
         <View
           style={[
             slideStyles.slideScrollContent,
-            { paddingTop: topPadding + 20, paddingBottom: bottomPadding + 60 },
+            { paddingTop: topPadding + 16, paddingBottom: bottomPadding + 16 },
           ]}
         >
-            <View style={slideStyles.textSection}>
-              <Text style={slideStyles.slideTitle}>{item.title}</Text>
+            <View style={[slideStyles.textSection, { marginBottom: textMargin }]}>
+              <Text style={[slideStyles.slideTitle, { fontSize: titleFontSize, lineHeight: titleLineHeight }]}>{item.title}</Text>
               <Text style={slideStyles.slideSubtitle}>{item.subtitle}</Text>
             </View>
 
             <SlideContent slide={item} index={index} />
+
+            {index > 0 && (
+              <View style={slideStyles.dotsRow}>
+                {slides.map((_, i) => (
+                  <Pressable key={i} onPress={() => goToSlide(i)} hitSlop={8}>
+                    <View style={[styles.dot, i === currentIndex ? styles.dotActive : styles.dotInactive]} />
+                  </Pressable>
+                ))}
+              </View>
+            )}
 
             {index === 0 && (
               <View style={formStyles.formContainer}>
@@ -470,20 +501,6 @@ export default function LoginScreen() {
         />
       </KeyboardAvoidingView>
 
-      {currentIndex > 0 && (
-        <View style={[styles.pagination, { bottom: bottomPadding }]}>
-          {slides.map((_, i) => (
-            <Pressable key={i} onPress={() => goToSlide(i)} hitSlop={8}>
-              <View
-                style={[
-                  styles.dot,
-                  i === currentIndex ? styles.dotActive : styles.dotInactive,
-                ]}
-              />
-            </Pressable>
-          ))}
-        </View>
-      )}
     </View>
   );
 }
@@ -526,7 +543,15 @@ const slideStyles = StyleSheet.create({
     paddingHorizontal: 28,
   },
   textSection: {
-    marginBottom: 28,
+    marginBottom: 24,
+  },
+  dotsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 20,
+    marginBottom: 8,
   },
   slideTitle: {
     fontFamily: "DMSans_700Bold",

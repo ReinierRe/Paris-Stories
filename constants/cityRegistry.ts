@@ -43,6 +43,12 @@ export const CITY_REGISTRY: CityRegistryEntry[] = [
     delivery: "remote",
     defaultActive: false,
   },
+  {
+    id: "london",
+    countryCode: "GB",
+    delivery: "remote",
+    defaultActive: false,
+  },
 ];
 
 export const DEFAULT_CURRENT_CITY_ID = "amsterdam";

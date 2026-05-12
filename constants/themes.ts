@@ -2175,6 +2175,7 @@ const londonThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-history-london.png"),
     color: "#6B4226",
     angles: londonHistoryAngles,
     topics: [
@@ -2197,6 +2198,7 @@ const londonThemes: Theme[] = [
     nameEs: "La Corona",
     icon: "ribbon",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-the-crown-london.png"),
     color: "#7B2D26",
     angles: londonCrownAngles,
     topics: [
@@ -2219,6 +2221,7 @@ const londonThemes: Theme[] = [
     nameEs: "Museos",
     icon: "museum",
     iconFamily: "MaterialIcons",
+    iconImage: require("@/assets/images/category-museums-london.png"),
     color: "#2980B9",
     angles: londonMuseumsAngles,
     topics: [
@@ -2241,6 +2244,7 @@ const londonThemes: Theme[] = [
     nameEs: "Edificios emblemáticos",
     icon: "business",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-epic-buildings-london.png"),
     color: "#34495E",
     angles: londonBuildingsAngles,
     topics: [
@@ -2263,6 +2267,7 @@ const londonThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-neighborhoods-london.png"),
     color: "#16A085",
     angles: londonNeighborhoodsAngles,
     topics: [
@@ -2285,6 +2290,7 @@ const londonThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-culinary-london.png"),
     color: "#E0A040",
     angles: londonCulinaryAngles,
     topics: [
@@ -2307,6 +2313,7 @@ const londonThemes: Theme[] = [
     nameEs: "Londres moderno",
     icon: "trending-up",
     iconFamily: "Ionicons",
+    iconImage: require("@/assets/images/category-modern-history-london.png"),
     color: "#8E44AD",
     angles: londonModernAngles,
     topics: [

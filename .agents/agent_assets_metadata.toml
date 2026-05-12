@@ -42,3 +42,45 @@ id = "NvjyaukVRFeNek4gJaBWi"
 uri = "file://assets/images/category-museums-barcelona.png"
 type = "image"
 title = "museums barcelona category"
+
+[[generated]]
+id = "x3ydsOgjLOgoA_glpWwM5"
+uri = "file://assets/images/category-history-london.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "POiMDtw_bk3dfGJFrfp5I"
+uri = "file://assets/images/category-the-crown-london.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Rz5WVaBDqjgPiVMJLQjDo"
+uri = "file://assets/images/category-museums-london.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "NKUK2kmw2_Upy2zPffdef"
+uri = "file://assets/images/category-epic-buildings-london.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "BdXCJR8FpS0ydKxbwQhQN"
+uri = "file://assets/images/category-neighborhoods-london.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "du6f2PfclYKE9AUxKGPzW"
+uri = "file://assets/images/category-culinary-london.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "qsUb5a0-8u7cDQqQGIW9n"
+uri = "file://assets/images/category-modern-history-london.png"
+type = "image"
+title = "generated_image"

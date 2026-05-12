@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
-  ScrollView,
   Dimensions,
   FlatList,
   ViewToken,
@@ -271,13 +270,11 @@ export default function LoginScreen() {
   const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => {
     return (
       <View style={[slideStyles.slide, { width: SCREEN_WIDTH }]}>
-        <ScrollView
-          contentContainerStyle={[
+        <View
+          style={[
             slideStyles.slideScrollContent,
             { paddingTop: topPadding + 20, paddingBottom: bottomPadding + 60 },
           ]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
         >
             <View style={slideStyles.textSection}>
               <Text style={slideStyles.slideTitle}>{item.title}</Text>
@@ -434,7 +431,7 @@ export default function LoginScreen() {
                 <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
               </Pressable>
             )}
-          </ScrollView>
+        </View>
       </View>
     );
   };
@@ -473,18 +470,20 @@ export default function LoginScreen() {
         />
       </KeyboardAvoidingView>
 
-      <View style={[styles.pagination, { bottom: bottomPadding }]}>
-        {slides.map((_, i) => (
-          <Pressable key={i} onPress={() => goToSlide(i)} hitSlop={8}>
-            <View
-              style={[
-                styles.dot,
-                i === currentIndex ? styles.dotActive : styles.dotInactive,
-              ]}
-            />
-          </Pressable>
-        ))}
-      </View>
+      {currentIndex > 0 && (
+        <View style={[styles.pagination, { bottom: bottomPadding }]}>
+          {slides.map((_, i) => (
+            <Pressable key={i} onPress={() => goToSlide(i)} hitSlop={8}>
+              <View
+                style={[
+                  styles.dot,
+                  i === currentIndex ? styles.dotActive : styles.dotInactive,
+                ]}
+              />
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -523,7 +522,7 @@ const slideStyles = StyleSheet.create({
     flex: 1,
   },
   slideScrollContent: {
-    flexGrow: 1,
+    flex: 1,
     paddingHorizontal: 28,
   },
   textSection: {

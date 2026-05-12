@@ -29,11 +29,10 @@ export interface OnboardingPodcastExample {
 
 const mixedCategories: OnboardingCategory[] = [
   { name: "History", imageKey: "category-history" },
-  { name: "Golden Age", imageKey: "category-golden-age" },
-  { name: "Gaudí", imageKey: "category-gaudi-barcelona" },
   { name: "Museums", imageKey: "category-museums" },
-  { name: "Revolution", imageKey: "category-french-revolution" },
-  { name: "Buildings", imageKey: "category-epic-buildings" },
+  { name: "Neighborhoods", imageKey: "category-neighborhoods" },
+  { name: "Epic Buildings", imageKey: "category-epic-buildings" },
+  { name: "Culture", imageKey: "category-modern-history" },
   { name: "Culinary", imageKey: "category-culinary" },
 ];
 
@@ -76,7 +75,7 @@ export function getOnboardingSlides(): OnboardingSlide[] {
     {
       id: "welcome",
       title: "Discover Cities\nThrough Stories",
-      subtitle: `${cityCount} European cities. Endless AI-generated audio stories — tailored to your interests, narrated by a friend who happens to know everything.`,
+      subtitle: `Discover Europe's cities beyond the guidebook. Whether it's hidden urban legends or the heights of architectural ambition, listen to curated podcast stories tailored to your interests. Your personal audio guide to the heart of the city.`,
     },
     {
       id: "audio-tours",

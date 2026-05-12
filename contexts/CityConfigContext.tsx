@@ -17,6 +17,7 @@ import { setActiveCityId } from "@/lib/query-client";
 const STORAGE_KEY_ACTIVE_CITIES = "cs.activeCities";
 const STORAGE_KEY_CURRENT_CITY = "cs.currentCityId";
 const STORAGE_KEY_FIRST_LAUNCH_DONE = "cs.firstLaunchDone";
+const STORAGE_KEY_LONDON_AUTOACTIVATED = "cs.londonAutoActivated";
 
 export interface CityConfigContextValue {
   /** All active (installed) cities for the current user */
@@ -73,10 +74,11 @@ async function loadActiveCitiesFromStorage(): Promise<{
   isFirstLaunch: boolean;
 }> {
   try {
-    const [activeRaw, currentRaw, firstLaunchRaw] = await Promise.all([
+    const [activeRaw, currentRaw, firstLaunchRaw, londonAutoActivatedRaw] = await Promise.all([
       AsyncStorage.getItem(STORAGE_KEY_ACTIVE_CITIES),
       AsyncStorage.getItem(STORAGE_KEY_CURRENT_CITY),
       AsyncStorage.getItem(STORAGE_KEY_FIRST_LAUNCH_DONE),
+      AsyncStorage.getItem(STORAGE_KEY_LONDON_AUTOACTIVATED),
     ]);
 
     const isFirstLaunch = firstLaunchRaw !== "true";
@@ -94,7 +96,13 @@ async function loadActiveCitiesFromStorage(): Promise<{
     }
     if (activeCityIds.length === 0) {
       activeCityIds = getDefaultActiveCityIds();
+    } else if (!isFirstLaunch && londonAutoActivatedRaw !== "true" && !activeCityIds.includes("london") && getRegistryEntry("london")?.defaultActive) {
+      // One-time migration: existing users (who have stored active cities from a
+      // previous install) get London auto-added to their library on upgrade.
+      activeCityIds = [...activeCityIds, "london"];
+      AsyncStorage.setItem(STORAGE_KEY_ACTIVE_CITIES, JSON.stringify(activeCityIds)).catch(() => {});
     }
+    AsyncStorage.setItem(STORAGE_KEY_LONDON_AUTOACTIVATED, "true").catch(() => {});
 
     let currentCityId = currentRaw && activeCityIds.includes(currentRaw) ? currentRaw : activeCityIds[0];
     if (!currentCityId) {

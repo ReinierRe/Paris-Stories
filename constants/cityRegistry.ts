@@ -47,7 +47,7 @@ export const CITY_REGISTRY: CityRegistryEntry[] = [
     id: "london",
     countryCode: "GB",
     delivery: "remote",
-    defaultActive: false,
+    defaultActive: true,
   },
 ];
 

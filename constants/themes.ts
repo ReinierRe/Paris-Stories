@@ -54,7 +54,6 @@ const parisThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
     color: "#6B4226",
     topics: [
       {
@@ -320,7 +319,6 @@ const parisThemes: Theme[] = [
     nameEs: "Museos",
     icon: "museum",
     iconFamily: "MaterialIcons",
-    iconImage: require("@/assets/images/category-museums.png"),
     color: "#2980B9",
     angles: [
       {
@@ -482,7 +480,6 @@ const parisThemes: Theme[] = [
     nameEs: "Edificios emblemáticos",
     icon: "business",
     iconFamily: "MaterialIcons",
-    iconImage: require("@/assets/images/category-epic-buildings.png"),
     color: "#34495E",
     topics: [
       {
@@ -600,7 +597,6 @@ const parisThemes: Theme[] = [
     nameEs: "Historia moderna",
     icon: "history",
     iconFamily: "MaterialIcons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#8E44AD",
     topics: [
       {
@@ -718,7 +714,6 @@ const parisThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Feather",
-    iconImage: require("@/assets/images/category-neighborhoods.png"),
     color: "#27AE60",
     angles: [
       {
@@ -894,7 +889,6 @@ const parisThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "MaterialIcons",
-    iconImage: require("@/assets/images/category-culinary.png"),
     color: "#E67E22",
     topics: [
       {
@@ -1015,7 +1009,6 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
     color: "#6B4226",
     topics: [
       {
@@ -1133,7 +1126,6 @@ const amsterdamThemes: Theme[] = [
     nameEs: "La Edad de Oro",
     icon: "sunny",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
     color: "#DAA520",
     angles: [
       {
@@ -1561,7 +1553,6 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Historia moderna",
     icon: "history",
     iconFamily: "MaterialIcons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#8E44AD",
     topics: [
       {
@@ -1855,7 +1846,6 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "MaterialIcons",
-    iconImage: require("@/assets/images/category-culinary.png"),
     color: "#E67E22",
     topics: [
       {
@@ -1976,7 +1966,6 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
     color: "#6B4226",
     topics: [
       { id: "bcn-roman-barcino", name: "Roman Barcino: The Birth of Barcelona", nameNl: "Romeins Barcino: De Geboorte van Barcelona", nameFr: "Barcino romaine : la naissance de Barcelone", nameDe: "Das römische Barcino: Die Geburt Barcelonas", nameEs: "Barcino romana: el nacimiento de Barcelona", description: "From Roman colony to medieval city", descriptionNl: "Van Romeinse kolonie tot middeleeuwse stad", descriptionFr: "De colonie romaine à cité médiévale", descriptionDe: "Von der römischen Kolonie zur mittelalterlichen Stadt", descriptionEs: "De colonia romana a ciudad medieval" },
@@ -2064,7 +2053,6 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Historia Moderna",
     icon: "newspaper",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#34495E",
     topics: [
       { id: "bcn-fcb-cruyff", name: "FC Barcelona & Cruyff: Més que un club", nameNl: "FC Barcelona & Cruyff: Més que un club", nameFr: "FC Barcelone & Cruyff : Més que un club", nameDe: "FC Barcelona & Cruyff: Més que un club", nameEs: "FC Barcelona y Cruyff: Més que un club", description: "How a football club became a political symbol of Catalonia", descriptionNl: "Hoe een voetbalclub uitgroeide tot politiek symbool van Catalonië", descriptionFr: "Comment un club de football est devenu un symbole politique de la Catalogne", descriptionDe: "Wie ein Fußballklub zum politischen Symbol Kataloniens wurde", descriptionEs: "Cómo un club de fútbol se convirtió en símbolo político de Cataluña" },
@@ -2381,7 +2369,6 @@ const berlinThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
     color: "#6B4226",
     angles: berlinHistoryAngles,
     topics: [
@@ -2404,7 +2391,6 @@ const berlinThemes: Theme[] = [
     nameEs: "El Muro",
     icon: "git-branch",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#5D4037",
     angles: berlinWallAngles,
     topics: [
@@ -2427,7 +2413,6 @@ const berlinThemes: Theme[] = [
     nameEs: "Museos",
     icon: "library",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-museums.png"),
     color: "#2980B9",
     angles: berlinMuseumsAngles,
     topics: [
@@ -2450,7 +2435,6 @@ const berlinThemes: Theme[] = [
     nameEs: "Edificios",
     icon: "business",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-epic-buildings.png"),
     color: "#34495E",
     angles: berlinBuildingsAngles,
     topics: [
@@ -2473,7 +2457,6 @@ const berlinThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-neighborhoods.png"),
     color: "#16A085",
     angles: berlinNeighborhoodsAngles,
     topics: [
@@ -2496,7 +2479,6 @@ const berlinThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-culinary.png"),
     color: "#E0A040",
     angles: berlinCulinaryAngles,
     topics: [
@@ -2519,7 +2501,6 @@ const berlinThemes: Theme[] = [
     nameEs: "Berlín moderno",
     icon: "trending-up",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#8E44AD",
     angles: berlinModernAngles,
     topics: [

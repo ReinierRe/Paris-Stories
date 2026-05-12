@@ -7,7 +7,6 @@ import {
   Platform,
   ActivityIndicator,
   TextInput,
-  KeyboardAvoidingView,
   Dimensions,
   useWindowDimensions,
   FlatList,
@@ -15,6 +14,7 @@ import {
   Keyboard,
   Linking,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -34,6 +34,7 @@ import {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type Mode = "login" | "register";
+type View_ = "onboarding" | "auth";
 
 function PhoneMockup({ children }: { children: React.ReactNode }) {
   return (
@@ -90,10 +91,9 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
   const { height: windowHeight } = useWindowDimensions();
   const isSmall = windowHeight < 700;
   const isMedium = windowHeight < 820;
-  const iconSize = isSmall ? 46 : isMedium ? 54 : 62;
-  const iconGap = isSmall ? 6 : isMedium ? 8 : 10;
-  const iconItemWidth = isSmall ? 72 : isMedium ? 82 : 90;
-  const gridMarginBottom = isSmall ? 10 : isMedium ? 16 : 22;
+  const iconSize = isSmall ? 56 : isMedium ? 64 : 74;
+  const iconGap = isSmall ? 8 : isMedium ? 10 : 12;
+  const iconItemWidth = isSmall ? 84 : isMedium ? 94 : 104;
 
   const categoryIcons = getOnboardingCategories().map((cat) => ({
     name: cat.name,
@@ -102,7 +102,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
 
   if (index === 0) {
     return (
-      <View style={{ marginBottom: gridMarginBottom }}>
+      <View style={slideStyles.visualContainer}>
         <View style={[slideStyles.iconGrid, { gap: iconGap }]}>
           {categoryIcons.slice(0, 6).map((cat, i) => (
             <View key={i} style={[slideStyles.iconGridItem, { width: iconItemWidth }]}>
@@ -200,22 +200,12 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
   return null;
 }
 
-export default function LoginScreen() {
+function OnboardingView({ onGetStarted }: { onGetStarted: () => void }) {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  const { login, register, isLoading, resetPassword } = useAuth();
   const flatListRef = useRef<FlatList>(null);
   const slides = getOnboardingSlides();
-
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [mode, setMode] = useState<Mode>("register");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
 
   const topPadding = Platform.OS === "web" ? 20 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
@@ -232,7 +222,121 @@ export default function LoginScreen() {
     flatListRef.current?.scrollToIndex({ index, animated: true });
   };
 
+  const isLastSlide = currentIndex === slides.length - 1;
+  const isSmallScreen = windowHeight < 700;
+  const isMediumScreen = windowHeight < 820;
+
+  const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => {
+    const titleFontSize = isSmallScreen ? 30 : isMediumScreen ? 34 : 38;
+    const titleLineHeight = isSmallScreen ? 36 : isMediumScreen ? 40 : 44;
+
+    return (
+      <View style={[slideStyles.slide, { width: SCREEN_WIDTH }]}>
+        <View
+          style={[
+            slideStyles.slideScrollContent,
+            { paddingTop: topPadding + 24, paddingBottom: 16 },
+          ]}
+        >
+          <View style={slideStyles.textSection}>
+            <Text style={[slideStyles.slideTitle, { fontSize: titleFontSize, lineHeight: titleLineHeight }]}>{item.title}</Text>
+            <Text style={slideStyles.slideSubtitle}>{item.subtitle}</Text>
+          </View>
+
+          <View style={slideStyles.visualWrapper}>
+            <SlideContent slide={item} index={index} />
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <LinearGradient
+        colors={["#0B1628", "#162033", "#0B1628"]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+
+      <View style={{ flex: 1 }}>
+        <FlatList
+          ref={flatListRef}
+          data={slides}
+          renderItem={renderSlide}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          bounces={false}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          getItemLayout={(_, index) => ({
+            length: SCREEN_WIDTH,
+            offset: SCREEN_WIDTH * index,
+            index,
+          })}
+        />
+      </View>
+
+      <View style={[onboardingStyles.bottomBar, { paddingBottom: bottomPadding }]}>
+        <View style={onboardingStyles.dotsRow}>
+          {slides.map((_, i) => (
+            <Pressable key={i} onPress={() => goToSlide(i)} hitSlop={8}>
+              <View style={[styles.dot, i === currentIndex ? styles.dotActive : styles.dotInactive]} />
+            </Pressable>
+          ))}
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [
+            formStyles.submitButton,
+            onboardingStyles.ctaButton,
+            pressed && formStyles.submitButtonPressed,
+          ]}
+          onPress={() => {
+            if (isLastSlide) {
+              onGetStarted();
+            } else {
+              goToSlide(currentIndex + 1);
+            }
+          }}
+        >
+          <Text style={formStyles.submitButtonText}>
+            {isLastSlide ? "Get started" : "Next"}
+          </Text>
+          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+        </Pressable>
+
+        {!isLastSlide && (
+          <Pressable onPress={onGetStarted} style={onboardingStyles.skipButton} hitSlop={8}>
+            <Text style={onboardingStyles.skipText}>Skip</Text>
+          </Pressable>
+        )}
+      </View>
+    </View>
+  );
+}
+
+function AuthView({ onBack }: { onBack: () => void }) {
+  const insets = useSafeAreaInsets();
+  const { login, register, isLoading, resetPassword } = useAuth();
+
+  const [mode, setMode] = useState<Mode>("register");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const topPadding = Platform.OS === "web" ? 20 : insets.top;
+  const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
+
   const handleSubmit = async () => {
+    Keyboard.dismiss();
     setError(null);
 
     if (!email.trim() || !password.trim()) {
@@ -264,6 +368,7 @@ export default function LoginScreen() {
       setError("Enter your email address first");
       return;
     }
+    Keyboard.dismiss();
     setIsSubmitting(true);
     setError(null);
     const result = await resetPassword(email.trim());
@@ -275,196 +380,11 @@ export default function LoginScreen() {
     }
   };
 
-  const toggleMode = () => {
-    setMode(mode === "login" ? "register" : "login");
+  const toggleMode = (next: Mode) => {
+    if (next === mode) return;
+    setMode(next);
     setError(null);
     setResetSent(false);
-  };
-
-  const isSmallScreen = windowHeight < 700;
-  const isMediumScreen = windowHeight < 820;
-
-  const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => {
-    const textMargin = isSmallScreen ? 10 : isMediumScreen ? 16 : 24;
-    const titleFontSize = isSmallScreen ? 32 : 38;
-    const titleLineHeight = isSmallScreen ? 38 : 44;
-
-    return (
-      <View style={[slideStyles.slide, { width: SCREEN_WIDTH }]}>
-        <View
-          style={[
-            slideStyles.slideScrollContent,
-            { paddingTop: topPadding + 16, paddingBottom: bottomPadding + 16 },
-          ]}
-        >
-            <View style={[slideStyles.textSection, { marginBottom: textMargin }]}>
-              <Text style={[slideStyles.slideTitle, { fontSize: titleFontSize, lineHeight: titleLineHeight }]}>{item.title}</Text>
-              <Text style={slideStyles.slideSubtitle}>{item.subtitle}</Text>
-            </View>
-
-            <SlideContent slide={item} index={index} />
-
-            {index > 0 && (
-              <View style={slideStyles.dotsRow}>
-                {slides.map((_, i) => (
-                  <Pressable key={i} onPress={() => goToSlide(i)} hitSlop={8}>
-                    <View style={[styles.dot, i === currentIndex ? styles.dotActive : styles.dotInactive]} />
-                  </Pressable>
-                ))}
-              </View>
-            )}
-
-            {index === 0 && (
-              <View style={formStyles.formContainer}>
-                {mode === "register" && (
-                  <View style={formStyles.inputWrapper}>
-                    <Ionicons
-                      name="person-outline"
-                      size={18}
-                      color="rgba(255,255,255,0.4)"
-                      style={formStyles.inputIcon}
-                    />
-                    <TextInput
-                      style={formStyles.input}
-                      placeholder="First name"
-                      placeholderTextColor="rgba(255,255,255,0.3)"
-                      value={firstName}
-                      onChangeText={setFirstName}
-                      autoCapitalize="words"
-                      autoComplete="given-name"
-                    />
-                  </View>
-                )}
-
-                <View style={formStyles.inputWrapper}>
-                  <Ionicons
-                    name="mail-outline"
-                    size={18}
-                    color="rgba(255,255,255,0.4)"
-                    style={formStyles.inputIcon}
-                  />
-                  <TextInput
-                    style={formStyles.input}
-                    placeholder="Email"
-                    placeholderTextColor="rgba(255,255,255,0.3)"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    keyboardType="email-address"
-                    textContentType="emailAddress"
-                  />
-                </View>
-
-                <View style={formStyles.inputWrapper}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={18}
-                    color="rgba(255,255,255,0.4)"
-                    style={formStyles.inputIcon}
-                  />
-                  <TextInput
-                    style={[formStyles.input, formStyles.passwordInput]}
-                    placeholder="Password"
-                    placeholderTextColor="rgba(255,255,255,0.3)"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoComplete={mode === "register" ? "new-password" : "current-password"}
-                    textContentType={mode === "register" ? "newPassword" : "password"}
-                  />
-                  <Pressable
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={formStyles.eyeButton}
-                    hitSlop={8}
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
-                      size={18}
-                      color="rgba(255,255,255,0.4)"
-                    />
-                  </Pressable>
-                </View>
-
-                {error && (
-                  <View style={formStyles.errorContainer}>
-                    <Ionicons name="alert-circle" size={16} color={Colors.light.error} />
-                    <Text style={formStyles.errorText}>{error}</Text>
-                  </View>
-                )}
-
-                {resetSent && (
-                  <View style={formStyles.successContainer}>
-                    <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                    <Text style={formStyles.successText}>Password reset email sent. Check your inbox.</Text>
-                  </View>
-                )}
-
-                <Pressable
-                  style={({ pressed }) => [
-                    formStyles.submitButton,
-                    pressed && formStyles.submitButtonPressed,
-                    (isSubmitting || isLoading) && formStyles.submitButtonDisabled,
-                  ]}
-                  onPress={handleSubmit}
-                  disabled={isSubmitting || isLoading}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={formStyles.submitButtonText}>
-                      {mode === "login" ? "Sign in" : "Create account"}
-                    </Text>
-                  )}
-                </Pressable>
-
-                {mode === "login" && (
-                  <Pressable onPress={handleForgotPassword} style={formStyles.forgotContainer} disabled={isSubmitting}>
-                    <Text style={formStyles.forgotText}>Forgot password?</Text>
-                  </Pressable>
-                )}
-
-                <Pressable onPress={toggleMode} style={formStyles.toggleContainer}>
-                  <Text style={formStyles.toggleText}>
-                    {mode === "login"
-                      ? "Don't have an account? "
-                      : "Already have an account? "}
-                    <Text style={formStyles.toggleLink}>
-                      {mode === "login" ? "Sign up" : "Sign in"}
-                    </Text>
-                  </Text>
-                </Pressable>
-
-                {mode === "register" && (
-                  <Pressable
-                    onPress={() => { const cityId = getCityHeaders()["X-City-Id"] || "amsterdam"; Linking.openURL(`${getApiUrl()}/privacy-policy?city=${cityId}`); }}
-                    style={formStyles.privacyContainer}
-                  >
-                    <Text style={formStyles.privacyText}>
-                      By creating an account, you agree to our{" "}
-                      <Text style={formStyles.privacyLink}>Privacy Policy</Text>
-                    </Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
-
-            {index > 0 && (
-              <Pressable
-                style={({ pressed }) => [
-                  formStyles.ctaButton,
-                  pressed && formStyles.submitButtonPressed,
-                ]}
-                onPress={() => goToSlide(0)}
-              >
-                <Text style={formStyles.submitButtonText}>Get started</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-              </Pressable>
-            )}
-        </View>
-      </View>
-    );
   };
 
   return (
@@ -476,33 +396,190 @@ export default function LoginScreen() {
         end={{ x: 1, y: 1 }}
       />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={slides}
-          renderItem={renderSlide}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          bounces={false}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          onScrollBeginDrag={() => Keyboard.dismiss()}
-          keyboardShouldPersistTaps="handled"
-          getItemLayout={(_, index) => ({
-            length: SCREEN_WIDTH,
-            offset: SCREEN_WIDTH * index,
-            index,
-          })}
-        />
-      </KeyboardAvoidingView>
+      <View style={[authStyles.header, { paddingTop: topPadding + 8 }]}>
+        <Pressable onPress={onBack} style={authStyles.backButton} hitSlop={12}>
+          <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+        </Pressable>
+      </View>
 
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[
+          authStyles.scrollContent,
+          { paddingBottom: bottomPadding + 24 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bottomOffset={20}
+      >
+        <View style={authStyles.heroSection}>
+          <Text style={authStyles.title}>
+            {mode === "register" ? "Create your account" : "Welcome back"}
+          </Text>
+          <Text style={authStyles.subtitle}>
+            {mode === "register"
+              ? "Start exploring cities through audio stories."
+              : "Sign in to continue your journey."}
+          </Text>
+        </View>
+
+        <View style={authStyles.tabsRow}>
+          <Pressable
+            style={[authStyles.tab, mode === "login" && authStyles.tabActive]}
+            onPress={() => toggleMode("login")}
+          >
+            <Text style={[authStyles.tabText, mode === "login" && authStyles.tabTextActive]}>
+              Sign in
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[authStyles.tab, mode === "register" && authStyles.tabActive]}
+            onPress={() => toggleMode("register")}
+          >
+            <Text style={[authStyles.tabText, mode === "register" && authStyles.tabTextActive]}>
+              Sign up
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={formStyles.formContainer}>
+          {mode === "register" && (
+            <View style={formStyles.inputWrapper}>
+              <Ionicons
+                name="person-outline"
+                size={18}
+                color="rgba(255,255,255,0.4)"
+                style={formStyles.inputIcon}
+              />
+              <TextInput
+                style={formStyles.input}
+                placeholder="First name"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+                autoComplete="given-name"
+                returnKeyType="next"
+              />
+            </View>
+          )}
+
+          <View style={formStyles.inputWrapper}>
+            <Ionicons
+              name="mail-outline"
+              size={18}
+              color="rgba(255,255,255,0.4)"
+              style={formStyles.inputIcon}
+            />
+            <TextInput
+              style={formStyles.input}
+              placeholder="Email"
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={formStyles.inputWrapper}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={18}
+              color="rgba(255,255,255,0.4)"
+              style={formStyles.inputIcon}
+            />
+            <TextInput
+              style={[formStyles.input, formStyles.passwordInput]}
+              placeholder="Password"
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
+              textContentType={mode === "register" ? "newPassword" : "password"}
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit}
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              style={formStyles.eyeButton}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={18}
+                color="rgba(255,255,255,0.4)"
+              />
+            </Pressable>
+          </View>
+
+          {error && (
+            <View style={formStyles.errorContainer}>
+              <Ionicons name="alert-circle" size={16} color={Colors.light.error} />
+              <Text style={formStyles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {resetSent && (
+            <View style={formStyles.successContainer}>
+              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+              <Text style={formStyles.successText}>Password reset email sent. Check your inbox.</Text>
+            </View>
+          )}
+
+          <Pressable
+            style={({ pressed }) => [
+              formStyles.submitButton,
+              pressed && formStyles.submitButtonPressed,
+              (isSubmitting || isLoading) && formStyles.submitButtonDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={isSubmitting || isLoading}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={formStyles.submitButtonText}>
+                {mode === "login" ? "Sign in" : "Create account"}
+              </Text>
+            )}
+          </Pressable>
+
+          {mode === "login" && (
+            <Pressable onPress={handleForgotPassword} style={formStyles.forgotContainer} disabled={isSubmitting}>
+              <Text style={formStyles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          )}
+
+          {mode === "register" && (
+            <Pressable
+              onPress={() => { const cityId = getCityHeaders()["X-City-Id"] || "amsterdam"; Linking.openURL(`${getApiUrl()}/privacy-policy?city=${cityId}`); }}
+              style={formStyles.privacyContainer}
+            >
+              <Text style={formStyles.privacyText}>
+                By creating an account, you agree to our{" "}
+                <Text style={formStyles.privacyLink}>Privacy Policy</Text>
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </KeyboardAwareScrollView>
     </View>
   );
+}
+
+export default function LoginScreen() {
+  const [view, setView] = useState<View_>("onboarding");
+
+  if (view === "auth") {
+    return <AuthView onBack={() => setView("onboarding")} />;
+  }
+  return <OnboardingView onGetStarted={() => setView("auth")} />;
 }
 
 const styles = StyleSheet.create({
@@ -534,6 +611,96 @@ const styles = StyleSheet.create({
   },
 });
 
+const onboardingStyles = StyleSheet.create({
+  bottomBar: {
+    paddingHorizontal: 28,
+    paddingTop: 12,
+    gap: 14,
+  },
+  dotsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 4,
+  },
+  ctaButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 0,
+  },
+  skipButton: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  skipText: {
+    fontFamily: "DMSans_500Medium",
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.5)",
+  },
+});
+
+const authStyles = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scrollContent: {
+    paddingHorizontal: 28,
+    paddingTop: 8,
+  },
+  heroSection: {
+    marginBottom: 24,
+  },
+  title: {
+    fontFamily: "DMSans_700Bold",
+    fontSize: 30,
+    color: "#FFFFFF",
+    letterSpacing: -0.8,
+    lineHeight: 36,
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontFamily: "DMSans_400Regular",
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.55)",
+    lineHeight: 22,
+  },
+  tabsRow: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 20,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 9,
+    alignItems: "center",
+  },
+  tabActive: {
+    backgroundColor: "rgba(196, 162, 101, 0.18)",
+  },
+  tabText: {
+    fontFamily: "DMSans_500Medium",
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.5)",
+  },
+  tabTextActive: {
+    color: "#FFFFFF",
+    fontFamily: "DMSans_600SemiBold",
+  },
+});
+
 const slideStyles = StyleSheet.create({
   slide: {
     flex: 1,
@@ -544,14 +711,6 @@ const slideStyles = StyleSheet.create({
   },
   textSection: {
     marginBottom: 24,
-  },
-  dotsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 20,
-    marginBottom: 8,
   },
   slideTitle: {
     fontFamily: "DMSans_700Bold",
@@ -568,8 +727,12 @@ const slideStyles = StyleSheet.create({
     lineHeight: 24,
     maxWidth: 320,
   },
+  visualWrapper: {
+    flex: 1,
+    justifyContent: "center",
+  },
   visualContainer: {
-    marginBottom: 28,
+    marginBottom: 8,
   },
   iconGrid: {
     flexDirection: "row",
@@ -658,10 +821,11 @@ const mockupStyles = StyleSheet.create({
     fontFamily: "DMSans_700Bold",
     fontSize: 18,
     color: "#FFFFFF",
+    marginBottom: 2,
   },
   screenSubtitle: {
     fontFamily: "DMSans_400Regular",
-    fontSize: 12,
+    fontSize: 11,
     color: "rgba(255, 255, 255, 0.4)",
     marginBottom: 8,
   },
@@ -675,15 +839,15 @@ const mockupStyles = StyleSheet.create({
   },
   podcastCategory: {
     fontFamily: "DMSans_600SemiBold",
-    fontSize: 9,
+    fontSize: 8,
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   podcastTitle: {
     fontFamily: "DMSans_600SemiBold",
-    fontSize: 14,
+    fontSize: 12,
     color: "#FFFFFF",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   podcastMeta: {
     flexDirection: "row",
@@ -692,11 +856,16 @@ const mockupStyles = StyleSheet.create({
   },
   podcastMetaText: {
     fontFamily: "DMSans_400Regular",
-    fontSize: 10,
+    fontSize: 9,
     color: "rgba(255, 255, 255, 0.4)",
   },
   podcastMetaDot: {
-    width: 3,
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+  },
+  podcastProgress: {
     height: 3,
     borderRadius: 1.5,
     backgroundColor: "rgba(255, 255, 255, 0.2)",

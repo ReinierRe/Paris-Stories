@@ -69,22 +69,13 @@ function PodcastItem({ category, title, voice, duration, lang, color }: {
 }
 
 const categoryImageMap: Record<string, any> = {
-  "category-history": require("@/assets/images/category-history.png"),
-  "category-french-revolution": require("@/assets/images/category-french-revolution.png"),
-  "category-golden-age": require("@/assets/images/category-history.png"),
-  "category-museums": require("@/assets/images/category-museums.png"),
-  "category-museums-amsterdam": require("@/assets/images/category-museums-amsterdam.png"),
-  "category-epic-buildings": require("@/assets/images/category-epic-buildings.png"),
-  "category-epic-buildings-amsterdam": require("@/assets/images/category-epic-buildings-amsterdam.png"),
-  "category-modern-history": require("@/assets/images/category-modern-history.png"),
-  "category-culinary": require("@/assets/images/category-culinary.png"),
-  "category-neighborhoods": require("@/assets/images/category-neighborhoods.png"),
-  "category-neighborhoods-amsterdam": require("@/assets/images/category-neighborhoods-amsterdam.png"),
-  "category-gaudi-barcelona": require("@/assets/images/category-gaudi-barcelona.png"),
-  "category-museums-barcelona": require("@/assets/images/category-museums-barcelona.png"),
-  "category-epic-buildings-barcelona": require("@/assets/images/category-epic-buildings-barcelona.png"),
-  "category-culinary-barcelona": require("@/assets/images/category-culinary-barcelona.png"),
-  "category-neighborhoods-barcelona": require("@/assets/images/category-neighborhoods-barcelona.png"),
+  "theme-history": require("@/assets/images/theme-history.png"),
+  "theme-special": require("@/assets/images/theme-special.png"),
+  "theme-museums": require("@/assets/images/theme-museums.png"),
+  "theme-buildings": require("@/assets/images/theme-buildings.jpg"),
+  "theme-modern": require("@/assets/images/theme-modern.png"),
+  "theme-culinary": require("@/assets/images/theme-culinary.png"),
+  "theme-neighborhoods": require("@/assets/images/theme-neighborhoods.png"),
 };
 
 function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number }) {

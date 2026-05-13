@@ -28,12 +28,12 @@ export interface OnboardingPodcastExample {
  */
 
 const mixedCategories: OnboardingCategory[] = [
-  { name: "History", imageKey: "category-history" },
-  { name: "Museums", imageKey: "category-museums" },
-  { name: "Neighborhoods", imageKey: "category-neighborhoods" },
-  { name: "Epic Buildings", imageKey: "category-epic-buildings" },
-  { name: "Culture", imageKey: "category-modern-history" },
-  { name: "Culinary", imageKey: "category-culinary" },
+  { name: "History", imageKey: "theme-history" },
+  { name: "Museums", imageKey: "theme-museums" },
+  { name: "Neighborhoods", imageKey: "theme-neighborhoods" },
+  { name: "Epic Buildings", imageKey: "theme-buildings" },
+  { name: "Culture", imageKey: "theme-modern" },
+  { name: "Culinary", imageKey: "theme-culinary" },
 ];
 
 const mixedPodcastExamples: OnboardingPodcastExample[] = [

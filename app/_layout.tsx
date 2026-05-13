@@ -22,15 +22,13 @@ import {
 import { Platform, ActivityIndicator, View } from "react-native";
 
 const loginImages = [
-  require("@/assets/images/category-history.png"),
-  require("@/assets/images/category-french-revolution.png"),
-  require("@/assets/images/category-museums.png"),
-  require("@/assets/images/category-epic-buildings.png"),
-  require("@/assets/images/category-epic-buildings-amsterdam.png"),
-  require("@/assets/images/category-modern-history.png"),
-  require("@/assets/images/category-culinary.png"),
-  require("@/assets/images/category-neighborhoods.png"),
-  require("@/assets/images/category-neighborhoods-amsterdam.png"),
+  require("@/assets/images/theme-history.png"),
+  require("@/assets/images/theme-special.png"),
+  require("@/assets/images/theme-museums.png"),
+  require("@/assets/images/theme-buildings.jpg"),
+  require("@/assets/images/theme-modern.png"),
+  require("@/assets/images/theme-culinary.png"),
+  require("@/assets/images/theme-neighborhoods.png"),
 ];
 
 SplashScreen.preventAutoHideAsync();

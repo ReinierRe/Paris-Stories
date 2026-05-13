@@ -33,7 +33,7 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-type Mode = "login" | "register";
+type Mode = "login" | "register" | "forgot";
 type View_ = "onboarding" | "auth";
 
 function PhoneMockup({ children }: { children: React.ReactNode }) {
@@ -354,7 +354,13 @@ function AuthView({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const handleForgotPassword = async () => {
+  const handleForgotPassword = () => {
+    setMode("forgot");
+    setError(null);
+    setResetSent(false);
+  };
+
+  const handleSendReset = async () => {
     if (!email.trim()) {
       setError("Enter your email address first");
       return;
@@ -405,33 +411,37 @@ function AuthView({ onBack }: { onBack: () => void }) {
       >
         <View style={authStyles.heroSection}>
           <Text style={authStyles.title}>
-            {mode === "register" ? "Create your account" : "Welcome back"}
+            {mode === "register" ? "Create your account" : mode === "forgot" ? "Reset password" : "Welcome back"}
           </Text>
           <Text style={authStyles.subtitle}>
             {mode === "register"
               ? "Start exploring cities through audio stories."
+              : mode === "forgot"
+              ? "Enter your email and we'll send you a reset link."
               : "Sign in to continue your journey."}
           </Text>
         </View>
 
-        <View style={authStyles.tabsRow}>
-          <Pressable
-            style={[authStyles.tab, mode === "login" && authStyles.tabActive]}
-            onPress={() => toggleMode("login")}
-          >
-            <Text style={[authStyles.tabText, mode === "login" && authStyles.tabTextActive]}>
-              Sign in
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[authStyles.tab, mode === "register" && authStyles.tabActive]}
-            onPress={() => toggleMode("register")}
-          >
-            <Text style={[authStyles.tabText, mode === "register" && authStyles.tabTextActive]}>
-              Sign up
-            </Text>
-          </Pressable>
-        </View>
+        {mode !== "forgot" && (
+          <View style={authStyles.tabsRow}>
+            <Pressable
+              style={[authStyles.tab, mode === "login" && authStyles.tabActive]}
+              onPress={() => toggleMode("login")}
+            >
+              <Text style={[authStyles.tabText, mode === "login" && authStyles.tabTextActive]}>
+                Sign in
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[authStyles.tab, mode === "register" && authStyles.tabActive]}
+              onPress={() => toggleMode("register")}
+            >
+              <Text style={[authStyles.tabText, mode === "register" && authStyles.tabTextActive]}>
+                Sign up
+              </Text>
+            </Pressable>
+          </View>
+        )}
 
         <View style={formStyles.formContainer}>
           {mode === "register" && (
@@ -476,38 +486,40 @@ function AuthView({ onBack }: { onBack: () => void }) {
             />
           </View>
 
-          <View style={formStyles.inputWrapper}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={18}
-              color="rgba(255,255,255,0.4)"
-              style={formStyles.inputIcon}
-            />
-            <TextInput
-              style={[formStyles.input, formStyles.passwordInput]}
-              placeholder="Password"
-              placeholderTextColor="rgba(255,255,255,0.3)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoComplete={mode === "register" ? "new-password" : "current-password"}
-              textContentType={mode === "register" ? "newPassword" : "password"}
-              returnKeyType="done"
-              onSubmitEditing={handleSubmit}
-            />
-            <Pressable
-              onPress={() => setShowPassword(!showPassword)}
-              style={formStyles.eyeButton}
-              hitSlop={8}
-            >
+          {mode !== "forgot" && (
+            <View style={formStyles.inputWrapper}>
               <Ionicons
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                name="lock-closed-outline"
                 size={18}
                 color="rgba(255,255,255,0.4)"
+                style={formStyles.inputIcon}
               />
-            </Pressable>
-          </View>
+              <TextInput
+                style={[formStyles.input, formStyles.passwordInput]}
+                placeholder="Password"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoComplete={mode === "register" ? "new-password" : "current-password"}
+                textContentType={mode === "register" ? "newPassword" : "password"}
+                returnKeyType="done"
+                onSubmitEditing={handleSubmit}
+              />
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={formStyles.eyeButton}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={18}
+                  color="rgba(255,255,255,0.4)"
+                />
+              </Pressable>
+            </View>
+          )}
 
           {error && (
             <View style={formStyles.errorContainer}>
@@ -523,27 +535,35 @@ function AuthView({ onBack }: { onBack: () => void }) {
             </View>
           )}
 
-          <Pressable
-            style={({ pressed }) => [
-              formStyles.submitButton,
-              pressed && formStyles.submitButtonPressed,
-              (isSubmitting || isLoading) && formStyles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={isSubmitting || isLoading}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={formStyles.submitButtonText}>
-                {mode === "login" ? "Sign in" : "Create account"}
-              </Text>
-            )}
-          </Pressable>
+          {!(mode === "forgot" && resetSent) && (
+            <Pressable
+              style={({ pressed }) => [
+                formStyles.submitButton,
+                pressed && formStyles.submitButtonPressed,
+                (isSubmitting || isLoading) && formStyles.submitButtonDisabled,
+              ]}
+              onPress={mode === "forgot" ? handleSendReset : handleSubmit}
+              disabled={isSubmitting || isLoading}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={formStyles.submitButtonText}>
+                  {mode === "login" ? "Sign in" : mode === "forgot" ? "Send reset link" : "Create account"}
+                </Text>
+              )}
+            </Pressable>
+          )}
 
           {mode === "login" && (
             <Pressable onPress={handleForgotPassword} style={formStyles.forgotContainer} disabled={isSubmitting}>
               <Text style={formStyles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          )}
+
+          {mode === "forgot" && (
+            <Pressable onPress={() => toggleMode("login")} style={formStyles.forgotContainer}>
+              <Text style={formStyles.forgotText}>Back to sign in</Text>
             </Pressable>
           )}
 

@@ -112,7 +112,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
 
   if (index === 1) {
     return (
-      <View style={slideStyles.visualContainer}>
+      <View style={[slideStyles.visualContainer, { transform: [{ scale: 0.88 }] }]}>
         <PhoneMockup>
           <Text style={mockupStyles.screenTitle}>My Podcasts</Text>
           <Text style={mockupStyles.screenSubtitle}>20 ready</Text>
@@ -126,7 +126,7 @@ function SlideContent({ slide, index }: { slide: OnboardingSlide; index: number 
 
   if (index === 2) {
     return (
-      <View style={slideStyles.visualContainer}>
+      <View style={[slideStyles.visualContainer, { transform: [{ scale: 0.88 }] }]}>
         <PhoneMockup>
           <Text style={mockupStyles.screenTitle}>City Stories</Text>
           <Text style={mockupStyles.screenSubtitle}>Explore categories</Text>

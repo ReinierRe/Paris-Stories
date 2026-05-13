@@ -89,7 +89,7 @@ export function getOnboardingSlides(): OnboardingSlide[] {
     },
     {
       id: "stories",
-      title: "Three Cities,\nThousands of Stories",
+      title: "Unique city\nstories",
       subtitle: "Amsterdam's Golden Age. Paris and the French Revolution. Gaudí's Barcelona. Each city has its own library — explore them all from one app.",
       features: [
         { icon: "time", text: "Rich historical depth" },

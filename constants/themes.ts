@@ -37,7 +37,7 @@ export interface Theme {
   nameDe: string;
   nameEs: string;
   icon: string;
-  iconFamily: "Ionicons" | "MaterialIcons" | "MaterialCommunityIcons" | "Feather";
+  iconFamily: "Ionicons";
   iconImage?: any;
   color: string;
   topics: Topic[];
@@ -318,8 +318,8 @@ const parisThemes: Theme[] = [
     nameFr: "Musées",
     nameDe: "Museen",
     nameEs: "Museos",
-    icon: "museum",
-    iconFamily: "MaterialIcons",
+    icon: "library",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-museums.png"),
     color: "#2980B9",
     angles: [
@@ -481,7 +481,7 @@ const parisThemes: Theme[] = [
     nameDe: "Ikonische Bauwerke",
     nameEs: "Edificios emblemáticos",
     icon: "business",
-    iconFamily: "MaterialIcons",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-epic-buildings.png"),
     color: "#34495E",
     topics: [
@@ -598,8 +598,8 @@ const parisThemes: Theme[] = [
     nameFr: "Histoire moderne",
     nameDe: "Moderne Geschichte",
     nameEs: "Historia moderna",
-    icon: "history",
-    iconFamily: "MaterialIcons",
+    icon: "trending-up",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#8E44AD",
     topics: [
@@ -717,7 +717,7 @@ const parisThemes: Theme[] = [
     nameDe: "Stadtviertel",
     nameEs: "Barrios",
     icon: "map",
-    iconFamily: "Feather",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-neighborhoods.png"),
     color: "#27AE60",
     angles: [
@@ -893,7 +893,7 @@ const parisThemes: Theme[] = [
     nameDe: "Kulinarisch",
     nameEs: "Gastronomía",
     icon: "restaurant",
-    iconFamily: "MaterialIcons",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-culinary.png"),
     color: "#E67E22",
     topics: [
@@ -1279,8 +1279,8 @@ const amsterdamThemes: Theme[] = [
     nameFr: "Musées",
     nameDe: "Museen",
     nameEs: "Museos",
-    icon: "museum",
-    iconFamily: "MaterialIcons",
+    icon: "library",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-museums-amsterdam.png"),
     color: "#2980B9",
     angles: [
@@ -1559,8 +1559,8 @@ const amsterdamThemes: Theme[] = [
     nameFr: "Histoire moderne",
     nameDe: "Moderne Geschichte",
     nameEs: "Historia moderna",
-    icon: "history",
-    iconFamily: "MaterialIcons",
+    icon: "trending-up",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#8E44AD",
     topics: [
@@ -1678,7 +1678,7 @@ const amsterdamThemes: Theme[] = [
     nameDe: "Stadtviertel",
     nameEs: "Barrios",
     icon: "map",
-    iconFamily: "Feather",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-neighborhoods-amsterdam.png"),
     color: "#27AE60",
     angles: [
@@ -1854,7 +1854,7 @@ const amsterdamThemes: Theme[] = [
     nameDe: "Kulinarisch",
     nameEs: "Gastronomía",
     icon: "restaurant",
-    iconFamily: "MaterialIcons",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-culinary.png"),
     color: "#E67E22",
     topics: [
@@ -2062,7 +2062,7 @@ const barcelonaThemes: Theme[] = [
     nameFr: "Histoire Moderne",
     nameDe: "Moderne Geschichte",
     nameEs: "Historia Moderna",
-    icon: "newspaper",
+    icon: "trending-up",
     iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-modern-history.png"),
     color: "#34495E",
@@ -2084,7 +2084,7 @@ const barcelonaThemes: Theme[] = [
     nameFr: "Quartiers",
     nameDe: "Viertel",
     nameEs: "Barrios",
-    icon: "home",
+    icon: "map",
     iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-neighborhoods-barcelona.png"),
     color: "#27AE60",
@@ -2219,8 +2219,8 @@ const londonThemes: Theme[] = [
     nameFr: "Musées",
     nameDe: "Museen",
     nameEs: "Museos",
-    icon: "museum",
-    iconFamily: "MaterialIcons",
+    icon: "library",
+    iconFamily: "Ionicons",
     iconImage: require("@/assets/images/category-museums-london.png"),
     color: "#2980B9",
     angles: londonMuseumsAngles,

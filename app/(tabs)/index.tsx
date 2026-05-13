@@ -12,7 +12,7 @@ import {
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { getThemes, type Theme, type Topic, getLocalizedName, getLocalizedDescription } from "@/constants/themes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -89,14 +89,7 @@ function ThemeCard({
     if (theme.iconImage) {
       return <Image source={theme.iconImage} style={{ width: 44, height: 44, borderRadius: 12 }} cachePolicy="memory-disk" />;
     }
-    const iconProps = { size: 22, color: "#FFFFFF" };
-    if (theme.iconFamily === "MaterialIcons") {
-      return <MaterialIcons name={theme.icon as any} {...iconProps} />;
-    }
-    if (theme.iconFamily === "Feather") {
-      return <Feather name={theme.icon as any} {...iconProps} />;
-    }
-    return <Ionicons name={theme.icon as any} {...iconProps} />;
+    return <Ionicons name={theme.icon as any} size={22} color="#FFFFFF" />;
   };
 
   return (

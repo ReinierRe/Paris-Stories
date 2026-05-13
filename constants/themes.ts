@@ -54,7 +54,7 @@ const parisThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
+    iconImage: require("@/assets/images/theme-history.png"),
     color: "#6B4226",
     topics: [
       {
@@ -172,7 +172,7 @@ const parisThemes: Theme[] = [
     nameEs: "Revolución Francesa",
     icon: "flag",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-french-revolution.png"),
+    iconImage: require("@/assets/images/theme-special.png"),
     color: "#C0392B",
     angles: [
       {
@@ -320,7 +320,7 @@ const parisThemes: Theme[] = [
     nameEs: "Museos",
     icon: "library",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-museums.png"),
+    iconImage: require("@/assets/images/theme-museums.png"),
     color: "#2980B9",
     angles: [
       {
@@ -482,7 +482,7 @@ const parisThemes: Theme[] = [
     nameEs: "Edificios emblemáticos",
     icon: "business",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-epic-buildings.png"),
+    iconImage: require("@/assets/images/theme-buildings.jpg"),
     color: "#34495E",
     topics: [
       {
@@ -600,7 +600,7 @@ const parisThemes: Theme[] = [
     nameEs: "Historia moderna",
     icon: "trending-up",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
+    iconImage: require("@/assets/images/theme-modern.png"),
     color: "#8E44AD",
     topics: [
       {
@@ -718,7 +718,7 @@ const parisThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-neighborhoods.png"),
+    iconImage: require("@/assets/images/theme-neighborhoods.png"),
     color: "#27AE60",
     angles: [
       {
@@ -894,7 +894,7 @@ const parisThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-culinary.png"),
+    iconImage: require("@/assets/images/theme-culinary.png"),
     color: "#E67E22",
     topics: [
       {
@@ -1015,7 +1015,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
+    iconImage: require("@/assets/images/theme-history.png"),
     color: "#6B4226",
     topics: [
       {
@@ -1133,7 +1133,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "La Edad de Oro",
     icon: "sunny",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
+    iconImage: require("@/assets/images/theme-special.png"),
     color: "#DAA520",
     angles: [
       {
@@ -1281,7 +1281,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Museos",
     icon: "library",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-museums-amsterdam.png"),
+    iconImage: require("@/assets/images/theme-museums.png"),
     color: "#2980B9",
     angles: [
       {
@@ -1443,7 +1443,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Edificios y Monumentos",
     icon: "business",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-epic-buildings-amsterdam.png"),
+    iconImage: require("@/assets/images/theme-buildings.jpg"),
     color: "#7A8B9A",
     topics: [
       {
@@ -1561,7 +1561,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Historia moderna",
     icon: "trending-up",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
+    iconImage: require("@/assets/images/theme-modern.png"),
     color: "#8E44AD",
     topics: [
       {
@@ -1679,7 +1679,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-neighborhoods-amsterdam.png"),
+    iconImage: require("@/assets/images/theme-neighborhoods.png"),
     color: "#27AE60",
     angles: [
       {
@@ -1855,7 +1855,7 @@ const amsterdamThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-culinary.png"),
+    iconImage: require("@/assets/images/theme-culinary.png"),
     color: "#E67E22",
     topics: [
       {
@@ -1976,7 +1976,7 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history.png"),
+    iconImage: require("@/assets/images/theme-history.png"),
     color: "#6B4226",
     topics: [
       { id: "bcn-roman-barcino", name: "Roman Barcino: The Birth of Barcelona", nameNl: "Romeins Barcino: De Geboorte van Barcelona", nameFr: "Barcino romaine : la naissance de Barcelone", nameDe: "Das römische Barcino: Die Geburt Barcelonas", nameEs: "Barcino romana: el nacimiento de Barcelona", description: "From Roman colony to medieval city", descriptionNl: "Van Romeinse kolonie tot middeleeuwse stad", descriptionFr: "De colonie romaine à cité médiévale", descriptionDe: "Von der römischen Kolonie zur mittelalterlichen Stadt", descriptionEs: "De colonia romana a ciudad medieval" },
@@ -1998,7 +1998,7 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Gaudí y el Modernismo",
     icon: "color-palette",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-gaudi-barcelona.png"),
+    iconImage: require("@/assets/images/theme-special.png"),
     color: "#E07A1F",
     topics: [
       { id: "bcn-sagrada", name: "La Sagrada Família", nameNl: "La Sagrada Família", nameFr: "La Sagrada Família", nameDe: "Die Sagrada Família", nameEs: "La Sagrada Família", description: "Gaudí's unfinished masterpiece, 140 years in the making", descriptionNl: "Gaudí's onvoltooide meesterwerk, al 140 jaar in de maak", descriptionFr: "Le chef-d'œuvre inachevé de Gaudí, 140 ans en construction", descriptionDe: "Gaudís unvollendetes Meisterwerk, seit 140 Jahren im Bau", descriptionEs: "La obra maestra inacabada de Gaudí, 140 años en construcción" },
@@ -2020,7 +2020,7 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Museos",
     icon: "library",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-museums-barcelona.png"),
+    iconImage: require("@/assets/images/theme-museums.png"),
     color: "#5B9BD5",
     topics: [
       { id: "bcn-picasso-museum", name: "Museu Picasso", nameNl: "Museu Picasso", nameFr: "Le Musée Picasso", nameDe: "Das Museu Picasso", nameEs: "El Museu Picasso", description: "Picasso's Barcelona youth and his early masterpieces", descriptionNl: "Picasso's jeugd in Barcelona en zijn vroege meesterwerken", descriptionFr: "La jeunesse barcelonaise de Picasso et ses premiers chefs-d'œuvre", descriptionDe: "Picassos Jugend in Barcelona und seine frühen Meisterwerke", descriptionEs: "La juventud de Picasso en Barcelona y sus primeras obras maestras" },
@@ -2042,7 +2042,7 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Edificios y Monumentos",
     icon: "business",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-epic-buildings-barcelona.png"),
+    iconImage: require("@/assets/images/theme-buildings.jpg"),
     color: "#7A8B9A",
     topics: [
       { id: "bcn-cathedral", name: "Barcelona Cathedral", nameNl: "Kathedraal van Barcelona", nameFr: "La Cathédrale de Barcelone", nameDe: "Die Kathedrale von Barcelona", nameEs: "La Catedral de Barcelona", description: "Gothic spires, geese in the cloister, and Saint Eulalia", descriptionNl: "Gotische torens, ganzen in het klooster en de heilige Eulalia", descriptionFr: "Flèches gothiques, oies dans le cloître et Sainte-Eulalie", descriptionDe: "Gotische Türme, Gänse im Kreuzgang und die heilige Eulalia", descriptionEs: "Agujas góticas, ocas en el claustro y Santa Eulalia" },
@@ -2064,7 +2064,7 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Historia Moderna",
     icon: "trending-up",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-modern-history.png"),
+    iconImage: require("@/assets/images/theme-modern.png"),
     color: "#34495E",
     topics: [
       { id: "bcn-fcb-cruyff", name: "FC Barcelona & Cruyff: Més que un club", nameNl: "FC Barcelona & Cruyff: Més que un club", nameFr: "FC Barcelone & Cruyff : Més que un club", nameDe: "FC Barcelona & Cruyff: Més que un club", nameEs: "FC Barcelona y Cruyff: Més que un club", description: "How a football club became a political symbol of Catalonia", descriptionNl: "Hoe een voetbalclub uitgroeide tot politiek symbool van Catalonië", descriptionFr: "Comment un club de football est devenu un symbole politique de la Catalogne", descriptionDe: "Wie ein Fußballklub zum politischen Symbol Kataloniens wurde", descriptionEs: "Cómo un club de fútbol se convirtió en símbolo político de Cataluña" },
@@ -2086,7 +2086,7 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-neighborhoods-barcelona.png"),
+    iconImage: require("@/assets/images/theme-neighborhoods.png"),
     color: "#27AE60",
     topics: [
       { id: "bcn-gothic-quarter", name: "Barri Gòtic: The Gothic Quarter", nameNl: "Barri Gòtic: De Gotische Wijk", nameFr: "Le Barri Gòtic", nameDe: "Das Gotische Viertel", nameEs: "El Barrio Gótico", description: "Medieval alleys, Roman walls, and hidden plaças", descriptionNl: "Middeleeuwse steegjes, Romeinse muren en verborgen plaças", descriptionFr: "Ruelles médiévales, murs romains et plaças cachées", descriptionDe: "Mittelalterliche Gassen, römische Mauern und versteckte Plätze", descriptionEs: "Callejones medievales, murallas romanas y plazas escondidas" },
@@ -2108,7 +2108,7 @@ const barcelonaThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-culinary-barcelona.png"),
+    iconImage: require("@/assets/images/theme-culinary.png"),
     color: "#E0A040",
     topics: [
       { id: "bcn-tapas", name: "The Art of Tapas", nameNl: "De Kunst van Tapas", nameFr: "L'art des tapas", nameDe: "Die Kunst der Tapas", nameEs: "El arte de las tapas", description: "From bar snack to global phenomenon", descriptionNl: "Van barhapje tot wereldwijd fenomeen", descriptionFr: "De l'amuse-gueule au phénomène mondial", descriptionDe: "Vom Bar-Snack zum globalen Phänomen", descriptionEs: "Del aperitivo de bar al fenómeno global" },
@@ -2175,7 +2175,7 @@ const londonThemes: Theme[] = [
     nameEs: "Historia",
     icon: "book",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-history-london.png"),
+    iconImage: require("@/assets/images/theme-history.png"),
     color: "#6B4226",
     angles: londonHistoryAngles,
     topics: [
@@ -2198,7 +2198,7 @@ const londonThemes: Theme[] = [
     nameEs: "La Corona",
     icon: "ribbon",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-the-crown-london.png"),
+    iconImage: require("@/assets/images/theme-special.png"),
     color: "#7B2D26",
     angles: londonCrownAngles,
     topics: [
@@ -2221,7 +2221,7 @@ const londonThemes: Theme[] = [
     nameEs: "Museos",
     icon: "library",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-museums-london.png"),
+    iconImage: require("@/assets/images/theme-museums.png"),
     color: "#2980B9",
     angles: londonMuseumsAngles,
     topics: [
@@ -2244,7 +2244,7 @@ const londonThemes: Theme[] = [
     nameEs: "Edificios emblemáticos",
     icon: "business",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-epic-buildings-london.png"),
+    iconImage: require("@/assets/images/theme-buildings.jpg"),
     color: "#34495E",
     angles: londonBuildingsAngles,
     topics: [
@@ -2267,7 +2267,7 @@ const londonThemes: Theme[] = [
     nameEs: "Barrios",
     icon: "map",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-neighborhoods-london.png"),
+    iconImage: require("@/assets/images/theme-neighborhoods.png"),
     color: "#16A085",
     angles: londonNeighborhoodsAngles,
     topics: [
@@ -2290,7 +2290,7 @@ const londonThemes: Theme[] = [
     nameEs: "Gastronomía",
     icon: "restaurant",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-culinary-london.png"),
+    iconImage: require("@/assets/images/theme-culinary.png"),
     color: "#E0A040",
     angles: londonCulinaryAngles,
     topics: [
@@ -2313,7 +2313,7 @@ const londonThemes: Theme[] = [
     nameEs: "Londres moderno",
     icon: "trending-up",
     iconFamily: "Ionicons",
-    iconImage: require("@/assets/images/category-modern-history-london.png"),
+    iconImage: require("@/assets/images/theme-modern.png"),
     color: "#8E44AD",
     angles: londonModernAngles,
     topics: [
@@ -2382,6 +2382,7 @@ const berlinThemes: Theme[] = [
     icon: "book",
     iconFamily: "Ionicons",
     color: "#6B4226",
+    iconImage: require("@/assets/images/theme-history.png"),
     angles: berlinHistoryAngles,
     topics: [
       { id: "ber-prussia-empire", name: "From Prussia to the German Empire: Berlin's Rise to Power", nameNl: "Van Pruisen tot het Duitse Keizerrijk: de opkomst van Berlijn", nameFr: "De la Prusse à l'Empire allemand : l'ascension de Berlin", nameDe: "Von Preußen zum Deutschen Kaiserreich: Berlins Aufstieg zur Macht", nameEs: "De Prusia al Imperio alemán: el ascenso de Berlín al poder", description: "How a Brandenburg garrison town became the capital of a continental power", descriptionNl: "Hoe een Brandenburgs garnizoensstadje uitgroeide tot hoofdstad van een continentale macht", descriptionFr: "Comment une ville de garnison brandebourgeoise est devenue la capitale d'une puissance continentale", descriptionDe: "Wie aus einer brandenburgischen Garnisonsstadt die Hauptstadt einer Kontinentalmacht wurde", descriptionEs: "Cómo una ciudad guarnición de Brandeburgo se convirtió en la capital de una potencia continental" },
@@ -2404,6 +2405,7 @@ const berlinThemes: Theme[] = [
     icon: "git-branch",
     iconFamily: "Ionicons",
     color: "#5D4037",
+    iconImage: require("@/assets/images/theme-special.png"),
     angles: berlinWallAngles,
     topics: [
       { id: "ber-wall-built", name: "August 13, 1961: The Night the Wall Was Built", nameNl: "13 augustus 1961: de nacht dat de Muur werd gebouwd", nameFr: "13 août 1961 : la nuit où le Mur fut construit", nameDe: "13. August 1961: Die Nacht, in der die Mauer gebaut wurde", nameEs: "13 de agosto de 1961: la noche en que se levantó el Muro", description: "How barbed wire and breeze blocks split a city in a single weekend", descriptionNl: "Hoe prikkeldraad en betonblokken een stad in één weekend splitsten", descriptionFr: "Comment fil de fer barbelé et parpaings ont coupé une ville en un seul week-end", descriptionDe: "Wie Stacheldraht und Hohlblocksteine eine Stadt an einem einzigen Wochenende teilten", descriptionEs: "Cómo el alambre de espino y los bloques de hormigón partieron una ciudad en un solo fin de semana" },
@@ -2426,6 +2428,7 @@ const berlinThemes: Theme[] = [
     icon: "library",
     iconFamily: "Ionicons",
     color: "#2980B9",
+    iconImage: require("@/assets/images/theme-museums.png"),
     angles: berlinMuseumsAngles,
     topics: [
       { id: "ber-pergamon", name: "The Pergamon Museum: Ancient Worlds Reconstructed", nameNl: "Het Pergamonmuseum: oude werelden herbouwd", nameFr: "Le musée de Pergame : des mondes antiques reconstruits", nameDe: "Das Pergamonmuseum: Antike Welten wiedererrichtet", nameEs: "El Museo de Pérgamo: mundos antiguos reconstruidos", description: "The Pergamon Altar, the Ishtar Gate and the great rebuilt monuments of the East", descriptionNl: "Het Pergamonaltaar, de Ishtarpoort en de grote herbouwde monumenten uit het Oosten", descriptionFr: "L'autel de Pergame, la porte d'Ishtar et les grands monuments reconstruits de l'Orient", descriptionDe: "Der Pergamonaltar, das Ischtar-Tor und die großen wiederaufgebauten Monumente des Orients", descriptionEs: "El altar de Pérgamo, la puerta de Ishtar y los grandes monumentos reconstruidos de Oriente" },
@@ -2448,6 +2451,7 @@ const berlinThemes: Theme[] = [
     icon: "business",
     iconFamily: "Ionicons",
     color: "#34495E",
+    iconImage: require("@/assets/images/theme-buildings.jpg"),
     angles: berlinBuildingsAngles,
     topics: [
       { id: "ber-brandenburg-gate", name: "The Brandenburg Gate: From Triumphal Arch to Symbol of Division", nameNl: "De Brandenburger Tor: van triomfboog tot symbool van deling", nameFr: "La porte de Brandebourg : de l'arc de triomphe au symbole de la division", nameDe: "Das Brandenburger Tor: Vom Triumphbogen zum Symbol der Teilung", nameEs: "La Puerta de Brandeburgo: del arco triunfal al símbolo de la división", description: "Berlin's most famous landmark, witness to two centuries of upheaval", descriptionNl: "Het beroemdste landmark van Berlijn, getuige van twee eeuwen omwentelingen", descriptionFr: "Le monument le plus célèbre de Berlin, témoin de deux siècles de bouleversements", descriptionDe: "Berlins berühmtestes Wahrzeichen, Zeuge zweier Jahrhunderte voller Umbrüche", descriptionEs: "El monumento más famoso de Berlín, testigo de dos siglos de convulsiones" },
@@ -2470,6 +2474,7 @@ const berlinThemes: Theme[] = [
     icon: "map",
     iconFamily: "Ionicons",
     color: "#16A085",
+    iconImage: require("@/assets/images/theme-neighborhoods.png"),
     angles: berlinNeighborhoodsAngles,
     topics: [
       { id: "ber-mitte", name: "Mitte: The Historic Heart Rebuilt", nameNl: "Mitte: het historische hart herbouwd", nameFr: "Mitte : le cœur historique reconstruit", nameDe: "Mitte: Das historische Herz, neu aufgebaut", nameEs: "Mitte: el corazón histórico reconstruido", description: "Unter den Linden, Museum Island and the long road back from ruins", descriptionNl: "Unter den Linden, het Museumeiland en de lange weg terug uit de puinhopen", descriptionFr: "Unter den Linden, l'île aux Musées et le long chemin de retour depuis les ruines", descriptionDe: "Unter den Linden, die Museumsinsel und der lange Weg zurück aus den Trümmern", descriptionEs: "Unter den Linden, la Isla de los Museos y el largo camino de vuelta desde las ruinas" },
@@ -2492,6 +2497,7 @@ const berlinThemes: Theme[] = [
     icon: "restaurant",
     iconFamily: "Ionicons",
     color: "#E0A040",
+    iconImage: require("@/assets/images/theme-culinary.png"),
     angles: berlinCulinaryAngles,
     topics: [
       { id: "ber-currywurst", name: "The Currywurst: Berlin's Most Iconic Street Food", nameNl: "De Currywurst: het meest iconische straatvoedsel van Berlijn", nameFr: "La Currywurst : le plat de rue le plus emblématique de Berlin", nameDe: "Die Currywurst: Berlins ikonischstes Streetfood", nameEs: "La Currywurst: la comida callejera más icónica de Berlín", description: "Herta Heuwer's invention and a sausage that became a city symbol", descriptionNl: "Herta Heuwers uitvinding en een worst die een stadssymbool werd", descriptionFr: "L'invention d'Herta Heuwer et une saucisse devenue symbole de la ville", descriptionDe: "Herta Heuwers Erfindung und eine Wurst, die zum Stadtsymbol wurde", descriptionEs: "El invento de Herta Heuwer y una salchicha convertida en símbolo de la ciudad" },
@@ -2514,6 +2520,7 @@ const berlinThemes: Theme[] = [
     icon: "trending-up",
     iconFamily: "Ionicons",
     color: "#8E44AD",
+    iconImage: require("@/assets/images/theme-modern.png"),
     angles: berlinModernAngles,
     topics: [
       { id: "ber-berghain-techno", name: "Berghain and Techno: The Club That Changed Music Culture", nameNl: "Berghain en techno: de club die de muziekcultuur veranderde", nameFr: "Le Berghain et la techno : le club qui a changé la culture musicale", nameDe: "Berghain und Techno: Der Club, der die Musikkultur veränderte", nameEs: "Berghain y techno: el club que cambió la cultura musical", description: "Post-Wall warehouses, the door, and Berlin as the world's techno capital", descriptionNl: "Loodsen na de Muur, de deur en Berlijn als technohoofdstad van de wereld", descriptionFr: "Les entrepôts d'après le Mur, la porte et Berlin comme capitale mondiale de la techno", descriptionDe: "Hallen nach der Mauer, die Tür und Berlin als Welthauptstadt des Techno", descriptionEs: "Naves industriales tras el Muro, la puerta y Berlín como capital mundial del techno" },
@@ -2581,6 +2588,7 @@ const kotorThemes: Theme[] = [
     icon: "book",
     iconFamily: "Ionicons",
     color: "#6B4226",
+    iconImage: require("@/assets/images/theme-history.png"),
     angles: kotorHistoryAngles,
     topics: [
       { id: "ktr-crna-gora", name: "Crna Gora: The Origin of the Black Mountain", nameNl: "Crna Gora: de oorsprong van de Zwarte Berg", nameFr: "Crna Gora : l'origine de la Montagne noire", nameDe: "Crna Gora: Der Ursprung des Schwarzen Berges", nameEs: "Crna Gora: el origen de la Montaña Negra", description: "The medieval origins of Montenegro, from Zetan princes to the name Black Mountain", descriptionNl: "De middeleeuwse oorsprong van Montenegro, van Zetaanse vorsten tot de naam Zwarte Berg", descriptionFr: "Les origines médiévales du Monténégro, des princes de Zeta au nom Montagne noire", descriptionDe: "Die mittelalterlichen Ursprünge Montenegros, von den zetanischen Fürsten bis zum Namen Schwarzer Berg", descriptionEs: "Los orígenes medievales de Montenegro, de los príncipes de Zeta al nombre Montaña Negra" },
@@ -2599,6 +2607,7 @@ const kotorThemes: Theme[] = [
     icon: "water",
     iconFamily: "Ionicons",
     color: "#1A6B8A",
+    iconImage: require("@/assets/images/theme-special.png"),
     angles: kotorBayAngles,
     topics: [
       { id: "ktr-kotor-city", name: "Kotor: The Walled City at the Water's Edge", nameNl: "Kotor: de ommuurde stad aan de waterkant", nameFr: "Kotor : la ville fortifiée au bord de l'eau", nameDe: "Kotor: Die ummauerte Stadt am Wasser", nameEs: "Kotor: la ciudad amurallada a orillas del agua", description: "The medieval city of Kotor, its UNESCO-listed walls and its extraordinary setting on the Adriatic fjord", descriptionNl: "De middeleeuwse stad Kotor, haar op de UNESCO-lijst geplaatste muren en haar buitengewone ligging aan het Adriatische fjord", descriptionFr: "La ville médiévale de Kotor, ses remparts inscrits à l'UNESCO et son cadre extraordinaire sur le fjord adriatique", descriptionDe: "Die mittelalterliche Stadt Kotor, ihre auf der UNESCO-Liste stehenden Mauern und ihre außergewöhnliche Lage am adriatischen Fjord", descriptionEs: "La ciudad medieval de Kotor, sus murallas inscritas en la UNESCO y su extraordinario emplazamiento en el fiordo adriático" },
@@ -2617,6 +2626,7 @@ const kotorThemes: Theme[] = [
     icon: "library",
     iconFamily: "Ionicons",
     color: "#2980B9",
+    iconImage: require("@/assets/images/theme-museums.png"),
     angles: kotorMuseumsAngles,
     topics: [
       { id: "ktr-maritime-museum", name: "The Maritime Museum of Kotor", nameNl: "Het Maritiem Museum van Kotor", nameFr: "Le Musée maritime de Kotor", nameDe: "Das Seefahrtsmuseum von Kotor", nameEs: "El Museo Marítimo de Kotor", description: "Kotor's centuries of naval heritage and the Adriatic seafaring tradition preserved in the Grgurina palace", descriptionNl: "Kotors eeuwen van maritieme erfenis en de Adriatische zeevaarttraditie bewaard in het Grgurina-paleis", descriptionFr: "Des siècles de patrimoine naval de Kotor et la tradition maritime adriatique préservée dans le palais Grgurina", descriptionDe: "Kotors Jahrhunderte maritimes Erbe und die adriatische Seefahrtstradition im Palast Grgurina", descriptionEs: "Los siglos de patrimonio naval de Kotor y la tradición marinera adriática preservada en el palacio Grgurina" },
@@ -2634,6 +2644,7 @@ const kotorThemes: Theme[] = [
     icon: "business",
     iconFamily: "Ionicons",
     color: "#34495E",
+    iconImage: require("@/assets/images/theme-buildings.jpg"),
     angles: kotorBuildingsAngles,
     topics: [
       { id: "ktr-city-walls", name: "Kotor's City Walls: UNESCO Heritage on the Hillside", nameNl: "De stadsmuren van Kotor: UNESCO-erfgoed op de heuvelflank", nameFr: "Les remparts de Kotor : patrimoine UNESCO sur la colline", nameDe: "Kotors Stadtmauern: UNESCO-Erbe am Hang", nameEs: "Las murallas de Kotor: patrimonio UNESCO en la ladera", description: "The extraordinary 4.5 km fortification that scales the sheer limestone cliffs above Kotor to the fortress of San Giovanni", descriptionNl: "De buitengewone 4,5 km lange vestingmuur die de steile kalkstenen kliffen boven Kotor beklimmt tot aan het fort San Giovanni", descriptionFr: "L'extraordinaire fortification de 4,5 km qui gravit les falaises calcaires abruptes au-dessus de Kotor jusqu'à la forteresse San Giovanni", descriptionDe: "Die außergewöhnliche 4,5 km lange Befestigung, die die steilen Kalksteinfelsen über Kotor bis zur Festung San Giovanni erklimmt", descriptionEs: "La extraordinaria fortificación de 4,5 km que escala los acantilados de caliza sobre Kotor hasta la fortaleza de San Giovanni" },
@@ -2652,6 +2663,7 @@ const kotorThemes: Theme[] = [
     icon: "compass",
     iconFamily: "Ionicons",
     color: "#16A085",
+    iconImage: require("@/assets/images/theme-neighborhoods.png"),
     angles: kotorDestinationsAngles,
     topics: [
       { id: "ktr-sveti-stefan", name: "Sveti Stefan: The Island Village That Became a Resort", nameNl: "Sveti Stefan: het eilanddorp dat een resort werd", nameFr: "Sveti Stefan : le village insulaire devenu station balnéaire", nameDe: "Sveti Stefan: Das Inseldorf, das zum Resort wurde", nameEs: "Sveti Stefan: el pueblo isleño que se convirtió en resort", description: "The iconic 15th-century walled island village transformed into one of the Adriatic's most exclusive luxury hotels", descriptionNl: "Het iconische 15e-eeuwse ommuurde eilanddorp omgevormd tot een van de meest exclusieve luxehotels aan de Adriatische Zee", descriptionFr: "L'iconique village insulaire fortifié du XVe siècle transformé en l'un des hôtels de luxe les plus exclusifs de l'Adriatique", descriptionDe: "Das ikonische ummauerte Inseldorf aus dem 15. Jahrhundert, das zu einem der exklusivsten Luxushotels an der Adria wurde", descriptionEs: "El icónico pueblo isleño amurallado del siglo XV transformado en uno de los hoteles de lujo más exclusivos del Adriático" },
@@ -2670,6 +2682,7 @@ const kotorThemes: Theme[] = [
     icon: "restaurant",
     iconFamily: "Ionicons",
     color: "#E0A040",
+    iconImage: require("@/assets/images/theme-culinary.png"),
     angles: kotorCulinaryAngles,
     topics: [
       { id: "ktr-prsut", name: "Pršut: Montenegro's Beloved Cured Ham", nameNl: "Pršut: Montenegro's geliefde gedroogde ham", nameFr: "Pršut : le jambon séché bien-aimé du Monténégro", nameDe: "Pršut: Montenegros geliebter Rohschinken", nameEs: "Pršut: el amado jamón curado de Montenegro", description: "The air-dried ham that is central to Montenegrin table culture, hospitality, and mountain tradition", descriptionNl: "De in de lucht gedroogde ham die centraal staat in de Montenegrijnse tafelcultuur, gastvrijheid en bergtraditie", descriptionFr: "Le jambon séché à l'air libre, central dans la culture de table monténégrine, l'hospitalité et la tradition montagnarde", descriptionDe: "Der luftgetrocknete Schinken, der für die montenegrinische Tischkultur, Gastfreundschaft und Bergtradition zentral ist", descriptionEs: "El jamón secado al aire que es central en la cultura culinaria montenegrina, la hospitalidad y la tradición de montaña" },
@@ -2688,6 +2701,7 @@ const kotorThemes: Theme[] = [
     icon: "trending-up",
     iconFamily: "Ionicons",
     color: "#8E44AD",
+    iconImage: require("@/assets/images/theme-modern.png"),
     angles: kotorModernAngles,
     topics: [
       { id: "ktr-wild-beauty", name: "Wild Beauty: How a Small Country Marketed Itself to the World", nameNl: "Wild Beauty: hoe een klein land zichzelf aan de wereld presenteerde", nameFr: "Wild Beauty : comment un petit pays s'est vendu au monde", nameDe: "Wild Beauty: Wie sich ein kleines Land der Welt vermarktete", nameEs: "Wild Beauty: cómo un pequeño país se presentó al mundo", description: "Montenegro's brilliant 'Wild Beauty' tourism campaign and how it transformed a post-Yugoslav nation into a destination brand", descriptionNl: "Montenegro's briljante 'Wild Beauty'-toerismecampagne en hoe het een post-Joegoslavische natie transformeerde tot een bestemmingsmerk", descriptionFr: "La brillante campagne touristique 'Wild Beauty' du Monténégro et comment elle a transformé une nation post-yougoslave en marque de destination", descriptionDe: "Montenegros brillante Tourismuskampagne 'Wild Beauty' und wie sie eine post-jugoslawische Nation in eine Destinationsmarke verwandelte", descriptionEs: "La brillante campaña turística 'Wild Beauty' de Montenegro y cómo transformó una nación post-yugoslava en una marca de destino" },
